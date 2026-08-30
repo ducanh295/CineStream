@@ -1,0 +1,21 @@
+# File cá nhân / AI Agent
+.agents/
+**/.agents/
+
+# IDE cá nhân (VS Code, Visual Studio, JetBrains)
+.vs/
+.vscode/
+.idea/
+*.user
+*.userosscache
+*.suo
+
+# Build artifacts của .NET
+[Bb]in/
+[Oo]bj/
+*.log
+
+# Frontend (phòng sau này thêm vào)
+node_modules/
+dist/
+.env.local
