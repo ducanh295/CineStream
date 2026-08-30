@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 
-namespace VietFlix.Controllers;
+namespace Backend.Controllers;
 
 [ApiController]
 [Route("[controller]")]

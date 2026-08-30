@@ -1,4 +1,4 @@
-namespace VietFlix;
+namespace Backend;
 
 public class WeatherForecast
 {
