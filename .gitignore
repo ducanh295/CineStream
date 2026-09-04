@@ -1,6 +1,11 @@
 # File cá nhân / AI Agent
 .agents/
 **/.agents/
+GEMINI.md
+**/GEMINI.md
+AGENTS.md
+**/AGENTS.md
+**/prompt-formulas-guide.md
 
 # IDE cá nhân (VS Code, Visual Studio, JetBrains)
 .vs/
