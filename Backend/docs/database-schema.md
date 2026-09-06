@@ -250,7 +250,7 @@
 
 ## Sơ đồ quan hệ tổng quan
 
-```
+
 Users ──1:1──► Profiles
 Users ──1:N──► Favorites ◄──N:1── Movies
 Users ──1:N──► Ratings   ◄──N:1── Movies
@@ -260,7 +260,7 @@ Movies ──M:N──► Categories   (qua MovieCategories)
 Movies ──M:N──► Actors       (qua MovieActors)
 
 Series ──1:N──► Seasons ──1:N──► Episodes
-```
+
 
 ---
 

@@ -23,7 +23,7 @@
 
 ## Cấu Trúc Thư Mục (Toàn Bộ Project)
 
-```
+
 Backend/
 ├── Controllers/           ← Nhận request HTTP, gọi Service, trả response
 ├── Services/              ← Business logic (xử lý nghiệp vụ)
@@ -46,7 +46,7 @@ Backend/
 ├── Program.cs             ← Entry point + đăng ký DI
 ├── appsettings.json       ← Cấu hình (connection string, JWT secret...)
 └── Backend.csproj         ← NuGet packages
-```
+
 
 ---
 
@@ -54,7 +54,7 @@ Backend/
 
 Đây là tất cả entity bạn sẽ tạo trong thư mục `Models/`:
 
-```
+
 Models/
 ├── User.cs               ← Tài khoản người dùng
 ├── Profile.cs            ← Thông tin cá nhân (avatar, bio...)
@@ -72,10 +72,10 @@ Models/
 └── Enums/
     ├── UserRole.cs       ← Admin, User
     └── MovieType.cs      ← Single (phim lẻ), Series (phim bộ)
-```
+
 
 **Quan hệ giữa các entity:**
-```
+
 User ──1:1──► Profile
 User ──1:N──► Favorite
 User ──1:N──► Rating
@@ -88,7 +88,7 @@ Movie ──1:N──► Favorite
 
 Series ──1:N──► Season
 Season ──1:N──► Episode
-```
+
 
 ---
 
@@ -182,13 +182,13 @@ Season ──1:N──► Episode
 
 Mở terminal tại thư mục `Backend/`, chạy lần lượt:
 
-```bash
+bash
 dotnet add package Npgsql.EntityFrameworkCore.PostgreSQL
 dotnet add package Microsoft.EntityFrameworkCore.Design
 dotnet add package Microsoft.AspNetCore.Authentication.JwtBearer
 dotnet add package AutoMapper.Extensions.Microsoft.DependencyInjection
 dotnet add package FluentValidation.AspNetCore
-```
+
 
 Giải thích từng package:
 | Package | Tác dụng |
@@ -200,9 +200,9 @@ Giải thích từng package:
 | `FluentValidation.AspNetCore` | Viết validation rules (email hợp lệ, password đủ dài...) |
 
 Cài thêm tool EF Core (chạy 1 lần, dùng mãi):
-```bash
+bash
 dotnet tool install --global dotnet-ef
-```
+
 
 **Kiểm tra**: Chạy `dotnet build` — phải thành công, không lỗi.
 
@@ -212,7 +212,7 @@ dotnet tool install --global dotnet-ef
 
 Mở `appsettings.json`, thêm ConnectionString để kết nối PostgreSQL:
 
-```json
+json
 {
   "ConnectionStrings": {
     "DefaultConnection": "Host=localhost;Port=5432;Database=VietFlixDb;Username=postgres;Password=YOUR_PASSWORD"
@@ -224,7 +224,7 @@ Mở `appsettings.json`, thêm ConnectionString để kết nối PostgreSQL:
     "ExpireMinutes": 60
   }
 }
-```
+
 
 ---
 
@@ -232,30 +232,30 @@ Mở `appsettings.json`, thêm ConnectionString để kết nối PostgreSQL:
 
 Tạo các file theo thứ tự:
 
-```
+
 1. Models/Enums/UserRole.cs          ← enum: Admin, User
 2. Models/Enums/MovieType.cs         ← enum: Single, Series
 3. Models/BaseEntity.cs              ← class chung: Id, CreatedAt, UpdatedAt, IsDeleted, DeletedAt
 4. Models/User.cs                    ← entity đầu tiên (kế thừa BaseEntity)
-```
+
 
 ---
 
 #### Bước 0.4 — Tạo DbContext + Configuration
 
-```
+
 5. Data/AppDbContext.cs                       ← DbContext chính (đăng ký entity, override SaveChanges cho audit fields)
 6. Data/Configurations/UserConfiguration.cs   ← Fluent API: index, ràng buộc, max length...
-```
+
 
 ---
 
 #### Bước 0.5 — Tạo Response wrapper + Error middleware
 
-```
+
 7. DTOs/Common/ApiResponse.cs                    ← Class chung cho mọi response: { success, data, message, errors }
 8. Middleware/ExceptionHandlingMiddleware.cs       ← Bắt mọi exception → trả JSON lỗi thay vì crash
-```
+
 
 ---
 
@@ -272,17 +272,17 @@ Sửa `Program.cs` để đăng ký:
 #### Bước 0.7 — Tạo Migration + Database
 
 Chạy trên terminal:
-```bash
+bash
 dotnet ef migrations add InitialCreate
 dotnet ef database update
-```
+
 
 **Kiểm tra Phase 0 hoàn thành:**
-```
+
 ✅ dotnet build                    → thành công, không lỗi
 ✅ dotnet ef database update       → DB "VietFlixDb" xuất hiện trong PostgreSQL
 ✅ dotnet run                      → server chạy, mở Swagger trên trình duyệt được
-```
+
 
 ---
 
@@ -292,7 +292,7 @@ dotnet ef database update
 
 **Files cần tạo (theo thứ tự):**
 
-```
+
 1.  Models/Profile.cs                 ← Entity profile
 2.  Data/Configurations/ProfileConfiguration.cs
 3.  DTOs/Auth/RegisterRequest.cs      ← Dữ liệu đăng ký
@@ -309,7 +309,7 @@ dotnet ef database update
 14. Services/UserService.cs
 15. Controllers/UsersController.cs    ← CRUD user endpoints
 16. Program.cs                        ← Cập nhật: thêm JWT auth, DI cho services
-```
+
 
 **Kiểm tra**: Dùng Swagger hoặc .http file:
 - POST `/api/auth/register` → tạo user thành công
@@ -325,7 +325,7 @@ dotnet ef database update
 
 **Files cần tạo (theo thứ tự):**
 
-```
+
 1.  Models/Category.cs
 2.  Models/Movie.cs
 3.  Models/Actor.cs
@@ -353,7 +353,7 @@ dotnet ef database update
 25. Services/Interfaces/IMovieService.cs
 26. Services/MovieService.cs
 27. Controllers/MoviesController.cs
-```
+
 
 **Kiểm tra**:
 - CRUD Categories hoạt động
@@ -368,7 +368,7 @@ dotnet ef database update
 
 **Files cần tạo:**
 
-```
+
 1.  Models/Series.cs
 2.  Models/Season.cs
 3.  Models/Episode.cs
@@ -384,7 +384,7 @@ dotnet ef database update
 13. Services/Interfaces/ISeriesService.cs
 14. Services/SeriesService.cs
 15. Controllers/SeriesController.cs
-```
+
 
 **Kiểm tra**: CRUD Series + Season + Episode hoạt động, quan hệ lồng nhau đúng.
 
@@ -396,7 +396,7 @@ dotnet ef database update
 
 **Files cần tạo:**
 
-```
+
 1.  Models/Favorite.cs
 2.  Models/Rating.cs
 3.  Data/Configurations/FavoriteConfiguration.cs
@@ -414,7 +414,7 @@ dotnet ef database update
 15. Services/Interfaces/IRatingService.cs
 16. Services/RatingService.cs
 17. Controllers/RatingsController.cs
-```
+
 
 **Kiểm tra**: User thêm/xóa favorite, đánh giá phim hoạt động.
 
@@ -432,7 +432,7 @@ dotnet ef database update
 
 ## Tóm Tắt: Bạn Sẽ Làm Gì
 
-```
+
 Phase 0 (Foundation)   → 10 files  → Kết quả: Build + DB + Base classes
 Phase 1 (Auth + Users) → 16 files  → Kết quả: Đăng nhập + JWT + CRUD Users
 Phase 2 (Movies + Cat) → 27 files  → Kết quả: CRUD phim + thể loại + search
@@ -440,4 +440,4 @@ Phase 3 (Series)       → 15 files  → Kết quả: CRUD phim bộ
 Phase 4 (Interactions) → 17 files  → Kết quả: Yêu thích + đánh giá
 ─────────────────────────────────────────────────────────────
 Tổng Phase 0-4:        ~85 files   → Backend CRUD hoàn chỉnh
-```
+
