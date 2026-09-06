@@ -1,6 +1,6 @@
-using VietFlix.Models.Enums;
+﻿using CineStream.Models.Enums;
 
-namespace VietFlix.DTOs.Auth;
+namespace CineStream.DTOs.Auth;
 
 // 💡 DTO nhận dữ liệu đăng ký tài khoản
 public class RegisterRequestDto

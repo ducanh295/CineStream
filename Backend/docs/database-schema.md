@@ -1,4 +1,4 @@
-# 🗄️ VietFlix Database Schema — Bản Thiết Kế Chi Tiết
+﻿# 🗄️ CineStream Database Schema — Bản Thiết Kế Chi Tiết
 
 > **Mục đích**: File này là bản vẽ chính xác từng bảng, từng cột.
 > Khi viết Entity class trong `Models/`, bạn mở file này ra và code theo.

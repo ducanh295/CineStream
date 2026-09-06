@@ -1,4 +1,4 @@
-namespace VietFlix.Models;
+﻿namespace CineStream.Models;
 
 // 💡 Bảng trung gian M:N giữa Movie và Category (Composite Key: MovieId + CategoryId)
 public class MovieCategory

@@ -1,4 +1,4 @@
-# 🎬 VietFlix Backend — Kế Hoạch Triển Khai
+﻿# 🎬 CineStream Backend — Kế Hoạch Triển Khai
 
 > **Nguyên tắc**: File nào → Code gì → Thứ tự nào → Kiểm tra bằng cách nào.
 > **Approach**: Code-First (EF Core) — viết Entity class → Migration tự tạo DB.
@@ -215,12 +215,12 @@ Mở `appsettings.json`, thêm ConnectionString để kết nối PostgreSQL:
 ```json
 {
   "ConnectionStrings": {
-    "DefaultConnection": "Host=localhost;Port=5432;Database=VietFlixDb;Username=postgres;Password=YOUR_PASSWORD"
+    "DefaultConnection": "Host=localhost;Port=5432;Database=CineStreamDb;Username=postgres;Password=YOUR_PASSWORD"
   },
   "Jwt": {
     "Key": "your-super-secret-key-at-least-32-characters-long",
-    "Issuer": "VietFlix",
-    "Audience": "VietFlixApp",
+    "Issuer": "CineStream",
+    "Audience": "CineStreamApp",
     "ExpireMinutes": 60
   }
 }
@@ -280,7 +280,7 @@ dotnet ef database update
 **Kiểm tra Phase 0 hoàn thành:**
 ```
 ✅ dotnet build                    → thành công, không lỗi
-✅ dotnet ef database update       → DB "VietFlixDb" xuất hiện trong PostgreSQL
+✅ dotnet ef database update       → DB "CineStreamDb" xuất hiện trong PostgreSQL
 ✅ dotnet run                      → server chạy, mở Swagger trên trình duyệt được
 ```
 

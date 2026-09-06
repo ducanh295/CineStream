@@ -1,8 +1,8 @@
-using System.Net;
+﻿using System.Net;
 using System.Text.Json;
-using VietFlix.DTOs.Common;
+using CineStream.DTOs.Common;
 
-namespace VietFlix.Middleware;
+namespace CineStream.Middleware;
 
 // 💡 Middleware bắt lỗi tập trung (Global Exception Handler) cho toàn bộ HTTP pipeline
 public class ExceptionHandlingMiddleware

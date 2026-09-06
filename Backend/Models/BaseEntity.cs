@@ -1,6 +1,6 @@
-using System;
+﻿using System;
 
-namespace VietFlix.Models;
+namespace CineStream.Models;
 
 public abstract class BaseEntity
 {

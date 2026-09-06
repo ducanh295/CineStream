@@ -1,4 +1,4 @@
-namespace VietFlix.Models.Enums
+﻿namespace CineStream.Models.Enums
 {
     public enum UserRole
     {

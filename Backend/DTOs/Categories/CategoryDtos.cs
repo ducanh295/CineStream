@@ -1,4 +1,4 @@
-namespace VietFlix.DTOs.Categories;
+﻿namespace CineStream.DTOs.Categories;
 
 // 💡 DTO trả về thông tin thể loại cho client
 public class CategoryDto

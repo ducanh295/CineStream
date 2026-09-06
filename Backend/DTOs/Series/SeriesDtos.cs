@@ -1,4 +1,4 @@
-namespace VietFlix.DTOs.Series;
+﻿namespace CineStream.DTOs.Series;
 
 // 💡 DTO hiển thị từng tập phim
 public class EpisodeDto

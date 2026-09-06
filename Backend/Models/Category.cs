@@ -1,6 +1,6 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
-namespace VietFlix.Models;
+namespace CineStream.Models;
 
 public class Category : BaseEntity
 {

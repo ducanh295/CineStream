@@ -1,4 +1,4 @@
-namespace VietFlix.DTOs.Favorites;
+﻿namespace CineStream.DTOs.Favorites;
 
 // 💡 DTO hiển thị danh sách phim yêu thích của user
 public class FavoriteDto

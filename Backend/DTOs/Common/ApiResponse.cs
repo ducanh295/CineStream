@@ -1,4 +1,4 @@
-namespace VietFlix.DTOs.Common;
+﻿namespace CineStream.DTOs.Common;
 
 // 💡 Generic <T> cho phép bọc bất kỳ kiểu dữ liệu nào (Movie, User, List<Category>...)
 public class ApiResponse<T>

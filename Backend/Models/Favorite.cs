@@ -1,6 +1,6 @@
-using System;
+﻿using System;
 
-namespace VietFlix.Models;
+namespace CineStream.Models;
 
 // 💡 Bảng trung gian M:N giữa User và Movie (phim yêu thích), có thêm cột ngày thêm CreatedAt
 public class Favorite

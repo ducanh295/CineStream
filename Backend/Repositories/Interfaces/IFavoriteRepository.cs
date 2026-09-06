@@ -1,6 +1,6 @@
-using VietFlix.Models;
+﻿using CineStream.Models;
 
-namespace VietFlix.Repositories.Interfaces;
+namespace CineStream.Repositories.Interfaces;
 
 // 💡 Interface riêng cho bảng liên kết Favorite (không kế thừa BaseEntity vì dùng Composite Key)
 public interface IFavoriteRepository

@@ -1,6 +1,6 @@
-using VietFlix.Models;
+﻿using CineStream.Models;
 
-namespace VietFlix.Repositories.Interfaces;
+namespace CineStream.Repositories.Interfaces;
 
 public interface ISeriesRepository : IBaseRepository<Series>
 {

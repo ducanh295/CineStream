@@ -1,6 +1,6 @@
-using VietFlix.Models;
+﻿using CineStream.Models;
 
-namespace VietFlix.Repositories.Interfaces;
+namespace CineStream.Repositories.Interfaces;
 
 // 💡 Interface generic dùng chung cho mọi Entity kế thừa từ BaseEntity
 public interface IBaseRepository<T> where T : BaseEntity

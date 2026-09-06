@@ -1,7 +1,7 @@
-using System.Collections.Generic;
-using VietFlix.Models.Enums;
+﻿using System.Collections.Generic;
+using CineStream.Models.Enums;
 
-namespace VietFlix.Models;
+namespace CineStream.Models;
 
 public class User : BaseEntity
 {

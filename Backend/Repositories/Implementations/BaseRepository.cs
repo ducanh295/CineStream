@@ -1,9 +1,9 @@
-using Microsoft.EntityFrameworkCore;
-using VietFlix.Data;
-using VietFlix.Models;
-using VietFlix.Repositories.Interfaces;
+﻿using Microsoft.EntityFrameworkCore;
+using CineStream.Data;
+using CineStream.Models;
+using CineStream.Repositories.Interfaces;
 
-namespace VietFlix.Repositories.Implementations;
+namespace CineStream.Repositories.Implementations;
 
 // 💡 Implementation dùng chung mọi câu lệnh CRUD cơ bản của EF Core
 public class BaseRepository<T> : IBaseRepository<T> where T : BaseEntity

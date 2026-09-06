@@ -1,9 +1,9 @@
-using Microsoft.EntityFrameworkCore;
-using VietFlix.Data;
-using VietFlix.Models;
-using VietFlix.Repositories.Interfaces;
+﻿using Microsoft.EntityFrameworkCore;
+using CineStream.Data;
+using CineStream.Models;
+using CineStream.Repositories.Interfaces;
 
-namespace VietFlix.Repositories.Implementations;
+namespace CineStream.Repositories.Implementations;
 
 public class UserRepository : BaseRepository<User>, IUserRepository
 {

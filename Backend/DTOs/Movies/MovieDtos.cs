@@ -1,7 +1,7 @@
-using VietFlix.DTOs.Categories;
-using VietFlix.Models.Enums;
+﻿using CineStream.DTOs.Categories;
+using CineStream.Models.Enums;
 
-namespace VietFlix.DTOs.Movies;
+namespace CineStream.DTOs.Movies;
 
 // 💡 DTO tóm tắt hiển thị danh sách phim ngoài trang chủ/tìm kiếm (gọn nhẹ)
 public class MovieDto

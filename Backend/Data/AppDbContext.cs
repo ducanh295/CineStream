@@ -1,7 +1,7 @@
-using Microsoft.EntityFrameworkCore;
-using VietFlix.Models;
+﻿using Microsoft.EntityFrameworkCore;
+using CineStream.Models;
 
-namespace VietFlix.Data;
+namespace CineStream.Data;
 
 public class AppDbContext : DbContext
 {

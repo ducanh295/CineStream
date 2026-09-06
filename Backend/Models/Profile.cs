@@ -1,4 +1,4 @@
-namespace VietFlix.Models;
+﻿namespace CineStream.Models;
 
 public class Profile : BaseEntity
 {
