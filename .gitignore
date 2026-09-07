@@ -24,3 +24,9 @@ AGENTS.md
 node_modules/
 dist/
 .env.local
+
+# Graphify knowledge graph (local only, do not push)
+graphify-out/
+**/graphify-out/
+.graphify/
+**/.graphify/
