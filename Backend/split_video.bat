@@ -26,6 +26,8 @@ set OUTPUT_DIR=%~dp0wwwroot\videos\%MOVIE_ID%
 
 if not exist "%OUTPUT_DIR%" (
     mkdir "%OUTPUT_DIR%"
+) else (
+    del /q "%OUTPUT_DIR%\*.ts" "%OUTPUT_DIR%\*.m3u8" >nul 2>&1
 )
 
 echo.
@@ -34,7 +36,15 @@ echo [*] Tep dau vao: "%INPUT_FILE%"
 echo [*] Thu muc xuat: "%OUTPUT_DIR%"
 echo.
 
-ffmpeg -y -i "%INPUT_FILE%" -codec: copy -start_number 0 -hls_time 6 -hls_list_size 0 -f hls "%OUTPUT_DIR%\master.m3u8"
+REM Su dung GPU NVIDIA NVENC (RTX 3050) de chuyen doi sieu toc sang H.264
+REM Giup xu ly tat ca cac file YouTube (AV1, VP9) thanh video HLS phat duoc ca hinh lan tieng
+echo [*] Dang su dung card do hoa NVIDIA NVENC de ma hoa sang H.264...
+ffmpeg -y -i "%INPUT_FILE%" -c:v h264_nvenc -preset p4 -b:v 2200k -c:a copy -start_number 0 -hls_time 6 -hls_list_size 0 -f hls "%OUTPUT_DIR%\master.m3u8"
+
+if %ERRORLEVEL% NEQ 0 (
+    echo [*] GPU khong kha dung, tu dong chuyen sang ma hoa CPU (libx264)...
+    ffmpeg -y -i "%INPUT_FILE%" -c:v libx264 -preset veryfast -b:v 2000k -c:a copy -start_number 0 -hls_time 6 -hls_list_size 0 -f hls "%OUTPUT_DIR%\master.m3u8"
+)
 
 if %ERRORLEVEL% EQU 0 (
     echo.
