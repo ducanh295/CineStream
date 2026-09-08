@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using CineStream.Data;
 using CineStream.Models;
 using CineStream.Repositories.Interfaces;
@@ -13,17 +13,18 @@ public class CategoryRepository : BaseRepository<Category>, ICategoryRepository
 
     public async Task<Category?> GetByNameAsync(string name)
     {
-        // 💡 So sánh không phân biệt hoa thường
+        // Tim kiem the loai theo ten khong phan biet hoa thuong
         return await _dbSet.FirstOrDefaultAsync(c => c.Name.ToLower() == name.ToLower());
     }
 
     public async Task<bool> ExistsByNameAsync(string name, int? excludeId = null)
     {
-        var query = _dbSet.AsQueryable();
+        // Su dung IgnoreQueryFilters de kiem tra tren toan bo bang, tranh loi vi pham unique constraint database khi da co ban ghi bi xoa mem
+        var query = _dbSet.IgnoreQueryFilters().AsQueryable();
         if (excludeId.HasValue)
         {
             query = query.Where(c => c.Id != excludeId.Value);
         }
-        return await query.AnyAsync(c => c.Name.ToLower() == name.ToLower());
+        return await query.AnyAsync(c => c.Name.ToLower() == name.Trim().ToLower());
     }
 }

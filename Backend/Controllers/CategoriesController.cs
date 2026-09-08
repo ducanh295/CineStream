@@ -55,6 +55,11 @@ public class CategoriesController : ControllerBase
         var result = await _categoryService.UpdateAsync(id, dto);
         if (!result.Success)
         {
+            // Neu khong tim thay the loai thi tra ve 404 NotFound theo chuan RESTful
+            if (result.Message == "Khong tim thay the loai!")
+            {
+                return NotFound(result);
+            }
             return BadRequest(result);
         }
         return Ok(result);

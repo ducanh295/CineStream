@@ -37,8 +37,16 @@ public class CategoryService : ICategoryService
 
     public async Task<ApiResponse<CategoryDto>> CreateAsync(CreateCategoryDto dto)
     {
+        // Kiem tra du lieu dau vao khong duoc rong
+        if (string.IsNullOrWhiteSpace(dto.Name))
+        {
+            return ApiResponse<CategoryDto>.Fail("Ten the loai khong duoc de trong!");
+        }
+
+        var trimmedName = dto.Name.Trim();
+
         // Kiem tra trung lap ten the loai truoc khi tao moi
-        bool nameExists = await _categoryRepo.ExistsByNameAsync(dto.Name);
+        bool nameExists = await _categoryRepo.ExistsByNameAsync(trimmedName);
         if (nameExists)
         {
             return ApiResponse<CategoryDto>.Fail("Ten the loai da ton tai!");
@@ -47,8 +55,8 @@ public class CategoryService : ICategoryService
         // Khoi tao thuc the Category tu du lieu dau vao va luu vao co so du lieu
         var category = new Category
         {
-            Name = dto.Name,
-            Description = dto.Description
+            Name = trimmedName,
+            Description = dto.Description?.Trim()
         };
 
         await _categoryRepo.AddAsync(category);
@@ -59,6 +67,12 @@ public class CategoryService : ICategoryService
 
     public async Task<ApiResponse<CategoryDto>> UpdateAsync(int id, UpdateCategoryDto dto)
     {
+        // Kiem tra du lieu dau vao khong duoc rong
+        if (string.IsNullOrWhiteSpace(dto.Name))
+        {
+            return ApiResponse<CategoryDto>.Fail("Ten the loai khong duoc de trong!");
+        }
+
         // Kiem tra the loai can cap nhat co ton tai trong he thong khong
         var category = await _categoryRepo.GetByIdAsync(id);
         if (category == null)
@@ -66,16 +80,18 @@ public class CategoryService : ICategoryService
             return ApiResponse<CategoryDto>.Fail("Khong tim thay the loai!");
         }
 
+        var trimmedName = dto.Name.Trim();
+
         // Kiem tra trung lap ten voi the loai khac (loai tru chinh no)
-        bool nameExists = await _categoryRepo.ExistsByNameAsync(dto.Name, id);
+        bool nameExists = await _categoryRepo.ExistsByNameAsync(trimmedName, id);
         if (nameExists)
         {
             return ApiResponse<CategoryDto>.Fail("Ten the loai da ton tai!");
         }
 
         // Cap nhat cac truong du lieu va ghi xuong co so du lieu
-        category.Name = dto.Name;
-        category.Description = dto.Description;
+        category.Name = trimmedName;
+        category.Description = dto.Description?.Trim();
 
         _categoryRepo.Update(category);
         await _categoryRepo.SaveChangesAsync();
