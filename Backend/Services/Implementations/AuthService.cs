@@ -1,4 +1,4 @@
-﻿using BCrypt.Net;
+using BCrypt.Net;
 using CineStream.DTOs.Auth;
 using CineStream.DTOs.Common;
 using CineStream.Models;
@@ -21,29 +21,24 @@ public class AuthService : IAuthService
 
     public async Task<ApiResponse<AuthResponseDto>> RegisterAsync(RegisterRequestDto request)
     {
-        // Kiểm tra email đã có người dùng chưa
-        //kiểm tra xem eamil có trùng ko
+        // Kiểm tra tính duy nhất của Email trong hệ thống
         bool emailExists = await _userRepo.EmailExistsAsync(request.Email);
-        //nếu có thì từ chối đăng ký
         if (emailExists)
         {
             return ApiResponse<AuthResponseDto>.Fail("Email đã được sử dụng");
         }
 
-        //Kiểm tra username đã có người dùng chưa
-        //kiểm tra xem eamil có trùng ko
+        // Kiểm tra tính duy nhất của Username để tránh xung đột dữ liệu
         bool usernameExists = await _userRepo.UsernameExistsAsync(request.Username);
-        //nếu có thì từ chối đăng ký
         if (usernameExists)
         {
-            return ApiResponse<AuthResponseDto>.Fail("Name đã được sử dụng");
+            return ApiResponse<AuthResponseDto>.Fail("Tên đăng nhập đã được sử dụng");
         }
 
-        //Băm mật khẩu bằng BCrypt
+        // Mã hóa mật khẩu một chiều sử dụng thuật toán BCrypt
         string hashedPassword = BCrypt.Net.BCrypt.HashPassword(request.Password);
 
-        //Khởi tạo đối tượng User mới
-
+        // Khởi tạo thực thể User kèm Profile mặc định và lưu vào cơ sở dữ liệu
         var user = new User
         {
             Username = request.Username,
@@ -54,8 +49,7 @@ public class AuthService : IAuthService
         };
         await _userRepo.AddAsync(user);
 
-
-        // Sinh JWT Token và đóng gói dữ liệu trả về
+        // Tạo JWT Token xác thực và đóng gói dữ liệu phản hồi
         string token = _jwtService.GenerateToken(user);
         var response = new AuthResponseDto
         {
@@ -63,28 +57,27 @@ public class AuthService : IAuthService
             ExpiresAt = DateTime.UtcNow.AddHours(1),
             User = MapToUserDto(user)
         };
+
         return ApiResponse<AuthResponseDto>.Ok(response, "Đăng ký tài khoản thành công!");
     }
 
     public async Task<ApiResponse<AuthResponseDto>> LoginAsync(LoginRequestDto request)
     {
-
-        //Tìm user trong DB theo Email hoặc Username
-
+        // Tìm kiếm tài khoản người dùng theo Email hoặc Username
         var user = await _userRepo.GetByEmailOrUsernameAsync(request.UsernameOrEmail);
         if (user == null)
         {
-            return ApiResponse<AuthResponseDto>.Fail("tài khoản hoặc mật khẩu không chính xác !");
+            return ApiResponse<AuthResponseDto>.Fail("Tài khoản hoặc mật khẩu không chính xác!");
         }
 
-        // So sánh mật khẩu người dùng nhập vào với PasswordHash trong DB
+        // Xác thực mật khẩu người dùng nhập vào với chuỗi băm lưu trong cơ sở dữ liệu
         bool isPasswordValid = BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash);
         if (!isPasswordValid)
         {
-            return ApiResponse<AuthResponseDto>.Fail("Tài khoản hoặc mật khẩu không chính xác");
+            return ApiResponse<AuthResponseDto>.Fail("Tài khoản hoặc mật khẩu không chính xác!");
         }
 
-        // Tạo JWT Token và trả về thành công
+        // Khởi tạo JWT Token có thời hạn và đóng gói thông tin đăng nhập thành công
         string token = _jwtService.GenerateToken(user);
         var response = new AuthResponseDto
         {
@@ -92,12 +85,13 @@ public class AuthService : IAuthService
             ExpiresAt = DateTime.UtcNow.AddHours(1),
             User = MapToUserDto(user)
         };
+
         return ApiResponse<AuthResponseDto>.Ok(response, "Đăng nhập thành công!");
     }
 
     public async Task<ApiResponse<UserDto>> GetCurrentUserAsync(int userId)
     {
-        //Lấy thông tin user kèm profile qua ID
+        // Truy vấn thông tin người dùng kèm hồ sơ cá nhân theo định danh
         var user = await _userRepo.GetWithProfileAsync(userId);
         if (user == null)
         {
@@ -107,7 +101,7 @@ public class AuthService : IAuthService
         return ApiResponse<UserDto>.Ok(MapToUserDto(user));
     }
 
-    //  Hàm tiện ích dùng chung: Chuyển đổi từ Model User sang UserDto (không làm lộ PasswordHash)
+    // Ánh xạ thực thể User sang UserDto nhằm bảo mật, loại trừ trường thông tin nhạy cảm PasswordHash
     private static UserDto MapToUserDto(User user)
     {
         return new UserDto
