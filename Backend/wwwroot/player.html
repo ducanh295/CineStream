@@ -213,7 +213,8 @@
             if (isHls && Hls.isSupported()) {
                 hlsInstance = new Hls({
                     enableWorker: true,
-                    lowLatencyMode: true
+                    lowLatencyMode: false,
+                    startPosition: 0
                 });
 
                 hlsInstance.loadSource(url);
