@@ -31,7 +31,7 @@ public class MovieService : IMovieService
             movies = await _movieRepo.GetAllWithCategoriesAsync();
         }
 
-        // Neu client truyen tu khoa tim kiem thi loc tiep theo tieu de phim
+        // Neu client truyen tu khoa tim kiem thi loc tiep theo tieu de phim khong phan biet hoa thuong
         if (!string.IsNullOrWhiteSpace(search))
         {
             var keyword = search.Trim().ToLower();
@@ -56,22 +56,94 @@ public class MovieService : IMovieService
         return ApiResponse<MovieDetailDto>.Ok(MapToMovieDetailDto(movie));
     }
 
-    public Task<ApiResponse<MovieDetailDto>> CreateAsync(CreateMovieDto dto)
+    public async Task<ApiResponse<MovieDetailDto>> CreateAsync(CreateMovieDto dto)
     {
-        // Phuong thuc nay se duoc trien khai chi tiet trong Step 2.3
-        throw new NotImplementedException();
+        // Kiem tra tinh hop le cua tieu de phim
+        if (string.IsNullOrWhiteSpace(dto.Title))
+        {
+            return ApiResponse<MovieDetailDto>.Fail("Tieu de phim khong duoc de trong!");
+        }
+
+        var trimmedTitle = dto.Title.Trim();
+
+        // Khoi tao thuc the Movie kem cac the loai lien ket trong bang trung gian
+        var movie = new Movie
+        {
+            Title = trimmedTitle,
+            Description = dto.Description?.Trim(),
+            PosterUrl = dto.PosterUrl?.Trim(),
+            VideoUrl = dto.VideoUrl?.Trim(),
+            VideoStatus = !string.IsNullOrWhiteSpace(dto.VideoUrl) ? 1 : 0,
+            TrailerUrl = dto.TrailerUrl?.Trim(),
+            Duration = dto.Duration,
+            ReleaseYear = dto.ReleaseYear,
+            Type = dto.Type,
+            MovieCategories = dto.CategoryIds?
+                .Distinct()
+                .Select(catId => new MovieCategory { CategoryId = catId })
+                .ToList() ?? new List<MovieCategory>()
+        };
+
+        await _movieRepo.AddAsync(movie);
+        await _movieRepo.SaveChangesAsync();
+
+        // Nap lai phim kem thong tin Category day du de tra ve cho client
+        var createdMovie = await _movieRepo.GetWithCategoriesAsync(movie.Id);
+        return ApiResponse<MovieDetailDto>.Ok(MapToMovieDetailDto(createdMovie!), "Tao phim thanh cong!");
     }
 
-    public Task<ApiResponse<MovieDetailDto>> UpdateAsync(int id, UpdateMovieDto dto)
+    public async Task<ApiResponse<MovieDetailDto>> UpdateAsync(int id, UpdateMovieDto dto)
     {
-        // Phuong thuc nay se duoc trien khai chi tiet trong Step 2.3
-        throw new NotImplementedException();
+        // Kiem tra tinh hop le cua tieu de phim
+        if (string.IsNullOrWhiteSpace(dto.Title))
+        {
+            return ApiResponse<MovieDetailDto>.Fail("Tieu de phim khong duoc de trong!");
+        }
+
+        // Kiem tra bo phim can cap nhat co ton tai khong
+        var movie = await _movieRepo.GetByIdAsync(id);
+        if (movie == null)
+        {
+            return ApiResponse<MovieDetailDto>.Fail("Khong tim thay phim!");
+        }
+
+        // Cap nhat cac truong thong tin cua phim
+        movie.Title = dto.Title.Trim();
+        movie.Description = dto.Description?.Trim();
+        movie.PosterUrl = dto.PosterUrl?.Trim();
+        movie.VideoUrl = dto.VideoUrl?.Trim();
+        movie.VideoStatus = dto.VideoStatus != 0 ? dto.VideoStatus : (!string.IsNullOrWhiteSpace(dto.VideoUrl) ? 1 : 0);
+        movie.TrailerUrl = dto.TrailerUrl?.Trim();
+        movie.Duration = dto.Duration;
+        movie.ReleaseYear = dto.ReleaseYear;
+        movie.Type = dto.Type;
+
+        _movieRepo.Update(movie);
+
+        // Dong bo lai danh sach the loai trong bang trung gian MovieCategories
+        if (dto.CategoryIds != null)
+        {
+            await _movieRepo.UpdateMovieCategoriesAsync(id, dto.CategoryIds.Distinct().ToList());
+        }
+
+        await _movieRepo.SaveChangesAsync();
+
+        // Nap lai thong tin phim sau khi cap nhat de tra ve ket qua day du
+        var updatedMovie = await _movieRepo.GetWithCategoriesAsync(id);
+        return ApiResponse<MovieDetailDto>.Ok(MapToMovieDetailDto(updatedMovie!), "Cap nhat phim thanh cong!");
     }
 
-    public Task<ApiResponse<bool>> DeleteAsync(int id)
+    public async Task<ApiResponse<bool>> DeleteAsync(int id)
     {
-        // Phuong thuc nay se duoc trien khai chi tiet trong Step 2.3
-        throw new NotImplementedException();
+        // Thuc hien xoa mem bo phim theo dinh danh
+        bool deleted = await _movieRepo.DeleteAsync(id);
+        if (!deleted)
+        {
+            return ApiResponse<bool>.Fail("Khong tim thay phim!");
+        }
+
+        await _movieRepo.SaveChangesAsync();
+        return ApiResponse<bool>.Ok(true, "Xoa phim thanh cong!");
     }
 
     // Anh xa thuc the Movie sang MovieDto (an VideoUrl de toi uu bang thong)
@@ -99,7 +171,7 @@ public class MovieService : IMovieService
         };
     }
 
-    // Anh xa thuc the Movie sang MovieDetailDto (chua VideoUrl va CreatedAt)
+    // Anh xa thuc the Movie sang MovieDetailDto (chua day du VideoUrl va CreatedAt)
     private static MovieDetailDto MapToMovieDetailDto(Movie movie)
     {
         return new MovieDetailDto
