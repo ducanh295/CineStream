@@ -1,4 +1,4 @@
-﻿using System.Security.Claims;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using CineStream.DTOs.Auth;
@@ -60,5 +60,13 @@ public class AuthController : ControllerBase
             return NotFound(result);
         }
         return Ok(result);
+    }
+
+    // Yêu cầu quyền Quản trị viên theo Authorization Policy AdminOnly
+    [Authorize(Policy = "AdminOnly")]
+    [HttpGet("admin-check")]
+    public ActionResult<ApiResponse<string>> AdminCheck()
+    {
+        return Ok(ApiResponse<string>.Ok("Xác thực quyền Quản trị viên thành công!"));
     }
 }

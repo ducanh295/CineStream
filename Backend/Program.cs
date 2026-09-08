@@ -11,7 +11,9 @@ using CineStream.Repositories.Interfaces;
 using CineStream.Services.Implementations;
 using CineStream.Services.Interfaces;
 using CineStream.DTOs.Common;
+using CineStream.Models.Enums;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -71,11 +73,20 @@ builder.Services.AddAuthentication(options =>
         ValidateIssuerSigningKey = true,
         ValidIssuer = jwtIssuer,
         ValidAudience = jwtAudience,
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
+        RoleClaimType = ClaimTypes.Role
     };
 });
 
-// 6. Cấu hình CORS cho Frontend (Flutter + React Admin)
+// 6. Cấu hình Authorization Policy
+builder.Services.AddAuthorization(options =>
+{
+    // Chính sách AdminOnly yêu cầu người dùng phải có vai trò Quản trị viên (Admin)
+    options.AddPolicy("AdminOnly", policy =>
+        policy.RequireRole(UserRole.Admin.ToString()));
+});
+
+// 7. Cấu hình CORS cho Frontend (Flutter + React Admin)
 builder.Services.AddCors(option =>
 {
     option.AddPolicy("AllowAll", policy =>
