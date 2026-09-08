@@ -10,11 +10,27 @@ using CineStream.Repositories.Implementations;
 using CineStream.Repositories.Interfaces;
 using CineStream.Services.Implementations;
 using CineStream.Services.Interfaces;
+using CineStream.DTOs.Common;
+using Microsoft.AspNetCore.Mvc;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 1. Thêm Controllers & OpenAPI
-builder.Services.AddControllers();
+// 1. Thêm Controllers với cấu hình chuẩn hóa phản hồi lỗi Validation & OpenAPI
+builder.Services.AddControllers()
+    .ConfigureApiBehaviorOptions(options =>
+    {
+        // Chuẩn hóa phản hồi lỗi ModelState Validation theo định dạng ApiResponse thống nhất
+        options.InvalidModelStateResponseFactory = context =>
+        {
+            var errors = context.ModelState
+                .Where(e => e.Value?.Errors.Count > 0)
+                .SelectMany(e => e.Value!.Errors.Select(x => x.ErrorMessage))
+                .ToList();
+            var message = errors.FirstOrDefault() ?? "Du lieu dau vao khong hop le!";
+            var response = ApiResponse<object>.Fail(message, errors);
+            return new BadRequestObjectResult(response);
+        };
+    });
 builder.Services.AddOpenApi();
 
 // 2. Kết nối Database PostgreSQL
