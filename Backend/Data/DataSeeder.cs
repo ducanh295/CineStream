@@ -83,29 +83,30 @@ public static class DataSeeder
         {
             new Movie
             {
-                Title = "Tears of Steel (Chiến Binh Thép)",
-                Description = "Trong tương lai viễn tưởng, một nhóm các nhà khoa học cố gắng thay đổi quá khứ để cứu nhân loại.",
+                Title = "Quan Xẩm Lốc Cốc (Châu Tinh Trì)",
+                Description = "Phim hài hành động kinh điển của Châu Tinh Trì, phát sóng chuẩn HLS Adaptive Bitrate.",
                 PosterUrl = "https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=600",
                 TrailerUrl = "https://www.youtube.com/watch?v=R6MlUcmOul8",
-                VideoUrl = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4",
-                Duration = 12,
-                ReleaseYear = 2024,
+                VideoUrl = "http://localhost:5182/videos/1/master.m3u8",
+                Duration = 106,
+                ReleaseYear = 1994,
                 Type = MovieType.Single,
                 VideoStatus = 1,
                 MovieCategories = new List<MovieCategory>
                 {
+                    new MovieCategory { CategoryId = 1 },
                     new MovieCategory { CategoryId = 2 }
                 }
             },
             new Movie
             {
-                Title = "Big Buck Bunny",
-                Description = "Bộ phim hoạt hình kinh điển kể về cuộc trả thù hài hước của chú thỏ khổng lồ đối với ba kẻ bắt nạt trong rừng.",
+                Title = "Gettr Sample Video (CDN Direct MP4)",
+                Description = "Đoạn phim mẫu chất lượng cao phát trực tiếp từ máy chủ mạng phân phối nội dung CDN Gettr.",
                 PosterUrl = "https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?w=600",
                 TrailerUrl = "https://www.youtube.com/watch?v=aqz-KE-bpKQ",
-                VideoUrl = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
-                Duration = 10,
-                ReleaseYear = 2023,
+                VideoUrl = "https://media.gettr.com/group5/getter/2026/09/03/15/d7ba41f2-d24f-826f-5a50-eeede8c36074/6b38c8a6e89c85f9cb2c83f43311c4a2.mp4",
+                Duration = 1,
+                ReleaseYear = 2026,
                 Type = MovieType.Single,
                 VideoStatus = 1,
                 MovieCategories = new List<MovieCategory>

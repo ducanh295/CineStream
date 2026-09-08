@@ -36,6 +36,18 @@ public class MoviesController : ControllerBase
         return Ok(result);
     }
 
+    // GET /api/movies/{id}/playback - Lay thong tin luong phat video chuyen biet cho Player (ho tro ca HLS va CDN Direct MP4)
+    [HttpGet("{id}/playback")]
+    public async Task<ActionResult<ApiResponse<MoviePlaybackDto>>> GetPlayback(int id)
+    {
+        var result = await _movieService.GetPlaybackAsync(id);
+        if (!result.Success)
+        {
+            return NotFound(result);
+        }
+        return Ok(result);
+    }
+
     // POST /api/movies - Tao moi mot bo phim kem danh sach the loai lien ket
     [HttpPost]
     public async Task<ActionResult<ApiResponse<MovieDetailDto>>> Create([FromBody] CreateMovieDto dto)

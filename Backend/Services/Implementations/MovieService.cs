@@ -146,6 +146,44 @@ public class MovieService : IMovieService
         return ApiResponse<bool>.Ok(true, "Xoa phim thanh cong!");
     }
 
+    // Lay thong tin luong phat video chuyen biet cho Player (ho tro ca HLS va CDN Direct MP4)
+    public async Task<ApiResponse<MoviePlaybackDto>> GetPlaybackAsync(int id)
+    {
+        var movie = await _movieRepo.GetByIdAsync(id);
+        if (movie == null)
+        {
+            return ApiResponse<MoviePlaybackDto>.Fail("Khong tim thay phim!");
+        }
+
+        var playbackDto = new MoviePlaybackDto
+        {
+            MovieId = movie.Id,
+            Title = movie.Title,
+            StreamUrl = movie.VideoUrl,
+            StreamType = DetermineStreamType(movie.VideoUrl),
+            VideoStatus = movie.VideoStatus,
+            Duration = movie.Duration
+        };
+
+        return ApiResponse<MoviePlaybackDto>.Ok(playbackDto, "Lay thong tin luong phat thanh cong!");
+    }
+
+    // Xac dinh loai luong phat dua vao dinh dang URL video
+    private static string DetermineStreamType(string? videoUrl)
+    {
+        if (string.IsNullOrWhiteSpace(videoUrl))
+        {
+            return "NONE";
+        }
+
+        if (videoUrl.Contains(".m3u8", StringComparison.OrdinalIgnoreCase))
+        {
+            return "HLS";
+        }
+
+        return "DIRECT_MP4";
+    }
+
     // Anh xa thuc the Movie sang MovieDto (an VideoUrl de toi uu bang thong)
     private static MovieDto MapToMovieDto(Movie movie)
     {
@@ -186,6 +224,7 @@ public class MovieService : IMovieService
             Type = movie.Type,
             VideoStatus = movie.VideoStatus,
             VideoUrl = movie.VideoUrl,
+            StreamType = DetermineStreamType(movie.VideoUrl),
             CreatedAt = movie.CreatedAt,
             Categories = movie.MovieCategories
                 .Where(mc => mc.Category != null)
