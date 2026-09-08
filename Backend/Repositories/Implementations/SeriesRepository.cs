@@ -13,7 +13,7 @@ public class SeriesRepository : BaseRepository<Series>, ISeriesRepository
 
     public async Task<Series?> GetWithDetailsAsync(int id)
     {
-        // 💡 Load cấu trúc lồng nhau: Series -> Seasons -> Episodes có sắp xếp theo thứ tự
+        //  Load cấu trúc lồng nhau: Series -> Seasons -> Episodes có sắp xếp theo thứ tự
         return await _dbSet
             .Include(s => s.Seasons.OrderBy(sn => sn.SeasonNumber))
                 .ThenInclude(sn => sn.Episodes.OrderBy(e => e.EpisodeNumber))

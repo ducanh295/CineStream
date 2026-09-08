@@ -16,7 +16,7 @@ public class FavoriteRepository : IFavoriteRepository
 
     public async Task<IReadOnlyList<Favorite>> GetByUserIdAsync(int userId)
     {
-        // 💡 Load danh sách phim yêu thích kèm thông tin Movie, sắp xếp theo thời gian thêm mới nhất
+        //  Load danh sách phim yêu thích kèm thông tin Movie, sắp xếp theo thời gian thêm mới nhất
         return await _context.Favorites
             .AsNoTracking()
             .Include(f => f.Movie)

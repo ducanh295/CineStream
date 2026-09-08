@@ -13,7 +13,7 @@ public class MovieRepository : BaseRepository<Movie>, IMovieRepository
 
     public async Task<Movie?> GetWithCategoriesAsync(int id)
     {
-        // 💡 Include bảng liên kết MovieCategory và bảng Category để nạp thông tin thể loại
+        //  Include bảng liên kết MovieCategory và bảng Category để nạp thông tin thể loại
         return await _dbSet
             .Include(m => m.MovieCategories)
                 .ThenInclude(mc => mc.Category)
@@ -43,15 +43,15 @@ public class MovieRepository : BaseRepository<Movie>, IMovieRepository
 
     public async Task UpdateMovieCategoriesAsync(int movieId, List<int> categoryIds)
     {
-        // 💡 1. Lấy toàn bộ quan hệ thể loại cũ của phim này
+        //  1. Lấy toàn bộ quan hệ thể loại cũ của phim này
         var currentCategories = await _context.MovieCategories
             .Where(mc => mc.MovieId == movieId)
             .ToListAsync();
 
-        // 💡 2. Xóa các quan hệ cũ khỏi bảng trung gian
+        //  2. Xóa các quan hệ cũ khỏi bảng trung gian
         _context.MovieCategories.RemoveRange(currentCategories);
 
-        // 💡 3. Thêm các quan hệ thể loại mới
+        //  3. Thêm các quan hệ thể loại mới
         var newCategories = categoryIds.Select(catId => new MovieCategory
         {
             MovieId = movieId,

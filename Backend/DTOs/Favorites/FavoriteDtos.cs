@@ -1,6 +1,6 @@
 ﻿namespace CineStream.DTOs.Favorites;
 
-// 💡 DTO hiển thị danh sách phim yêu thích của user
+//  DTO hiển thị danh sách phim yêu thích của user
 public class FavoriteDto
 {
     public int MovieId { get; set; }
@@ -11,7 +11,7 @@ public class FavoriteDto
     public DateTime AddedAt { get; set; }
 }
 
-// 💡 DTO nhận vào khi bấm Thích phim
+//  DTO nhận vào khi bấm Thích phim
 public class AddFavoriteDto
 {
     public int MovieId { get; set; }

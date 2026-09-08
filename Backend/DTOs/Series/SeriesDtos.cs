@@ -1,6 +1,6 @@
 ﻿namespace CineStream.DTOs.Series;
 
-// 💡 DTO hiển thị từng tập phim
+// DTO hiển thị từng tập phim
 public class EpisodeDto
 {
     public int Id { get; set; }
@@ -29,7 +29,7 @@ public class UpdateEpisodeDto
     public int? Duration { get; set; }
 }
 
-// 💡 DTO hiển thị mùa phim kèm các tập
+// DTO hiển thị mùa phim kèm các tập
 public class SeasonDto
 {
     public int Id { get; set; }
@@ -51,7 +51,7 @@ public class UpdateSeasonDto
     public string? Title { get; set; }
 }
 
-// 💡 DTO danh sách phim bộ ngoài trang chủ
+// DTO danh sách phim bộ ngoài trang chủ
 public class SeriesDto
 {
     public int Id { get; set; }
@@ -63,7 +63,7 @@ public class SeriesDto
     public int TotalSeasons { get; set; }
 }
 
-// 💡 DTO chi tiết phim bộ kèm toàn bộ các mùa và tập
+// DTO chi tiết phim bộ kèm toàn bộ các mùa và tập
 public class SeriesDetailDto : SeriesDto
 {
     public List<SeasonDto> Seasons { get; set; } = new();
