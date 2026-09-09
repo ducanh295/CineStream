@@ -10,6 +10,6 @@ public class Series : BaseEntity
     public string? TrailerUrl { get; set; }
     public int? ReleaseYear { get; set; }
 
-    // 💡 1 Series có nhiều Season (Mùa phim)
+    // 1 Series có nhiều Season (Mùa phim)
     public virtual ICollection<Season> Seasons { get; set; } = new List<Season>();
 }

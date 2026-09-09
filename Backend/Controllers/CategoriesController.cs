@@ -17,7 +17,7 @@ public class CategoriesController : ControllerBase
         _categoryService = categoryService;
     }
 
-    // GET /api/categories - Lay toan bo danh sach the loai
+    // GET /api/categories - Lấy toàn bộ danh sách thể loại
     [HttpGet]
     public async Task<ActionResult<ApiResponse<IReadOnlyList<CategoryDto>>>> GetAll()
     {
@@ -25,7 +25,7 @@ public class CategoriesController : ControllerBase
         return Ok(result);
     }
 
-    // GET /api/categories/{id} - Lay chi tiet mot the loai theo dinh danh
+    // GET /api/categories/{id} - Lấy chi tiết một thể loại theo định danh
     [HttpGet("{id}")]
     public async Task<ActionResult<ApiResponse<CategoryDto>>> GetById(int id)
     {

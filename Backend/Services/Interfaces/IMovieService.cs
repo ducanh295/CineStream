@@ -3,24 +3,24 @@ using CineStream.DTOs.Movies;
 
 namespace CineStream.Services.Interfaces;
 
-// Giao dien dich vu quan ly phim le, dinh nghia cac thao tac nghiep vu CRUD va tim kiem/loc
+// Giao diện dịch vụ quản lý phim lẻ, định nghĩa các thao tác nghiệp vụ CRUD, tìm kiếm và lọc dữ liệu
 public interface IMovieService
 {
-    // Lay danh sach phim le, ho tro loc theo the loai va tim kiem theo ten phim
+    // Lấy danh sách phim lẻ, hỗ trợ lọc theo thể loại và tìm kiếm theo tên phim
     Task<ApiResponse<IReadOnlyList<MovieDto>>> GetAllAsync(int? categoryId = null, string? search = null);
 
-    // Lay thong tin chi tiet cua mot bo phim theo dinh danh, bao gom duong dan video phat stream
+    // Lấy thông tin chi tiết của một bộ phim theo định danh, bao gồm đường dẫn video phát stream
     Task<ApiResponse<MovieDetailDto>> GetByIdAsync(int id);
 
-    // Tao moi mot bo phim kem theo danh sach the loai duoc chon
+    // Tạo mới một bộ phim kèm theo danh sách thể loại được chọn
     Task<ApiResponse<MovieDetailDto>> CreateAsync(CreateMovieDto dto);
 
-    // Cap nhat thong tin phim va danh sach the loai tuong ung
+    // Cập nhật thông tin phim và danh sách thể loại tương ứng
     Task<ApiResponse<MovieDetailDto>> UpdateAsync(int id, UpdateMovieDto dto);
 
-    // Lay thong tin luong phat video chuyen biet cho Player (ho tro ca HLS va CDN Direct MP4)
+    // Lấy thông tin luồng phát video chuyên biệt cho trình phát Player (hỗ trợ cả HLS và CDN Direct MP4)
     Task<ApiResponse<MoviePlaybackDto>> GetPlaybackAsync(int id);
 
-    // Xoa mem mot bo phim theo dinh danh
+    // Xóa mềm một bộ phim theo định danh
     Task<ApiResponse<bool>> DeleteAsync(int id);
 }

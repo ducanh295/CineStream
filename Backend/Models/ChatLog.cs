@@ -1,4 +1,4 @@
-﻿namespace CineStream.Models;
+namespace CineStream.Models;
 
 public class ChatLog : BaseEntity
 {
@@ -6,6 +6,6 @@ public class ChatLog : BaseEntity
     public string Message { get; set; } = string.Empty;
     public bool IsFromAI { get; set; } = false;
 
-    // 💡 Navigation Property trỏ về User gửi tin nhắn
+    // Quan hệ điều hướng (Navigation Property) tới người dùng sở hữu đoạn chat
     public virtual User User { get; set; } = null!;
 }

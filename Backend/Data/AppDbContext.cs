@@ -1,11 +1,11 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using CineStream.Models;
 
 namespace CineStream.Data;
 
 public class AppDbContext : DbContext
 {
-    //khai báo các bảng
+    // Khai báo các bảng dữ liệu trong hệ thống CineStream
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
     public DbSet<User> Users => Set<User>();
     public DbSet<Profile> Profiles => Set<Profile>();
@@ -28,9 +28,11 @@ public class AppDbContext : DbContext
         base.OnModelCreating(modelBuilder);
 
         modelBuilder.Entity<MovieCategory>().HasKey(mc => new { mc.MovieId, mc.CategoryId });
-        //Favorite: mỗi user chỉ được thích 1 bộ phim 1 lần
+
+        // Ràng buộc Favorite: Mỗi người dùng chỉ được đánh dấu yêu thích một bộ phim một lần
         modelBuilder.Entity<Favorite>().HasKey(f => new { f.UserId, f.MovieId });
-        // bắt trùng email hoặc username
+
+        // Ràng buộc chỉ mục duy nhất: Ngăn chặn trùng lặp Email hoặc Username
         modelBuilder.Entity<User>().HasIndex(u => u.Email).IsUnique();
 
         modelBuilder.Entity<User>().HasIndex(u => u.Username).IsUnique();
@@ -42,6 +44,10 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<Movie>().HasQueryFilter(m => !m.IsDeleted);
         modelBuilder.Entity<Category>().HasQueryFilter(c => !c.IsDeleted);
         modelBuilder.Entity<Series>().HasQueryFilter(s => !s.IsDeleted);
+        modelBuilder.Entity<ChatLog>().HasQueryFilter(cl => !cl.IsDeleted);
+
+        // Đánh chỉ mục cho UserId trong ChatLog để tối ưu hóa tốc độ truy vấn lịch sử trò chuyện
+        modelBuilder.Entity<ChatLog>().HasIndex(cl => cl.UserId);
     }
 
 }
