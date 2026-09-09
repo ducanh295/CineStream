@@ -17,7 +17,7 @@ public class CategoryService : ICategoryService
 
     public async Task<ApiResponse<IReadOnlyList<CategoryDto>>> GetAllAsync()
     {
-        // Truy van toan bo the loai tu tang du lieu va anh xa sang DTO
+        // Truy vấn toàn bộ thể loại từ tầng dữ liệu và ánh xạ sang DTO
         var categories = await _categoryRepo.GetAllAsync();
         var result = categories.Select(MapToDto).ToList().AsReadOnly();
         return ApiResponse<IReadOnlyList<CategoryDto>>.Ok(result);
@@ -25,7 +25,7 @@ public class CategoryService : ICategoryService
 
     public async Task<ApiResponse<CategoryDto>> GetByIdAsync(int id)
     {
-        // Tim the loai theo dinh danh, tra ve loi 404 neu khong ton tai
+        // Tìm thể loại theo định danh, trả về lỗi 404 nếu không tồn tại
         var category = await _categoryRepo.GetByIdAsync(id);
         if (category == null)
         {
@@ -37,7 +37,7 @@ public class CategoryService : ICategoryService
 
     public async Task<ApiResponse<CategoryDto>> CreateAsync(CreateCategoryDto dto)
     {
-        // Kiem tra du lieu dau vao khong duoc rong
+        // Kiểm tra dữ liệu đầu vào không được để trống
         if (string.IsNullOrWhiteSpace(dto.Name))
         {
             return ApiResponse<CategoryDto>.Fail("Ten the loai khong duoc de trong!");
@@ -45,14 +45,14 @@ public class CategoryService : ICategoryService
 
         var trimmedName = dto.Name.Trim();
 
-        // Kiem tra trung lap ten the loai truoc khi tao moi
+        // Kiểm tra trùng lặp tên thể loại trước khi tạo mới
         bool nameExists = await _categoryRepo.ExistsByNameAsync(trimmedName);
         if (nameExists)
         {
             return ApiResponse<CategoryDto>.Fail("Ten the loai da ton tai!");
         }
 
-        // Khoi tao thuc the Category tu du lieu dau vao va luu vao co so du lieu
+        // Khởi tạo thực thể Category từ dữ liệu đầu vào và lưu vào cơ sở dữ liệu
         var category = new Category
         {
             Name = trimmedName,
@@ -67,13 +67,13 @@ public class CategoryService : ICategoryService
 
     public async Task<ApiResponse<CategoryDto>> UpdateAsync(int id, UpdateCategoryDto dto)
     {
-        // Kiem tra du lieu dau vao khong duoc rong
+        // Kiểm tra dữ liệu đầu vào không được để trống
         if (string.IsNullOrWhiteSpace(dto.Name))
         {
             return ApiResponse<CategoryDto>.Fail("Ten the loai khong duoc de trong!");
         }
 
-        // Kiem tra the loai can cap nhat co ton tai trong he thong khong
+        // Kiểm tra thể loại cần cập nhật có tồn tại trong hệ thống không
         var category = await _categoryRepo.GetByIdAsync(id);
         if (category == null)
         {
@@ -82,14 +82,14 @@ public class CategoryService : ICategoryService
 
         var trimmedName = dto.Name.Trim();
 
-        // Kiem tra trung lap ten voi the loai khac (loai tru chinh no)
+        // Kiểm tra trùng lặp tên với thể loại khác (loại trừ chính nó)
         bool nameExists = await _categoryRepo.ExistsByNameAsync(trimmedName, id);
         if (nameExists)
         {
             return ApiResponse<CategoryDto>.Fail("Ten the loai da ton tai!");
         }
 
-        // Cap nhat cac truong du lieu va ghi xuong co so du lieu
+        // Cập nhật các trường dữ liệu và ghi xuống cơ sở dữ liệu
         category.Name = trimmedName;
         category.Description = dto.Description?.Trim();
 
@@ -101,7 +101,7 @@ public class CategoryService : ICategoryService
 
     public async Task<ApiResponse<bool>> DeleteAsync(int id)
     {
-        // Thuc hien xoa mem the loai theo dinh danh
+        // Thực hiện xóa mềm thể loại theo định danh
         bool deleted = await _categoryRepo.DeleteAsync(id);
         if (!deleted)
         {
@@ -112,7 +112,7 @@ public class CategoryService : ICategoryService
         return ApiResponse<bool>.Ok(true, "Xoa the loai thanh cong!");
     }
 
-    // Anh xa thuc the Category sang CategoryDto de tra ve cho client
+    // Ánh xạ thực thể Category sang CategoryDto để trả về cho client
     private static CategoryDto MapToDto(Category category)
     {
         return new CategoryDto

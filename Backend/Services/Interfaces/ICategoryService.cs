@@ -3,21 +3,21 @@ using CineStream.DTOs.Common;
 
 namespace CineStream.Services.Interfaces;
 
-// Giao dien dich vu quan ly the loai phim, dinh nghia cac thao tac nghiep vu CRUD
+// Giao diện dịch vụ quản lý thể loại phim, định nghĩa các thao tác nghiệp vụ CRUD
 public interface ICategoryService
 {
-    // Lay toan bo danh sach the loai hien co trong he thong
+    // Lấy toàn bộ danh sách thể loại hiện có trong hệ thống
     Task<ApiResponse<IReadOnlyList<CategoryDto>>> GetAllAsync();
 
-    // Lay chi tiet mot the loai theo dinh danh
+    // Lấy chi tiết một thể loại theo định danh
     Task<ApiResponse<CategoryDto>> GetByIdAsync(int id);
 
-    // Tao moi mot the loai tu du lieu dau vao cua client
+    // Tạo mới một thể loại từ dữ liệu đầu vào của client
     Task<ApiResponse<CategoryDto>> CreateAsync(CreateCategoryDto dto);
 
-    // Cap nhat thong tin the loai theo dinh danh va du lieu moi
+    // Cập nhật thông tin thể loại theo định danh và dữ liệu mới
     Task<ApiResponse<CategoryDto>> UpdateAsync(int id, UpdateCategoryDto dto);
 
-    // Xoa mem the loai theo dinh danh
+    // Xóa mềm thể loại theo định danh
     Task<ApiResponse<bool>> DeleteAsync(int id);
 }

@@ -39,3 +39,8 @@ Backend/wwwroot/videos/
 *.ts
 *.m3u8
 
+# Scratch test files và internal docs
+Backend/scratch/
+**/scratch/
+Backend/docs/
+**/docs/

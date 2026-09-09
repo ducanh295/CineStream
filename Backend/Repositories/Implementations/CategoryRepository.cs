@@ -13,13 +13,13 @@ public class CategoryRepository : BaseRepository<Category>, ICategoryRepository
 
     public async Task<Category?> GetByNameAsync(string name)
     {
-        // Tim kiem the loai theo ten khong phan biet hoa thuong
+        // Tìm kiếm thể loại theo tên không phân biệt hoa thường
         return await _dbSet.FirstOrDefaultAsync(c => c.Name.ToLower() == name.ToLower());
     }
 
     public async Task<bool> ExistsByNameAsync(string name, int? excludeId = null)
     {
-        // Su dung IgnoreQueryFilters de kiem tra tren toan bo bang, tranh loi vi pham unique constraint database khi da co ban ghi bi xoa mem
+        // Sử dụng IgnoreQueryFilters để kiểm tra trên toàn bộ bảng, tránh lỗi vi phạm ràng buộc duy nhất (Unique Constraint) trong cơ sở dữ liệu khi đã có bản ghi bị xóa mềm
         var query = _dbSet.IgnoreQueryFilters().AsQueryable();
         if (excludeId.HasValue)
         {

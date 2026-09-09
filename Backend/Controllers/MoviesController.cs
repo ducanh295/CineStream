@@ -17,7 +17,7 @@ public class MoviesController : ControllerBase
         _movieService = movieService;
     }
 
-    // GET /api/movies?categoryId=X&search=Y - Lay danh sach phim, ho tro loc the loai va tim kiem theo ten
+    // GET /api/movies?categoryId=X&search=Y - Lấy danh sách phim, hỗ trợ lọc thể loại và tìm kiếm theo tên
     [HttpGet]
     public async Task<ActionResult<ApiResponse<IReadOnlyList<MovieDto>>>> GetAll([FromQuery] int? categoryId = null, [FromQuery] string? search = null)
     {
@@ -25,7 +25,7 @@ public class MoviesController : ControllerBase
         return Ok(result);
     }
 
-    // GET /api/movies/{id} - Lay chi tiet mot bo phim kem duong dan video phat stream
+    // GET /api/movies/{id} - Lấy chi tiết một bộ phim kèm đường dẫn video phát stream
     [HttpGet("{id}")]
     public async Task<ActionResult<ApiResponse<MovieDetailDto>>> GetById(int id)
     {
@@ -37,7 +37,7 @@ public class MoviesController : ControllerBase
         return Ok(result);
     }
 
-    // GET /api/movies/{id}/playback - Lay thong tin luong phat video chuyen biet cho Player (ho tro ca HLS va CDN Direct MP4)
+    // GET /api/movies/{id}/playback - Lấy thông tin luồng phát video chuyên biệt cho Player (hỗ trợ cả HLS và CDN Direct MP4)
     [HttpGet("{id}/playback")]
     public async Task<ActionResult<ApiResponse<MoviePlaybackDto>>> GetPlayback(int id)
     {

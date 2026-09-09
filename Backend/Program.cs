@@ -52,6 +52,10 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IMovieService, MovieService>();
 
+// Đăng ký GeminiOptions và dịch vụ trợ lý AI Điện ảnh (IAIService) với HttpClient
+builder.Services.Configure<CineStream.DTOs.AI.GeminiOptions>(builder.Configuration.GetSection("Gemini"));
+builder.Services.AddHttpClient<IAIService, AIService>();
+
 
 // 5. Cấu hình JWT Authentication
 var jwtKey = builder.Configuration["JWT:Key"] ?? "your-super-secret-key-at-least-32-characters-long";
@@ -99,7 +103,7 @@ builder.Services.AddCors(option =>
 
 var app = builder.Build();
 
-// 7. Global Exception Middleware
+// 7. Middleware xử lý ngoại lệ toàn cục (Global Exception Handling)
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 // 8. Scalar API Reference (Giao diện trực quan OpenAPI thay Swagger)
@@ -116,7 +120,7 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseCors("AllowAll");
 
-// Cau hinh phat luong video tinh HLS (.m3u8 va .ts) voi MIME type chuan
+// Cấu hình phát luồng video tĩnh HLS (.m3u8 và .ts) với MIME type chuẩn
 var contentTypeProvider = new FileExtensionContentTypeProvider();
 contentTypeProvider.Mappings[".m3u8"] = "application/vnd.apple.mpegurl";
 contentTypeProvider.Mappings[".ts"] = "video/mp2t";

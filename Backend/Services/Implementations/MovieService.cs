@@ -20,7 +20,7 @@ public class MovieService : IMovieService
 
     public async Task<ApiResponse<IReadOnlyList<MovieDto>>> GetAllAsync(int? categoryId = null, string? search = null)
     {
-        // Truy van danh sach phim, neu co categoryId thi loc theo the loai, nguoc lai lay toan bo
+        // Truy vấn danh sách phim, nếu có categoryId thì lọc theo thể loại, ngược lại lấy toàn bộ
         IReadOnlyList<Movie> movies;
         if (categoryId.HasValue)
         {
@@ -31,34 +31,34 @@ public class MovieService : IMovieService
             movies = await _movieRepo.GetAllWithCategoriesAsync();
         }
 
-        // Neu client truyen tu khoa tim kiem thi loc tiep theo tieu de phim khong phan biet hoa thuong
+        // Nếu client truyền từ khóa tìm kiếm thì lọc tiếp theo tiêu đề phim không phân biệt hoa thường
         if (!string.IsNullOrWhiteSpace(search))
         {
             var keyword = search.Trim().ToLower();
             movies = movies.Where(m => m.Title.ToLower().Contains(keyword)).ToList();
         }
 
-        // Anh xa danh sach thuc the sang MovieDto danh cho hien thi danh sach
+        // Ánh xạ danh sách thực thể sang MovieDto dành cho hiển thị danh sách
         var result = movies.Select(MapToMovieDto).ToList().AsReadOnly();
         return ApiResponse<IReadOnlyList<MovieDto>>.Ok(result);
     }
 
     public async Task<ApiResponse<MovieDetailDto>> GetByIdAsync(int id)
     {
-        // Tim phim theo ma dinh danh va nap kem danh sach the loai
+        // Tìm phim theo mã định danh và nạp kèm danh sách thể loại
         var movie = await _movieRepo.GetWithCategoriesAsync(id);
         if (movie == null)
         {
             return ApiResponse<MovieDetailDto>.Fail("Khong tim thay phim!");
         }
 
-        // Anh xa thuc the sang MovieDetailDto gom day du duong dan video phat stream
+        // Ánh xạ thực thể sang MovieDetailDto gồm đầy đủ đường dẫn video phát stream
         return ApiResponse<MovieDetailDto>.Ok(MapToMovieDetailDto(movie));
     }
 
     public async Task<ApiResponse<MovieDetailDto>> CreateAsync(CreateMovieDto dto)
     {
-        // Kiem tra tinh hop le cua tieu de phim
+        // Kiểm tra tính hợp lệ của tiêu đề phim
         if (string.IsNullOrWhiteSpace(dto.Title))
         {
             return ApiResponse<MovieDetailDto>.Fail("Tieu de phim khong duoc de trong!");
@@ -66,7 +66,7 @@ public class MovieService : IMovieService
 
         var trimmedTitle = dto.Title.Trim();
 
-        // Khoi tao thuc the Movie kem cac the loai lien ket trong bang trung gian
+        // Khởi tạo thực thể Movie kèm các thể loại liên kết trong bảng trung gian
         var movie = new Movie
         {
             Title = trimmedTitle,
@@ -87,27 +87,27 @@ public class MovieService : IMovieService
         await _movieRepo.AddAsync(movie);
         await _movieRepo.SaveChangesAsync();
 
-        // Nap lai phim kem thong tin Category day du de tra ve cho client
+        // Nạp lại phim kèm thông tin Category đầy đủ để trả về cho client
         var createdMovie = await _movieRepo.GetWithCategoriesAsync(movie.Id);
         return ApiResponse<MovieDetailDto>.Ok(MapToMovieDetailDto(createdMovie!), "Tao phim thanh cong!");
     }
 
     public async Task<ApiResponse<MovieDetailDto>> UpdateAsync(int id, UpdateMovieDto dto)
     {
-        // Kiem tra tinh hop le cua tieu de phim
+        // Kiểm tra tính hợp lệ của tiêu đề phim
         if (string.IsNullOrWhiteSpace(dto.Title))
         {
             return ApiResponse<MovieDetailDto>.Fail("Tieu de phim khong duoc de trong!");
         }
 
-        // Kiem tra bo phim can cap nhat co ton tai khong
+        // Kiểm tra bộ phim cần cập nhật có tồn tại không
         var movie = await _movieRepo.GetByIdAsync(id);
         if (movie == null)
         {
             return ApiResponse<MovieDetailDto>.Fail("Khong tim thay phim!");
         }
 
-        // Cap nhat cac truong thong tin cua phim
+        // Cập nhật các trường thông tin của phim
         movie.Title = dto.Title.Trim();
         movie.Description = dto.Description?.Trim();
         movie.PosterUrl = dto.PosterUrl?.Trim();
@@ -120,7 +120,7 @@ public class MovieService : IMovieService
 
         _movieRepo.Update(movie);
 
-        // Dong bo lai danh sach the loai trong bang trung gian MovieCategories
+        // Đồng bộ lại danh sách thể loại trong bảng trung gian MovieCategories
         if (dto.CategoryIds != null)
         {
             await _movieRepo.UpdateMovieCategoriesAsync(id, dto.CategoryIds.Distinct().ToList());
@@ -128,14 +128,14 @@ public class MovieService : IMovieService
 
         await _movieRepo.SaveChangesAsync();
 
-        // Nap lai thong tin phim sau khi cap nhat de tra ve ket qua day du
+        // Nạp lại thông tin phim sau khi cập nhật để trả về kết quả đầy đủ
         var updatedMovie = await _movieRepo.GetWithCategoriesAsync(id);
         return ApiResponse<MovieDetailDto>.Ok(MapToMovieDetailDto(updatedMovie!), "Cap nhat phim thanh cong!");
     }
 
     public async Task<ApiResponse<bool>> DeleteAsync(int id)
     {
-        // Thuc hien xoa mem bo phim theo dinh danh
+        // Thực hiện xóa mềm bộ phim theo định danh
         bool deleted = await _movieRepo.DeleteAsync(id);
         if (!deleted)
         {
@@ -146,7 +146,7 @@ public class MovieService : IMovieService
         return ApiResponse<bool>.Ok(true, "Xoa phim thanh cong!");
     }
 
-    // Lay thong tin luong phat video chuyen biet cho Player (ho tro ca HLS va CDN Direct MP4)
+    // Lấy thông tin luồng phát video chuyên biệt cho Player (hỗ trợ cả HLS và CDN Direct MP4)
     public async Task<ApiResponse<MoviePlaybackDto>> GetPlaybackAsync(int id)
     {
         var movie = await _movieRepo.GetByIdAsync(id);
@@ -168,7 +168,7 @@ public class MovieService : IMovieService
         return ApiResponse<MoviePlaybackDto>.Ok(playbackDto, "Lay thong tin luong phat thanh cong!");
     }
 
-    // Xac dinh loai luong phat dua vao dinh dang URL video
+    // Xác định loại luồng phát dựa vào định dạng URL video
     private static string DetermineStreamType(string? videoUrl)
     {
         if (string.IsNullOrWhiteSpace(videoUrl))
@@ -184,7 +184,7 @@ public class MovieService : IMovieService
         return "DIRECT_MP4";
     }
 
-    // Anh xa thuc the Movie sang MovieDto (an VideoUrl de toi uu bang thong)
+    // Ánh xạ thực thể Movie sang MovieDto (ẩn VideoUrl để tối ưu băng thông)
     private static MovieDto MapToMovieDto(Movie movie)
     {
         return new MovieDto
@@ -209,7 +209,7 @@ public class MovieService : IMovieService
         };
     }
 
-    // Anh xa thuc the Movie sang MovieDetailDto (chua day du VideoUrl va CreatedAt)
+    // Ánh xạ thực thể Movie sang MovieDetailDto (chứa đầy đủ VideoUrl và CreatedAt)
     private static MovieDetailDto MapToMovieDetailDto(Movie movie)
     {
         return new MovieDetailDto
