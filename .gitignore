@@ -23,6 +23,7 @@ AGENTS.md
 # Frontend (phòng sau này thêm vào)
 node_modules/
 dist/
+.env
 .env.local
 
 # Graphify knowledge graph (local only, do not push)
