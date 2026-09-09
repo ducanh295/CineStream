@@ -48,6 +48,7 @@ public class AuthService : IAuthService
             Profile = new Profile { DisplayName = request.Username }
         };
         await _userRepo.AddAsync(user);
+        await _userRepo.SaveChangesAsync();
 
         // Tạo JWT Token xác thực và đóng gói dữ liệu phản hồi
         string token = _jwtService.GenerateToken(user);
