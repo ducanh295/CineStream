@@ -25,7 +25,7 @@ const FieldRow = ({ label, hint, children }) => (
       <p className="text-slate-300 text-sm font-medium">{label}</p>
       {hint && <p className="text-slate-500 text-xs mt-0.5">{hint}</p>}
     </div>
-    <div className="flex-shrink-0">{children}</div>
+    <div className="shrink-0">{children}</div>
   </div>
 );
 
@@ -33,7 +33,7 @@ const ToggleSwitch = ({ checked, onChange }) => (
   <button
     type="button"
     onClick={() => onChange(!checked)}
-    className={`w-12 h-7 rounded-full transition-colors relative flex-shrink-0 ${checked ? 'bg-blue-600' : 'bg-slate-700'}`}
+    className={`w-12 h-7 rounded-full transition-colors relative shrink-0 ${checked ? 'bg-blue-600' : 'bg-slate-700'}`}
   >
     <span
       className={`absolute top-1 w-5 h-5 rounded-full bg-white transition-transform ${
@@ -91,7 +91,7 @@ const Settings = () => {
 
       <div className="flex flex-col lg:flex-row gap-6">
         {/* Tab menu */}
-        <div className="lg:w-64 flex-shrink-0">
+        <div className="lg:w-64 shrink-0">
           <div className="bg-slate-900 border border-slate-800 rounded-2xl p-2 flex lg:flex-col gap-1 overflow-x-auto">
             {TABS.map((tab) => (
               <button

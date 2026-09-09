@@ -256,7 +256,7 @@ const Movies = () => {
                   >
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-4">
-                        <div className="w-12 h-16 bg-slate-800 rounded-lg flex items-center justify-center border border-slate-700 group-hover:border-blue-500 transition-all overflow-hidden relative flex-shrink-0">
+                        <div className="w-12 h-16 bg-slate-800 rounded-lg flex items-center justify-center border border-slate-700 group-hover:border-blue-500 transition-all overflow-hidden relative shrink-0">
                           {movie.posterUrl ? (
                             <img src={movie.posterUrl} alt={movie.title} className="w-full h-full object-cover" />
                           ) : (
@@ -270,7 +270,7 @@ const Movies = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="flex flex-wrap gap-1 max-w-[200px]">
+                      <div className="flex flex-wrap gap-1 max-w-50">
                         {(movie.categories || []).length > 0 ? (
                           movie.categories.map((c) => (
                             <span key={c.id} className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20">

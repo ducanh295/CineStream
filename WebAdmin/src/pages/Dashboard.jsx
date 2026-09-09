@@ -126,7 +126,7 @@ const Dashboard = () => {
               {recentMovies.map((movie) => (
                 <div key={movie.id} className="flex items-center justify-between p-4 bg-slate-800/50 rounded-xl border border-slate-700/50 hover:border-blue-500/50 transition-all cursor-pointer">
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-16 bg-slate-700 rounded-lg overflow-hidden flex-shrink-0">
+                    <div className="w-12 h-16 bg-slate-700 rounded-lg overflow-hidden shrink-0">
                       {movie.posterUrl ? (
                         <img src={movie.posterUrl} alt={movie.title} className="w-full h-full object-cover" />
                       ) : null}

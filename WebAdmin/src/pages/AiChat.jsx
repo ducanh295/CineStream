@@ -140,7 +140,7 @@ const AiChat = () => {
                 className={`flex gap-3 ${msg.isFromAI ? 'flex-row' : 'flex-row-reverse'}`}
               >
                 <div
-                  className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 ${
+                  className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 ${
                     msg.isFromAI ? 'bg-blue-600' : 'bg-slate-700'
                   }`}
                 >
@@ -166,7 +166,7 @@ const AiChat = () => {
                           key={movie.id}
                           className="flex items-center gap-2 bg-slate-800/70 border border-slate-700 rounded-xl px-3 py-2"
                         >
-                          <div className="w-8 h-10 bg-slate-700 rounded overflow-hidden flex-shrink-0">
+                          <div className="w-8 h-10 bg-slate-700 rounded overflow-hidden shrink-0">
                             {movie.posterUrl ? (
                               <img src={movie.posterUrl} alt={movie.title} className="w-full h-full object-cover" />
                             ) : (
@@ -185,7 +185,7 @@ const AiChat = () => {
 
           {sending && (
             <div className="flex gap-3">
-              <div className="w-9 h-9 rounded-full bg-blue-600 flex items-center justify-center flex-shrink-0">
+              <div className="w-9 h-9 rounded-full bg-blue-600 flex items-center justify-center shrink-0">
                 <Bot size={18} className="text-white" />
               </div>
               <div className="px-4 py-3 rounded-2xl bg-slate-800 text-slate-400 rounded-tl-sm flex items-center gap-2">

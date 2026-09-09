@@ -121,7 +121,7 @@ const Users = () => {
               key={u.id}
               className="bg-slate-900 border border-slate-800 p-5 rounded-2xl flex items-center gap-4 hover:border-purple-500/50 transition-all group"
             >
-              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-slate-800 to-slate-700 flex items-center justify-center border-2 border-slate-800 group-hover:border-purple-500/50 transition-all overflow-hidden flex-shrink-0">
+              <div className="w-16 h-16 rounded-full bg-linear-to-br from-slate-800 to-slate-700 flex items-center justify-center border-2 border-slate-800 group-hover:border-purple-500/50 transition-all overflow-hidden shrink-0">
                 {u.profile?.avatarUrl ? (
                   <img src={u.profile.avatarUrl} alt={u.username} className="w-full h-full object-cover" />
                 ) : u.role === 1 ? (
@@ -134,12 +134,12 @@ const Users = () => {
               <div className="flex-1 min-w-0">
                 <h3 className="text-white font-bold truncate">{u.profile?.displayName || u.username}</h3>
                 <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 mt-1 text-slate-500 text-sm">
-                  <span className="flex items-center gap-1 truncate"><Mail size={14} className="flex-shrink-0" /> {u.email}</span>
-                  <span className="flex items-center gap-1 flex-shrink-0"><Calendar size={14} /> {formatDate(u.createdAt)}</span>
+                  <span className="flex items-center gap-1 truncate"><Mail size={14} className="shrink-0" /> {u.email}</span>
+                  <span className="flex items-center gap-1 shrink-0"><Calendar size={14} /> {formatDate(u.createdAt)}</span>
                 </div>
               </div>
 
-              <div className="flex flex-col items-end gap-2 flex-shrink-0">
+              <div className="flex flex-col items-end gap-2 shrink-0">
                 <span
                   className={`text-[10px] px-2 py-1 rounded-md font-bold border uppercase tracking-tighter ${
                     u.role === 1
