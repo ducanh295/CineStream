@@ -30,3 +30,16 @@ graphify-out/
 **/graphify-out/
 .graphify/
 **/.graphify/
+
+# Video streaming media (HLS .m3u8, .ts chunks và video gốc)
+Backend/wwwroot/videos/
+**/wwwroot/videos/
+*.mp4
+*.ts
+*.m3u8
+
+# Scratch test files và internal docs
+Backend/scratch/
+**/scratch/
+Backend/docs/
+**/docs/

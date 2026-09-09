@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using CineStream.Models;
 using CineStream.Models.Enums;
 
@@ -91,7 +91,11 @@ public static class DataSeeder
                 Duration = 12,
                 ReleaseYear = 2024,
                 Type = MovieType.Single,
-                VideoStatus = 1
+                VideoStatus = 1,
+                MovieCategories = new List<MovieCategory>
+                {
+                    new MovieCategory { CategoryId = 2 }
+                }
             },
             new Movie
             {
@@ -103,7 +107,11 @@ public static class DataSeeder
                 Duration = 10,
                 ReleaseYear = 2023,
                 Type = MovieType.Single,
-                VideoStatus = 1
+                VideoStatus = 1,
+                MovieCategories = new List<MovieCategory>
+                {
+                    new MovieCategory { CategoryId = 1 }
+                }
             }
         };
 
