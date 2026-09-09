@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { LayoutDashboard, Film, Users, CreditCard, MessageSquare, Settings, LogOut } from 'lucide-react';
+import { LayoutDashboard, Film, Tag, Users, CreditCard, MessageSquare, Settings, LogOut } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/useAuth';
 
@@ -7,6 +7,7 @@ const menuItems = [
   { icon: LayoutDashboard, label: 'Dashboard', path: '/' },
   { icon: Film, label: 'Phim & Series', path: '/movies' },
   { icon: Users, label: 'Người dùng', path: '/users' },
+  { icon: Tag, label: 'Thể loại', path: '/categories' },
   { icon: CreditCard, label: 'Gói dịch vụ', path: '/subscriptions' },
   { icon: MessageSquare, label: 'AI Chatbot', path: '/ai-chat' },
   { icon: Settings, label: 'Cấu hình', path: '/settings' },

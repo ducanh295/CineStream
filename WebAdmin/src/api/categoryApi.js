@@ -1,16 +1,20 @@
 import axiosInstance from './axios';
 
 const categoryApi = {
-  // Thể loại
-  getCategories: () => axiosInstance.get('/categories'),
-  createCategory: (data) => axiosInstance.post('/categories', data),
-  updateCategory: (id, data) => axiosInstance.put(`/categories/${id}`, data),
-  deleteCategory: (id) => axiosInstance.delete(`/categories/${id}`),
+  // GET /api/categories
+  getAll: () => axiosInstance.get('/categories'),
 
-  // Diễn viên (Actors)
-  getActors: (params) => axiosInstance.get('/actors', { params }),
-  addActor: (data) => axiosInstance.post('/actors', data),
-  updateActor: (id, data) => axiosInstance.put(`/actors/${id}`, data),
+  // GET /api/categories/{id}
+  getById: (id) => axiosInstance.get(`/categories/${id}`),
+
+  // POST /api/categories -> { name, description }
+  create: (data) => axiosInstance.post('/categories', data),
+
+  // PUT /api/categories/{id} -> { name, description }
+  update: (id, data) => axiosInstance.put(`/categories/${id}`, data),
+
+  // DELETE /api/categories/{id}
+  delete: (id) => axiosInstance.delete(`/categories/${id}`),
 };
 
 export default categoryApi;

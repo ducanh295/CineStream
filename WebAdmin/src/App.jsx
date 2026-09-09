@@ -6,10 +6,11 @@ import Dashboard from './pages/Dashboard';
 import Movies from './pages/Movies';
 import Users from './pages/Users';
 import Login from './pages/Login';
+import Categories from './pages/Categories';
+import AiChat from './pages/AiChat';
+import Subscriptions from './pages/Subscriptions';
+import Settings from './pages/Settings';
 
-const Subscriptions = () => <div className="p-8 text-white text-2xl font-bold">Quản lý Gói dịch vụ - Coming Soon</div>;
-const AiChat = () => <div className="p-8 text-white text-2xl font-bold">Hệ thống AI & Chatbot - Coming Soon</div>;
-const Settings = () => <div className="p-8 text-white text-2xl font-bold">Cấu hình hệ thống - Coming Soon</div>;
 
 function App() {
   return (
@@ -23,6 +24,7 @@ function App() {
               <Route index element={<Dashboard />} />
               <Route path="movies" element={<Movies />} />
               <Route path="users" element={<Users />} />
+              <Route path="categories" element={<Categories />} />
               <Route path="subscriptions" element={<Subscriptions />} />
               <Route path="ai-chat" element={<AiChat />} />
               <Route path="settings" element={<Settings />} />

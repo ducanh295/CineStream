@@ -1,7 +1,10 @@
+import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Users, Play, TrendingUp, DollarSign } from 'lucide-react';
+import { Users, DollarSign, Tag, Film, Loader2 } from 'lucide-react';
+import movieApi from '../api/movieApi';
+import categoryApi from '../api/categoryApi';
 
-const StatCard = ({ icon: Icon, label, value, color, delay }) => (
+const StatCard = ({ icon: Icon, label, value, color, delay, note }) => (
   <motion.div
     initial={{ opacity: 0, scale: 0.9 }}
     animate={{ opacity: 1, scale: 1 }}
@@ -18,14 +21,44 @@ const StatCard = ({ icon: Icon, label, value, color, delay }) => (
         <h3 className="text-2xl font-bold text-white mt-1">{value}</h3>
       </div>
     </div>
-    <div className="mt-4 flex items-center gap-2 text-green-400 text-sm">
-      <TrendingUp size={16} />
-      <span>+12.5% so với tháng trước</span>
+    <div className="mt-4 flex items-center gap-2 text-slate-500 text-xs">
+      <span>{note}</span>
     </div>
   </motion.div>
 );
 
 const Dashboard = () => {
+  const [movies, setMovies] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [errorMsg, setErrorMsg] = useState('');
+
+  const fetchDashboardData = useCallback(async () => {
+    setLoading(true);
+    setErrorMsg('');
+    try {
+      const [movieRes, categoryRes] = await Promise.all([
+        movieApi.getAll(),
+        categoryApi.getAll(),
+      ]);
+      setMovies(movieRes?.data || []);
+      setCategories(categoryRes?.data || []);
+    } catch (err) {
+      setErrorMsg(err.message || 'Không thể tải dữ liệu tổng quan. Vui lòng thử lại!');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    Promise.resolve().then(() => {
+      fetchDashboardData();
+    });
+  }, [fetchDashboardData]);
+
+  // Lấy 5 phim mới nhất theo thứ tự API trả về (giả định API trả theo id tăng dần / mới nhất trước)
+  const recentMovies = [...movies].slice(0, 5);
+
   return (
     <div className="space-y-8">
       <div>
@@ -33,46 +66,113 @@ const Dashboard = () => {
         <p className="text-slate-400 mt-1">Chào mừng bạn trở lại, đây là dữ liệu mới nhất hôm nay.</p>
       </div>
 
+      {errorMsg && (
+        <div className="bg-red-500/10 border border-red-500/20 text-red-400 text-sm p-3 rounded-xl">
+          {errorMsg}
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatCard icon={Users} label="Tổng thành viên" value="45,280" color="bg-blue-500" delay={0.1} />
-        <StatCard icon={Play} label="Lượt xem phim" value="1.2M" color="bg-purple-500" delay={0.2} />
-        <StatCard icon={DollarSign} label="Doanh thu" value="$84,200" color="bg-green-500" delay={0.3} />
-        <StatCard icon={TrendingUp} label="Gói đăng ký" value="12,500" color="bg-orange-500" delay={0.4} />
+        <StatCard
+          icon={Film}
+          label="Tổng số phim"
+          value={loading ? '...' : movies.length}
+          color="bg-blue-500"
+          delay={0.1}
+          note="Dữ liệu thật từ hệ thống"
+        />
+        <StatCard
+          icon={Tag}
+          label="Tổng thể loại"
+          value={loading ? '...' : categories.length}
+          color="bg-purple-500"
+          delay={0.2}
+          note="Dữ liệu thật từ hệ thống"
+        />
+        <StatCard
+          icon={DollarSign}
+          label="Doanh thu"
+          value="$84,200"
+          color="bg-green-500"
+          delay={0.3}
+          note="Dữ liệu mẫu — chờ API thống kê"
+        />
+        <StatCard
+          icon={Users}
+          label="Tổng thành viên"
+          value="45,280"
+          color="bg-orange-500"
+          delay={0.4}
+          note="Dữ liệu mẫu — chờ API Users"
+        />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 bg-slate-900 border border-slate-800 rounded-2xl p-6">
-          <h2 className="text-xl font-bold text-white mb-6">Phim thịnh hành gần đây</h2>
-          <div className="space-y-4">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="flex items-center justify-between p-4 bg-slate-800/50 rounded-xl border border-slate-700/50 hover:border-blue-500/50 transition-all cursor-pointer">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-16 bg-slate-700 rounded-lg animate-pulse"></div>
-                  <div>
-                    <h4 className="text-white font-semibold italic text-slate-500">Đang tải tên phim từ Backend...</h4>
-                    <p className="text-slate-400 text-sm">Hành động • 2h 15p</p>
+          <h2 className="text-xl font-bold text-white mb-6">Phim mới cập nhật</h2>
+
+          {loading ? (
+            <div className="flex flex-col items-center justify-center py-10 text-slate-500">
+              <Loader2 className="animate-spin mb-3" size={28} />
+              <p>Đang tải danh sách phim...</p>
+            </div>
+          ) : recentMovies.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-10 text-slate-500">
+              <Film size={32} className="mb-3 opacity-50" />
+              <p>Chưa có phim nào trong hệ thống.</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {recentMovies.map((movie) => (
+                <div key={movie.id} className="flex items-center justify-between p-4 bg-slate-800/50 rounded-xl border border-slate-700/50 hover:border-blue-500/50 transition-all cursor-pointer">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-16 bg-slate-700 rounded-lg overflow-hidden flex-shrink-0">
+                      {movie.posterUrl ? (
+                        <img src={movie.posterUrl} alt={movie.title} className="w-full h-full object-cover" />
+                      ) : null}
+                    </div>
+                    <div>
+                      <h4 className="text-white font-semibold">{movie.title}</h4>
+                      <p className="text-slate-400 text-sm">
+                        {(movie.categories || []).map((c) => c.name).join(', ') || 'Chưa gán thể loại'}
+                        {movie.duration ? ` • ${movie.duration} phút` : ''}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-blue-400 font-bold">{movie.releaseYear || '—'}</p>
                   </div>
                 </div>
-                <div className="text-right">
-                  <p className="text-blue-400 font-bold">8.5 IMDB</p>
-                  <p className="text-slate-500 text-xs">24k lượt xem</p>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
-        
+
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-          <h2 className="text-xl font-bold text-white mb-6">Hoạt động mới nhất</h2>
-          <div className="relative border-l border-slate-800 pl-6 space-y-6">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="relative">
-                <div className="absolute -left-[31px] top-0 w-2.5 h-2.5 rounded-full bg-blue-600 shadow-[0_0_10px_rgba(37,99,235,0.8)]"></div>
-                <p className="text-white text-sm font-medium italic text-slate-500">Admin vừa cập nhật phim mới</p>
-                <p className="text-slate-500 text-xs mt-1">10 phút trước</p>
-              </div>
-            ))}
-          </div>
+          <h2 className="text-xl font-bold text-white mb-6">Thể loại hiện có</h2>
+          {loading ? (
+            <div className="flex justify-center py-10 text-slate-500">
+              <Loader2 className="animate-spin" size={28} />
+            </div>
+          ) : categories.length === 0 ? (
+            <p className="text-slate-500 text-sm">Chưa có thể loại nào.</p>
+          ) : (
+            <div className="space-y-3">
+              {categories.map((cat) => {
+                const movieCount = movies.filter((m) =>
+                  (m.categories || []).some((c) => c.id === cat.id)
+                ).length;
+                return (
+                  <div key={cat.id} className="flex items-center justify-between">
+                    <span className="text-slate-300 text-sm">{cat.name}</span>
+                    <span className="text-slate-500 text-xs bg-slate-800 px-2 py-1 rounded-full">
+                      {movieCount} phim
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       </div>
     </div>
