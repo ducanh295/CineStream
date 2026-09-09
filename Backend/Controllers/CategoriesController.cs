@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using CineStream.DTOs.Categories;
 using CineStream.DTOs.Common;
@@ -36,7 +37,8 @@ public class CategoriesController : ControllerBase
         return Ok(result);
     }
 
-    // POST /api/categories - Tao the loai moi
+    // POST /api/categories - Tạo thể loại mới (Chỉ Quản trị viên)
+    [Authorize(Policy = "AdminOnly")]
     [HttpPost]
     public async Task<ActionResult<ApiResponse<CategoryDto>>> Create([FromBody] CreateCategoryDto dto)
     {
@@ -48,14 +50,15 @@ public class CategoriesController : ControllerBase
         return CreatedAtAction(nameof(GetById), new { id = result.Data!.Id }, result);
     }
 
-    // PUT /api/categories/{id} - Cap nhat the loai
+    // PUT /api/categories/{id} - Cập nhật thông tin thể loại (Chỉ Quản trị viên)
+    [Authorize(Policy = "AdminOnly")]
     [HttpPut("{id}")]
     public async Task<ActionResult<ApiResponse<CategoryDto>>> Update(int id, [FromBody] UpdateCategoryDto dto)
     {
         var result = await _categoryService.UpdateAsync(id, dto);
         if (!result.Success)
         {
-            // Neu khong tim thay the loai thi tra ve 404 NotFound theo chuan RESTful
+            // Nếu không tìm thấy thể loại thì trả về 404 NotFound theo chuẩn RESTful
             if (result.Message == "Khong tim thay the loai!")
             {
                 return NotFound(result);
@@ -65,7 +68,8 @@ public class CategoriesController : ControllerBase
         return Ok(result);
     }
 
-    // DELETE /api/categories/{id} - Xoa mem the loai
+    // DELETE /api/categories/{id} - Xóa mềm thể loại (Chỉ Quản trị viên)
+    [Authorize(Policy = "AdminOnly")]
     [HttpDelete("{id}")]
     public async Task<ActionResult<ApiResponse<bool>>> Delete(int id)
     {

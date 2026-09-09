@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using CineStream.DTOs.Common;
 using CineStream.DTOs.Movies;
@@ -48,7 +49,8 @@ public class MoviesController : ControllerBase
         return Ok(result);
     }
 
-    // POST /api/movies - Tao moi mot bo phim kem danh sach the loai lien ket
+    // POST /api/movies - Tạo mới một bộ phim kèm danh sách thể loại liên kết (Chỉ Quản trị viên)
+    [Authorize(Policy = "AdminOnly")]
     [HttpPost]
     public async Task<ActionResult<ApiResponse<MovieDetailDto>>> Create([FromBody] CreateMovieDto dto)
     {
@@ -60,14 +62,15 @@ public class MoviesController : ControllerBase
         return CreatedAtAction(nameof(GetById), new { id = result.Data!.Id }, result);
     }
 
-    // PUT /api/movies/{id} - Cap nhat thong tin phim va dong bo the loai lien ket
+    // PUT /api/movies/{id} - Cập nhật thông tin phim và đồng bộ thể loại liên kết (Chỉ Quản trị viên)
+    [Authorize(Policy = "AdminOnly")]
     [HttpPut("{id}")]
     public async Task<ActionResult<ApiResponse<MovieDetailDto>>> Update(int id, [FromBody] UpdateMovieDto dto)
     {
         var result = await _movieService.UpdateAsync(id, dto);
         if (!result.Success)
         {
-            // Neu khong tim thay phim thi tra ve 404 NotFound theo chuan RESTful
+            // Nếu không tìm thấy phim thì trả về 404 NotFound theo chuẩn RESTful
             if (result.Message == "Khong tim thay phim!")
             {
                 return NotFound(result);
@@ -77,7 +80,8 @@ public class MoviesController : ControllerBase
         return Ok(result);
     }
 
-    // DELETE /api/movies/{id} - Xoa mem mot bo phim
+    // DELETE /api/movies/{id} - Xóa mềm một bộ phim (Chỉ Quản trị viên)
+    [Authorize(Policy = "AdminOnly")]
     [HttpDelete("{id}")]
     public async Task<ActionResult<ApiResponse<bool>>> Delete(int id)
     {

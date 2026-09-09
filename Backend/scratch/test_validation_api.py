@@ -7,9 +7,11 @@ sys.stdout.reconfigure(encoding='utf-8')
 
 BASE_URL = "http://localhost:5182/api"
 
-def request(method, path, payload=None):
+def request(method, path, payload=None, token=None):
     url = f"{BASE_URL}{path}"
-    headers = {"Content-Type": "application/json"} if payload is not None else {}
+    headers = {"Content-Type": "application/json"}
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
     body = json.dumps(payload).encode("utf-8") if payload is not None else None
     req = urllib.request.Request(url, data=body, headers=headers, method=method)
     try:
@@ -31,6 +33,14 @@ def run_tests():
     print("==========================================================")
     print("   KIEM TRA TDD: DATA ANNOTATIONS DTO VALIDATION (STEP 3.1)")
     print("==========================================================")
+
+    # Dang nhap Admin de kiem tra validation tren cac endpoint duoc bao ve
+    s_admin, d_admin = request("POST", "/auth/login", {
+        "usernameOrEmail": "admin@cinestream.com",
+        "password": "Admin@123"
+    })
+    admin_token = d_admin.get("data", {}).get("token") if s_admin == 200 else None
+
     results = []
 
     # 1. Register with invalid email format
@@ -55,7 +65,7 @@ def run_tests():
     s, d = request("POST", "/categories", {
         "name": "A" * 105,
         "description": "Mo ta the loai"
-    })
+    }, token=admin_token)
     is_400_cat_name = (s == 400)
     results.append(("3. POST /api/categories (Name > 100 chars)", is_400_cat_name, s, d))
 
@@ -65,7 +75,7 @@ def run_tests():
         "releaseYear": 1800,
         "duration": 90,
         "categoryIds": [1]
-    })
+    }, token=admin_token)
     is_400_year = (s == 400)
     results.append(("4. POST /api/movies (ReleaseYear < 1888)", is_400_year, s, d))
 
@@ -75,7 +85,7 @@ def run_tests():
         "releaseYear": 2024,
         "duration": -10,
         "categoryIds": [1]
-    })
+    }, token=admin_token)
     is_400_duration = (s == 400)
     results.append(("5. POST /api/movies (Duration < 1 min)", is_400_duration, s, d))
 
