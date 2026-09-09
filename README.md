@@ -1,10 +1,3 @@
-# CINESTREAM - NỀN TẢNG XEM PHIM TRỰC TUYẾN & TRỢ LÝ AI ĐIỆN ẢNH THÔNG MINH
-
-Đồ án Tốt nghiệp Kỹ sư / Cử nhân Công nghệ Thông tin  
-Phiên bản: `v1.0.0-defense`  
-Hạn chót bảo vệ: Tháng 09/2026  
-
----
 
 ## 1. TỔNG QUAN ĐỀ TÀI
 
