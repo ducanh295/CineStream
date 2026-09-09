@@ -18,6 +18,9 @@ public interface IMovieService
     // Cap nhat thong tin phim va danh sach the loai tuong ung
     Task<ApiResponse<MovieDetailDto>> UpdateAsync(int id, UpdateMovieDto dto);
 
+    // Lay thong tin luong phat video chuyen biet cho Player (ho tro ca HLS va CDN Direct MP4)
+    Task<ApiResponse<MoviePlaybackDto>> GetPlaybackAsync(int id);
+
     // Xoa mem mot bo phim theo dinh danh
     Task<ApiResponse<bool>> DeleteAsync(int id);
 }

@@ -1,4 +1,4 @@
-﻿using CineStream.DTOs.Categories;
+using CineStream.DTOs.Categories;
 using CineStream.Models.Enums;
 
 namespace CineStream.DTOs.Movies;
@@ -24,7 +24,19 @@ public class MovieDto
 public class MovieDetailDto : MovieDto
 {
     public string? VideoUrl { get; set; }
+    public string StreamType { get; set; } = "NONE";
     public DateTime CreatedAt { get; set; }
+}
+
+//DTO chuyên biệt cung cấp thông tin luồng phát cho Player (hỗ trợ cả HLS và CDN Direct MP4)
+public class MoviePlaybackDto
+{
+    public int MovieId { get; set; }
+    public string Title { get; set; } = string.Empty;
+    public string? StreamUrl { get; set; }
+    public string StreamType { get; set; } = "NONE"; // "HLS" | "DIRECT_MP4" | "NONE"
+    public int VideoStatus { get; set; }
+    public int? Duration { get; set; }
 }
 
 //DTO khi Admin gửi form tạo phim mới
