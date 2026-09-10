@@ -2866,11 +2866,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "E:\\CODE\\CineStream\\Backend\\Backend.csproj",
+      "projectUniqueName": "E:\\CODE\\VietFlix\\Backend\\Backend.csproj",
       "projectName": "Backend",
-      "projectPath": "E:\\CODE\\CineStream\\Backend\\Backend.csproj",
+      "projectPath": "E:\\CODE\\VietFlix\\Backend\\Backend.csproj",
       "packagesPath": "C:\\Users\\nkda2\\.nuget\\packages\\",
-      "outputPath": "E:\\CODE\\CineStream\\Backend\\obj\\",
+      "outputPath": "E:\\CODE\\VietFlix\\Backend\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\nkda2\\AppData\\Roaming\\NuGet\\NuGet.Config"

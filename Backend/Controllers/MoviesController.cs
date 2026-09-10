@@ -17,11 +17,15 @@ public class MoviesController : ControllerBase
         _movieService = movieService;
     }
 
-    // GET /api/movies?categoryId=X&search=Y - Lấy danh sách phim, hỗ trợ lọc thể loại và tìm kiếm theo tên
+    // GET /api/movies?categoryId=X&search=Y&page=1&pageSize=10 - Lấy danh sách phim phân trang, hỗ trợ lọc và tìm kiếm
     [HttpGet]
-    public async Task<ActionResult<ApiResponse<IReadOnlyList<MovieDto>>>> GetAll([FromQuery] int? categoryId = null, [FromQuery] string? search = null)
+    public async Task<ActionResult<ApiResponse<PagedResult<MovieDto>>>> GetAll(
+        [FromQuery] int? categoryId = null,
+        [FromQuery] string? search = null,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 10)
     {
-        var result = await _movieService.GetAllAsync(categoryId, search);
+        var result = await _movieService.GetAllAsync(categoryId, search, page, pageSize);
         return Ok(result);
     }
 
