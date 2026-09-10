@@ -52,6 +52,7 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IMovieService, MovieService>();
 builder.Services.AddScoped<IEmailService, SmtpEmailService>();
+builder.Services.AddScoped<IAdminUserService, AdminUserService>();
 
 // Đăng ký GeminiOptions và dịch vụ trợ lý AI Điện ảnh (IAIService) với HttpClient
 builder.Services.Configure<CineStream.DTOs.AI.GeminiOptions>(builder.Configuration.GetSection("Gemini"));

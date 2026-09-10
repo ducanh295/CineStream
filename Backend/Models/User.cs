@@ -20,6 +20,10 @@ public class User : BaseEntity
     public string? PasswordResetToken { get; set; }
     public DateTime? PasswordResetTokenExpiresAt { get; set; }
 
+    // Trạng thái khóa tài khoản do Quản trị viên thiết lập và lý do khóa
+    public bool IsLocked { get; set; } = false;
+    public string? LockReason { get; set; }
+
     // 1 User có 1 Profile (1:1), Profile có thể null khi tài khoản vừa tạo
     public virtual Profile? Profile { get; set; }
 

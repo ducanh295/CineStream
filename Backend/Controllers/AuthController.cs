@@ -37,8 +37,8 @@ public class AuthController : ControllerBase
         var result = await _authService.LoginAsync(request);
         if (!result.Success)
         {
-            // Trả về BadRequest HTTP 400 nếu tài khoản chưa kích hoạt email
-            if (result.Message != null && result.Message.Contains("chưa được kích hoạt"))
+            // Trả về BadRequest HTTP 400 nếu tài khoản chưa kích hoạt email hoặc bị khóa bởi Quản trị viên
+            if (result.Message != null && (result.Message.Contains("chưa được kích hoạt") || result.Message.Contains("khóa") || result.Message.Contains("khoá")))
             {
                 return BadRequest(result);
             }

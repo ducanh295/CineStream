@@ -93,6 +93,15 @@ public class AuthService : IAuthService
             return ApiResponse<AuthResponseDto>.Fail("Tài khoản hoặc mật khẩu không chính xác!");
         }
 
+        // Kiểm tra trạng thái khóa tài khoản do Quản trị viên thiết lập (ưu tiên hàng đầu)
+        if (user.IsLocked)
+        {
+            var reasonSuffix = !string.IsNullOrWhiteSpace(user.LockReason)
+                ? $" Lý do: {user.LockReason}"
+                : string.Empty;
+            return ApiResponse<AuthResponseDto>.Fail($"Tài khoản của bạn đã bị khóa bởi Quản trị viên.{reasonSuffix}");
+        }
+
         // Kiểm tra trạng thái xác thực email của tài khoản trước khi cấp quyền truy cập
         if (!user.IsEmailConfirmed)
         {
