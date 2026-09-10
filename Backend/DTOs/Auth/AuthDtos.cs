@@ -57,11 +57,60 @@ public class UserDto
     public ProfileDto? Profile { get; set; }
 }
 
-//  DTO trả về sau khi đăng nhập / đăng ký thành công
+// DTO trả về sau khi đăng nhập / đăng ký thành công
 public class AuthResponseDto
 {
-    //  JWT Token để client gắn vào header Authorization: Bearer <token>
+    // JWT Token để client gắn vào header Authorization: Bearer <token>
     public string Token { get; set; } = string.Empty;
     public DateTime ExpiresAt { get; set; }
     public UserDto User { get; set; } = null!;
 }
+
+// DTO yêu cầu xác minh email bằng mã OTP
+public class VerifyEmailRequestDto
+{
+    [Required(ErrorMessage = "Email không được để trống!")]
+    [EmailAddress(ErrorMessage = "Định dạng email không hợp lệ!")]
+    [StringLength(100, ErrorMessage = "Email không được vượt quá 100 ký tự!")]
+    public string Email { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "Mã xác thực không được để trống!")]
+    [StringLength(10, MinimumLength = 4, ErrorMessage = "Mã xác thực phải từ 4 đến 10 ký tự!")]
+    public string Code { get; set; } = string.Empty;
+}
+
+// DTO yêu cầu gửi lại mã OTP xác minh email
+public class ResendVerificationEmailDto
+{
+    [Required(ErrorMessage = "Email không được để trống!")]
+    [EmailAddress(ErrorMessage = "Định dạng email không hợp lệ!")]
+    [StringLength(100, ErrorMessage = "Email không được vượt quá 100 ký tự!")]
+    public string Email { get; set; } = string.Empty;
+}
+
+// DTO yêu cầu cấp mã khôi phục mật khẩu khi bị quên
+public class ForgotPasswordRequestDto
+{
+    [Required(ErrorMessage = "Email không được để trống!")]
+    [EmailAddress(ErrorMessage = "Định dạng email không hợp lệ!")]
+    [StringLength(100, ErrorMessage = "Email không được vượt quá 100 ký tự!")]
+    public string Email { get; set; } = string.Empty;
+}
+
+// DTO đặt lại mật khẩu mới kèm mã OTP xác thực
+public class ResetPasswordRequestDto
+{
+    [Required(ErrorMessage = "Email không được để trống!")]
+    [EmailAddress(ErrorMessage = "Định dạng email không hợp lệ!")]
+    [StringLength(100, ErrorMessage = "Email không được vượt quá 100 ký tự!")]
+    public string Email { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "Mã xác thực không được để trống!")]
+    [StringLength(10, MinimumLength = 4, ErrorMessage = "Mã xác thực phải từ 4 đến 10 ký tự!")]
+    public string Code { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "Mật khẩu mới không được để trống!")]
+    [StringLength(100, MinimumLength = 6, ErrorMessage = "Mật khẩu mới phải có ít nhất 6 ký tự!")]
+    public string NewPassword { get; set; } = string.Empty;
+}
+

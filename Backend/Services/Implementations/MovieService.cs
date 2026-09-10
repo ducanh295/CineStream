@@ -18,8 +18,13 @@ public class MovieService : IMovieService
         _categoryRepo = categoryRepo;
     }
 
-    public async Task<ApiResponse<IReadOnlyList<MovieDto>>> GetAllAsync(int? categoryId = null, string? search = null)
+    public async Task<ApiResponse<PagedResult<MovieDto>>> GetAllAsync(int? categoryId = null, string? search = null, int pageNumber = 1, int pageSize = 10)
     {
+        // Dam bao pageNumber va pageSize luon hop le phong ngua tham so sai lech
+        if (pageNumber < 1) pageNumber = 1;
+        if (pageSize < 1) pageSize = 10;
+        if (pageSize > 100) pageSize = 100;
+
         // Truy vấn danh sách phim, nếu có categoryId thì lọc theo thể loại, ngược lại lấy toàn bộ
         IReadOnlyList<Movie> movies;
         if (categoryId.HasValue)
@@ -38,9 +43,24 @@ public class MovieService : IMovieService
             movies = movies.Where(m => m.Title.ToLower().Contains(keyword)).ToList();
         }
 
-        // Ánh xạ danh sách thực thể sang MovieDto dành cho hiển thị danh sách
-        var result = movies.Select(MapToMovieDto).ToList().AsReadOnly();
-        return ApiResponse<IReadOnlyList<MovieDto>>.Ok(result);
+        var totalCount = movies.Count;
+
+        // Ap dung cat phan trang theo vi tri trang va kich thuoc trang yeu cau
+        var pagedMovies = movies
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .Select(MapToMovieDto)
+            .ToList();
+
+        var result = new PagedResult<MovieDto>
+        {
+            Items = pagedMovies,
+            TotalCount = totalCount,
+            PageNumber = pageNumber,
+            PageSize = pageSize
+        };
+
+        return ApiResponse<PagedResult<MovieDto>>.Ok(result);
     }
 
     public async Task<ApiResponse<MovieDetailDto>> GetByIdAsync(int id)

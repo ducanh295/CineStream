@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using CineStream.Data;
 using CineStream.Models;
 using CineStream.Repositories.Interfaces;
@@ -16,10 +16,12 @@ public class FavoriteRepository : IFavoriteRepository
 
     public async Task<IReadOnlyList<Favorite>> GetByUserIdAsync(int userId)
     {
-        //  Load danh sách phim yêu thích kèm thông tin Movie, sắp xếp theo thời gian thêm mới nhất
+        // Load danh sach phim yeu thich kem thong tin Phim va The loai, sap xep theo thoi gian them moi nhat
         return await _context.Favorites
             .AsNoTracking()
             .Include(f => f.Movie)
+                .ThenInclude(m => m.MovieCategories)
+                .ThenInclude(mc => mc.Category)
             .Where(f => f.UserId == userId)
             .OrderByDescending(f => f.CreatedAt)
             .ToListAsync();

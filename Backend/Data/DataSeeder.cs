@@ -36,6 +36,7 @@ public static class DataSeeder
                 Email = "admin@cinestream.com",
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin@123"),
                 Role = UserRole.Admin,
+                IsEmailConfirmed = true,
                 Profile = new Profile
                 {
                     DisplayName = "Quản Trị Viên CineStream",
@@ -45,11 +46,20 @@ public static class DataSeeder
             };
             await context.Users.AddAsync(admin);
         }
-        else if (existingAdmin.IsDeleted)
+        else
         {
-            existingAdmin.IsDeleted = false;
-            existingAdmin.DeletedAt = null;
-            existingAdmin.UpdatedAt = DateTime.UtcNow;
+            if (existingAdmin.IsDeleted)
+            {
+                existingAdmin.IsDeleted = false;
+                existingAdmin.DeletedAt = null;
+                existingAdmin.UpdatedAt = DateTime.UtcNow;
+            }
+
+            if (!existingAdmin.IsEmailConfirmed)
+            {
+                existingAdmin.IsEmailConfirmed = true;
+                existingAdmin.UpdatedAt = DateTime.UtcNow;
+            }
         }
 
         // 2. Tài khoản Người dùng thông thường (User)
@@ -64,6 +74,7 @@ public static class DataSeeder
                 Email = "user@cinestream.com",
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword("User@123"),
                 Role = UserRole.User,
+                IsEmailConfirmed = true,
                 Profile = new Profile
                 {
                     DisplayName = "Khách Xem Phim",
@@ -73,11 +84,20 @@ public static class DataSeeder
             };
             await context.Users.AddAsync(user);
         }
-        else if (existingUser.IsDeleted)
+        else
         {
-            existingUser.IsDeleted = false;
-            existingUser.DeletedAt = null;
-            existingUser.UpdatedAt = DateTime.UtcNow;
+            if (existingUser.IsDeleted)
+            {
+                existingUser.IsDeleted = false;
+                existingUser.DeletedAt = null;
+                existingUser.UpdatedAt = DateTime.UtcNow;
+            }
+
+            if (!existingUser.IsEmailConfirmed)
+            {
+                existingUser.IsEmailConfirmed = true;
+                existingUser.UpdatedAt = DateTime.UtcNow;
+            }
         }
 
         await context.SaveChangesAsync();

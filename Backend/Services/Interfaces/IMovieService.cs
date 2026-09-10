@@ -6,8 +6,8 @@ namespace CineStream.Services.Interfaces;
 // Giao diện dịch vụ quản lý phim lẻ, định nghĩa các thao tác nghiệp vụ CRUD, tìm kiếm và lọc dữ liệu
 public interface IMovieService
 {
-    // Lấy danh sách phim lẻ, hỗ trợ lọc theo thể loại và tìm kiếm theo tên phim
-    Task<ApiResponse<IReadOnlyList<MovieDto>>> GetAllAsync(int? categoryId = null, string? search = null);
+    // Lấy danh sách phim lẻ phân trang, hỗ trợ lọc theo thể loại và tìm kiếm theo tên phim
+    Task<ApiResponse<PagedResult<MovieDto>>> GetAllAsync(int? categoryId = null, string? search = null, int pageNumber = 1, int pageSize = 10);
 
     // Lấy thông tin chi tiết của một bộ phim theo định danh, bao gồm đường dẫn video phát stream
     Task<ApiResponse<MovieDetailDto>> GetByIdAsync(int id);
