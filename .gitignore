@@ -44,3 +44,7 @@ Backend/wwwroot/videos/
 Backend/scratch/
 **/scratch/
 
+# Tài liệu nội bộ
+docs/
+**/docs/
+Backend/docs/
