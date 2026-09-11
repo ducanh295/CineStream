@@ -22,6 +22,8 @@ public class AppDbContext : DbContext
 
     public DbSet<ChatLog> ChatLogs => Set<ChatLog>();
 
+    public DbSet<PaymentTransaction> PaymentTransactions => Set<PaymentTransaction>();
+
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -40,14 +42,18 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<Category>().HasIndex(c => c.Name).IsUnique();
         modelBuilder.Entity<Profile>().HasIndex(p => p.UserId).IsUnique();
 
+        // Ràng buộc chỉ mục duy nhất cho OrderCode để tra cứu nhanh và bảo đảm tính toàn vẹn
+        modelBuilder.Entity<PaymentTransaction>().HasIndex(pt => pt.OrderCode).IsUnique();
+        modelBuilder.Entity<PaymentTransaction>().HasIndex(pt => pt.UserId);
+
         modelBuilder.Entity<User>().HasQueryFilter(u => !u.IsDeleted);
         modelBuilder.Entity<Movie>().HasQueryFilter(m => !m.IsDeleted);
         modelBuilder.Entity<Category>().HasQueryFilter(c => !c.IsDeleted);
         modelBuilder.Entity<Series>().HasQueryFilter(s => !s.IsDeleted);
         modelBuilder.Entity<ChatLog>().HasQueryFilter(cl => !cl.IsDeleted);
+        modelBuilder.Entity<PaymentTransaction>().HasQueryFilter(pt => !pt.IsDeleted);
 
         // Đánh chỉ mục cho UserId trong ChatLog để tối ưu hóa tốc độ truy vấn lịch sử trò chuyện
         modelBuilder.Entity<ChatLog>().HasIndex(cl => cl.UserId);
     }
-
 }
