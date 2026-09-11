@@ -19,6 +19,7 @@ AGENTS.md
 [Bb]in/
 [Oo]bj/
 *.log
+*.http
 
 # Frontend (phòng sau này thêm vào)
 node_modules/
@@ -39,8 +40,7 @@ Backend/wwwroot/videos/
 *.ts
 *.m3u8
 
-# Scratch test files và internal docs
+# Scratch test files cục bộ
 Backend/scratch/
 **/scratch/
-Backend/docs/
-**/docs/
+

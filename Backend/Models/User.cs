@@ -24,6 +24,10 @@ public class User : BaseEntity
     public bool IsLocked { get; set; } = false;
     public string? LockReason { get; set; }
 
+    // Trạng thái hội viên cao cấp và thời hạn hiệu lực của gói
+    public bool IsPremium { get; set; } = false;
+    public DateTime? PremiumExpiresAt { get; set; }
+
     // 1 User có 1 Profile (1:1), Profile có thể null khi tài khoản vừa tạo
     public virtual Profile? Profile { get; set; }
 

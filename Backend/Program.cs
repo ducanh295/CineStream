@@ -36,7 +36,7 @@ builder.Services.AddControllers()
 builder.Services.AddOpenApi();
 
 // 2. Kết nối Database PostgreSQL
-builder.Services.AddDbContext<AppDbContext>(options => 
+builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // 3. Đăng ký Repositories (DI)
@@ -140,6 +140,6 @@ app.UseAuthorization();
 app.MapControllers();
 
 // 10. Tự động nạp dữ liệu mẫu khi khởi động app
-await DataSeeder.SeedAsync(app);
+await CineStream.Data.DataSeeder.SeedAsync(app);
 
 app.Run();

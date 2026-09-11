@@ -126,11 +126,15 @@ public static class DataSeeder
             {
                 await context.Categories.AddAsync(cat);
             }
-            else if (existingCat.IsDeleted)
+            else
             {
-                // Khôi phục thể loại nếu trước đó bị xóa mềm để dữ liệu demo luôn sẵn sàng
-                existingCat.IsDeleted = false;
-                existingCat.DeletedAt = null;
+                // Khoi phuc the loai va cap nhat mo ta chuan cho du lieu demo luon hoan hao
+                if (existingCat.IsDeleted)
+                {
+                    existingCat.IsDeleted = false;
+                    existingCat.DeletedAt = null;
+                }
+                existingCat.Description = cat.Description;
                 existingCat.UpdatedAt = DateTime.UtcNow;
             }
         }
