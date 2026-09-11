@@ -1,8 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Users, DollarSign, Tag, Film, Loader2 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import movieApi from '../api/movieApi';
 import categoryApi from '../api/categoryApi';
+import userApi from '../api/userApi';
 
 const StatCard = ({ icon: Icon, label, value, color, delay, note }) => (
   <motion.div
@@ -29,6 +31,8 @@ const StatCard = ({ icon: Icon, label, value, color, delay, note }) => (
 
 const Dashboard = () => {
   const [movies, setMovies] = useState([]);
+  const [totalMovieCount, setTotalMovieCount] = useState(0);
+  const [totalUserCount, setTotalUserCount] = useState(0);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
@@ -37,12 +41,17 @@ const Dashboard = () => {
     setLoading(true);
     setErrorMsg('');
     try {
-      const [movieRes, categoryRes] = await Promise.all([
-        movieApi.getAll(),
+      const [movieRes, categoryRes, userRes] = await Promise.all([
+        movieApi.getAll({ page: 1, pageSize: 100 }),
         categoryApi.getAll(),
+        userApi.getAllUsers({ page: 1, pageSize: 1 }),
       ]);
-      setMovies(movieRes?.data || []);
-      setCategories(categoryRes?.data || []);
+      const movieData = movieRes?.data;
+      setMovies(Array.isArray(movieData) ? movieData : movieData?.items || []);
+      setTotalMovieCount(Array.isArray(movieData) ? movieData.length : movieData?.totalCount || 0);
+      setCategories(Array.isArray(categoryRes?.data) ? categoryRes.data : []);
+      const userData = userRes?.data;
+      setTotalUserCount(Array.isArray(userData) ? userData.length : userData?.totalCount || 0);
     } catch (err) {
       setErrorMsg(err.message || 'Không thể tải dữ liệu tổng quan. Vui lòng thử lại!');
     } finally {
@@ -76,7 +85,7 @@ const Dashboard = () => {
         <StatCard
           icon={Film}
           label="Tổng số phim"
-          value={loading ? '...' : movies.length}
+          value={loading ? '...' : totalMovieCount}
           color="bg-blue-500"
           delay={0.1}
           note="Dữ liệu thật từ hệ thống"
@@ -92,18 +101,18 @@ const Dashboard = () => {
         <StatCard
           icon={DollarSign}
           label="Doanh thu"
-          value="$84,200"
+          value="—"
           color="bg-green-500"
           delay={0.3}
-          note="Dữ liệu mẫu — chờ API thống kê"
+          note="Backend chưa cung cấp API doanh thu"
         />
         <StatCard
           icon={Users}
           label="Tổng thành viên"
-          value="45,280"
+          value={loading ? '...' : totalUserCount}
           color="bg-orange-500"
           delay={0.4}
-          note="Dữ liệu mẫu — chờ API Users"
+          note="Dữ liệu thật từ hệ thống"
         />
       </div>
 
@@ -124,7 +133,7 @@ const Dashboard = () => {
           ) : (
             <div className="space-y-4">
               {recentMovies.map((movie) => (
-                <div key={movie.id} className="flex items-center justify-between p-4 bg-slate-800/50 rounded-xl border border-slate-700/50 hover:border-blue-500/50 transition-all cursor-pointer">
+                <Link to={`/movies/${movie.id}`} key={movie.id} className="flex items-center justify-between p-4 bg-slate-800/50 rounded-xl border border-slate-700/50 hover:border-blue-500/50 transition-all cursor-pointer">
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-16 bg-slate-700 rounded-lg overflow-hidden shrink-0">
                       {movie.posterUrl ? (
@@ -142,7 +151,7 @@ const Dashboard = () => {
                   <div className="text-right">
                     <p className="text-blue-400 font-bold">{movie.releaseYear || '—'}</p>
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
           )}

@@ -4,6 +4,7 @@ import AdminLayout from './layouts/AdminLayout';
 import ProtectedRoute from './components/ProtectedRoute';
 import Dashboard from './pages/Dashboard';
 import Movies from './pages/Movies';
+import MovieDetail from './pages/MovieDetail';
 import Users from './pages/Users';
 import Login from './pages/Login';
 import Categories from './pages/Categories';
@@ -23,6 +24,7 @@ function App() {
             <Route path="/" element={<AdminLayout />}>
               <Route index element={<Dashboard />} />
               <Route path="movies" element={<Movies />} />
+              <Route path="movies/:id" element={<MovieDetail />} />
               <Route path="users" element={<Users />} />
               <Route path="categories" element={<Categories />} />
               <Route path="subscriptions" element={<Subscriptions />} />

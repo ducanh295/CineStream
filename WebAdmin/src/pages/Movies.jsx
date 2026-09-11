@@ -44,8 +44,11 @@ const Movies = () => {
     try {
       const params = {};
       if (searchTerm.trim()) params.search = searchTerm.trim();
+      params.page = 1;
+      params.pageSize = 100;
       const result = await movieApi.getAll(params);
-      setMovies(result?.data || []);
+      const movieData = result?.data;
+      setMovies(Array.isArray(movieData) ? movieData : movieData?.items || []);
     } catch (err) {
       setErrorMsg(err.message || 'Không thể tải danh sách phim. Vui lòng thử lại!');
     } finally {
@@ -56,7 +59,7 @@ const Movies = () => {
   const fetchCategories = useCallback(async () => {
     try {
       const result = await categoryApi.getAll();
-      setCategories(result?.data || []);
+      setCategories(Array.isArray(result?.data) ? result.data : []);
     } catch {
       // Không chặn trang nếu lỗi lấy category, chỉ ảnh hưởng form thêm/sửa
     }

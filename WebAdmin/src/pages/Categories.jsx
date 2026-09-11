@@ -29,7 +29,7 @@ const Categories = () => {
     setErrorMsg('');
     try {
       const result = await categoryApi.getAll();
-      setCategories(result?.data || []);
+      setCategories(Array.isArray(result?.data) ? result.data : []);
     } catch (err) {
       setErrorMsg(err.message || 'Không thể tải danh sách thể loại. Vui lòng thử lại!');
     } finally {

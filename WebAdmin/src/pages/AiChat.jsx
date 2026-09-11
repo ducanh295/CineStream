@@ -20,7 +20,7 @@ const AiChat = () => {
     setErrorMsg('');
     try {
       const result = await aiApi.getHistory(30);
-      const history = result?.data || [];
+      const history = Array.isArray(result?.data) ? result.data : [];
       // Sắp xếp theo thời gian tăng dần để hiển thị đúng thứ tự hội thoại
       const sorted = [...history].sort(
         (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
