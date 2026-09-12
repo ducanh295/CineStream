@@ -1,29 +1,42 @@
 class Favorite {
-  final int userId;
-  final int movieId;
-  final DateTime? createdAt;
+final int movieId;
+final String title;
+final String? description;
+final String? posterUrl;
+final String? trailerUrl;
+final int? duration;
+final int? releaseYear;
+final List<String> categories;
+final DateTime? addedAt;
 
-  Favorite({
-    required this.userId,
-    required this.movieId,
-    this.createdAt,
-  });
+const Favorite({
+required this.movieId,
+required this.title,
+this.description,
+this.posterUrl,
+this.trailerUrl,
+this.duration,
+this.releaseYear,
+this.categories = const [],
+this.addedAt,
+});
 
-  factory Favorite.fromJson(Map<String, dynamic> json) {
-    return Favorite(
-      userId: json['userId'] ?? 0,
-      movieId: json['movieId'] ?? 0,
-      createdAt: json['createdAt'] != null
-          ? DateTime.tryParse(json['createdAt'].toString())
-          : null,
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'userId': userId,
-      'movieId': movieId,
-      'createdAt': createdAt?.toIso8601String(),
-    };
-  }
+factory Favorite.fromJson(Map<String, dynamic> json) {
+return Favorite(
+movieId: (json['movieId'] as num?)?.toInt() ?? 0,
+title: json['title']?.toString() ?? '',
+description: json['description']?.toString(),
+posterUrl: json['posterUrl']?.toString(),
+trailerUrl: json['trailerUrl']?.toString(),
+duration: (json['duration'] as num?)?.toInt(),
+releaseYear: (json['releaseYear'] as num?)?.toInt(),
+categories: (json['categories'] as List<dynamic>?)
+?.map((item) => item.toString())
+.toList() ??
+const [],
+addedAt: json['addedAt'] != null
+? DateTime.tryParse(json['addedAt'].toString())
+: null,
+);
+}
 }

@@ -103,11 +103,11 @@ Dưới đây là các câu hỏi mà các Thầy Cô trong Hội đồng thư�
 - **Kiến trúc áp dụng**: Phân quyền dựa trên vai trò (Role-Based Access Control - RBAC) kết hợp Claim-based Authorization:
   1. Khi người dùng đăng nhập thành công, máy chủ cấp phát JWT Token chứa Claim `Role` (`Admin` hoặc `User`).
   2. Trong `Program.cs`, cấu hình Policy định danh:
-     ```csharp
+     csharp
      builder.Services.AddAuthorization(options => {
          options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
      });
-     ```
+     
   3. Trên các Controllers, các hành động đọc dữ liệu (`GET`) được mở công khai (`AllowAnonymous`), trong khi toàn bộ các hành động thay đổi dữ liệu (`POST`, `PUT`, `DELETE`) của Thể loại và Phim đều được bảo vệ nghiêm ngặt bằng thuộc tính `[Authorize(Policy = "AdminOnly")]`.
   4. Nếu Token thiếu hoặc không hợp lệ: Máy chủ phản hồi `401 Unauthorized`. Nếu người dùng thường cố tình gọi API Quản trị: Máy chủ phản hồi `403 Forbidden`.
 
@@ -125,10 +125,10 @@ Dưới đây là các câu hỏi mà các Thầy Cô trong Hội đồng thư�
 **Trả lời**:
 - **Công cụ**: Sử dụng FFmpeg tích hợp module tăng tốc phần cứng GPU NVIDIA NVENC (`h264_nvenc`).
 - **Lệnh thực thi chuẩn công nghiệp**:
-  ```bat
+  bat
   ffmpeg -i input.mp4 -c:v h264_nvenc -preset p4 -cq 23 -c:a aac -b:a 128k \
          -f hls -hls_time 10 -hls_list_size 0 -hls_segment_filename "master%%d.ts" master.m3u8
-  ```
+  
 - **Ý nghĩa các tham số**:
   - `-c:v h264_nvenc`: Sử dụng chip xử lý mã hóa phần cứng trên GPU thay vì CPU, giúp tốc độ xử lý nhanh hơn từ 5 đến 8 lần.
   - `-hls_time 10`: Đặt độ dài mục tiêu mỗi phân đoạn video là 10 giây.

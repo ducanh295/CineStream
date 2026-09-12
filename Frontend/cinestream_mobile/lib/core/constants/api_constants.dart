@@ -1,20 +1,41 @@
 class ApiConstants {
-  ApiConstants._();
+ApiConstants._();
 
-  static const String baseUrl = 'http://10.0.2.2:5000/api';
+// Android Emulator -> máy tính host
+static const String baseUrl =
+'http://10.0.2.2:5182/api';
 
-  static const String login = '/auth/login';
-  static const String register = '/auth/register';
-  static const String refreshToken = '/auth/refresh-token';
+// Auth
+static const String login = '/auth/login';
+static const String register = '/auth/register';
+static const String verifyEmail = '/auth/verify-email';
+static const String resendVerification =
+'/auth/resend-verification';
+static const String logout = '/auth/logout';
+static const String forgotPassword =
+'/auth/forgot-password';
+static const String resetPassword =
+'/auth/reset-password';
+static const String me = '/auth/me';
 
-  static const String movies = '/movies';
-  static const String series = '/series';
-  static const String categories = '/categories';
+// Movies
+static const String movies = '/movies';
 
-  static const String favorites = '/favorites';
+// Categories
+static const String categories = '/categories';
 
-  static const String users = '/users';
+// Favorites
+static const String favorites = '/favorites';
 
-  static const String chat = '/chat';
-  static const String chatHistory = '/chat/history';
+// AI
+static const String aiChat = '/ai/chat';
+static const String aiHistory = '/ai/history';
+
+// Payments
+static const String createPayment =
+'/payments/create';
+static const String paymentHistory =
+'/payments/history';
+static const String paymentStatus =
+'/payments/status';
 }

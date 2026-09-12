@@ -13,7 +13,7 @@ CineStream là hệ sinh thái xem phim trực tuyến hiện đại được th
 
 ## 2. KIẾN TRÚC HỆ THỐNG (SYSTEM ARCHITECTURE)
 
-```
+
 [ Mobile App / Web Client / Scalar UI ]
                    |
                    | HTTP/HTTPS (RESTful API + JWT Bearer)
@@ -58,7 +58,7 @@ CineStream là hệ sinh thái xem phim trực tuyến hiện đại được th
     | Google Gemini 2.5 Flash API |
     | (AI Movie Recommendation)   |
     +-----------------------------+
-```
+
 
 ---
 
@@ -86,7 +86,7 @@ CineStream là hệ sinh thái xem phim trực tuyến hiện đại được th
 
 ### 4.2. Cấu hình chuỗi kết nối và API Key
 Kiểm tra và cập nhật file `Backend/appsettings.json`:
-```json
+json
 {
   "ConnectionStrings": {
     "DefaultConnection": "Host=localhost;Port=5432;Database=cinestream_db;Username=postgres;Password=your_password"
@@ -103,11 +103,11 @@ Kiểm tra và cập nhật file `Backend/appsettings.json`:
     "ApiUrl": "https://generativelanguage.googleapis.com/v1beta/models"
   }
 }
-```
+
 
 ### 4.3. Chạy ứng dụng
 Mở terminal tại thư mục gốc của dự án:
-```bash
+bash
 # Di chuyển vào thư mục Backend
 cd Backend
 
@@ -116,7 +116,7 @@ dotnet build
 
 # Khởi chạy máy chủ Backend
 dotnet run
-```
+
 Sau khi khởi chạy thành công, máy chủ lắng nghe tại:
 - Cổng HTTP: `http://localhost:5182`
 - Giao diện tài liệu Scalar API Reference: `http://localhost:5182/scalar/v1`

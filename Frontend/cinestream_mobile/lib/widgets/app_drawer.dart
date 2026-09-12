@@ -72,13 +72,6 @@ class AppDrawer extends StatelessWidget {
                   ),
                   _buildDrawerItem(
                     context,
-                    icon: Icons.star_rounded,
-                    iconColor: Colors.orange,
-                    title: 'Đề xuất',
-                    route: AppRoutes.featured,
-                  ),
-                  _buildDrawerItem(
-                    context,
                     icon: Icons.smart_toy_rounded,
                     iconColor: Colors.pinkAccent,
                     title: 'AI CineBot',
@@ -104,13 +97,6 @@ class AppDrawer extends StatelessWidget {
                         'Tính năng Premium sẽ được kết nối sau.',
                       );
                     },
-                  ),
-                  _buildDrawerItem(
-                    context,
-                    icon: Icons.phone_in_talk_rounded,
-                    iconColor: Colors.pink,
-                    title: 'Liên hệ hỗ trợ',
-                    route: AppRoutes.support,
                   ),
                 ],
               ),
@@ -208,14 +194,12 @@ class AppDrawer extends StatelessWidget {
                   );
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor:
-                      AppTheme.darkGreen,
+                  backgroundColor: AppTheme.darkGreen,
                   foregroundColor: Colors.white,
                   elevation: 0,
                   padding: EdgeInsets.zero,
                   shape: RoundedRectangleBorder(
-                    borderRadius:
-                        BorderRadius.circular(30),
+                    borderRadius: BorderRadius.circular(30),
                   ),
                 ),
                 child: const Text(
@@ -242,17 +226,14 @@ class AppDrawer extends StatelessWidget {
                   );
                 },
                 style: OutlinedButton.styleFrom(
-                  backgroundColor:
-                      AppTheme.background,
-                  foregroundColor:
-                      AppTheme.darkGreen,
+                  backgroundColor: AppTheme.background,
+                  foregroundColor: AppTheme.darkGreen,
                   side: const BorderSide(
                     color: AppTheme.darkGreen,
                   ),
                   padding: EdgeInsets.zero,
                   shape: RoundedRectangleBorder(
-                    borderRadius:
-                        BorderRadius.circular(30),
+                    borderRadius: BorderRadius.circular(30),
                   ),
                 ),
                 child: const Text(
@@ -278,8 +259,7 @@ class AppDrawer extends StatelessWidget {
     String? route,
     VoidCallback? onTap,
   }) {
-    final selected =
-        route != null && route == currentRoute;
+    final selected = route != null && route == currentRoute;
 
     return Container(
       margin: const EdgeInsets.symmetric(
@@ -294,8 +274,7 @@ class AppDrawer extends StatelessWidget {
         borderRadius: BorderRadius.circular(15),
       ),
       child: ListTile(
-        contentPadding:
-            const EdgeInsets.symmetric(
+        contentPadding: const EdgeInsets.symmetric(
           horizontal: 12,
           vertical: 2,
         ),
@@ -323,8 +302,7 @@ class AppDrawer extends StatelessWidget {
             color: iconColor.withValues(
               alpha: 0.10,
             ),
-            borderRadius:
-                BorderRadius.circular(13),
+            borderRadius: BorderRadius.circular(13),
           ),
           child: Icon(
             icon,
@@ -337,9 +315,7 @@ class AppDrawer extends StatelessWidget {
           style: TextStyle(
             color: AppTheme.black,
             fontSize: 14.5,
-            fontWeight: selected
-                ? FontWeight.w800
-                : FontWeight.w600,
+            fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
           ),
         ),
         trailing: selected
@@ -354,8 +330,7 @@ class AppDrawer extends StatelessWidget {
                 size: 20,
               ),
         shape: RoundedRectangleBorder(
-          borderRadius:
-              BorderRadius.circular(15),
+          borderRadius: BorderRadius.circular(15),
         ),
       ),
     );
