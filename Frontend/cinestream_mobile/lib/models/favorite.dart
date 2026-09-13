@@ -1,3 +1,5 @@
+import 'category.dart';
+import 'movie.dart';
 
 class Favorite {
   final int movieId;
@@ -10,7 +12,7 @@ class Favorite {
   final List<String> categories;
   final DateTime? addedAt;
 
-  Favorite({
+  const Favorite({
     required this.movieId,
     required this.title,
     this.description,
@@ -26,95 +28,62 @@ class Favorite {
     Map<String, dynamic> json,
   ) {
     return Favorite(
-      movieId: _parseInt(json['movieId']),
-      title: json['title']?.toString() ?? '',
-      description: json['description']?.toString(),
-      posterUrl: json['posterUrl']?.toString(),
-      trailerUrl: json['trailerUrl']?.toString(),
-      duration: _parseNullableInt(
-        json['duration'],
-      ),
-      releaseYear: _parseNullableInt(
-        json['releaseYear'],
-      ),
-      categories: _parseCategories(
-        json['categories'],
-      ),
-      addedAt: json['addedAt'] != null
-          ? DateTime.tryParse(
-              json['addedAt'].toString(),
-            )
-          : null,
+      movieId:
+          (json['movieId'] as num?)
+                  ?.toInt() ??
+              0,
+      title:
+          json['title']?.toString() ??
+              '',
+      description:
+          json['description']
+              ?.toString(),
+      posterUrl:
+          json['posterUrl']?.toString(),
+      trailerUrl:
+          json['trailerUrl']?.toString(),
+      duration:
+          (json['duration'] as num?)
+              ?.toInt(),
+      releaseYear:
+          (json['releaseYear'] as num?)
+              ?.toInt(),
+      categories:
+          (json['categories']
+                  as List<dynamic>?)
+              ?.map(
+                (item) => item.toString(),
+              )
+              .toList() ??
+              const [],
+      addedAt:
+          json['addedAt'] != null
+              ? DateTime.tryParse(
+                  json['addedAt'].toString(),
+                )
+              : null,
     );
   }
 
-  Map<String, dynamic> toJson() {
-    return {
-      'movieId': movieId,
-      'title': title,
-      'description': description,
-      'posterUrl': posterUrl,
-      'trailerUrl': trailerUrl,
-      'duration': duration,
-      'releaseYear': releaseYear,
-      'categories': categories,
-      'addedAt': addedAt?.toIso8601String(),
-    };
-  }
-
-  static int _parseInt(dynamic value) {
-    if (value is int) {
-      return value;
-    }
-
-    return int.tryParse(
-          value?.toString() ?? '0',
-        ) ??
-        0;
-  }
-
-  static int? _parseNullableInt(
-    dynamic value,
-  ) {
-    if (value == null) {
-      return null;
-    }
-
-    if (value is int) {
-      return value;
-    }
-
-    return int.tryParse(
-      value.toString(),
+  Movie toMovie() {
+    return Movie(
+      id: movieId,
+      title: title,
+      description: description,
+      posterUrl: posterUrl,
+      trailerUrl: trailerUrl,
+      duration: duration,
+      releaseYear: releaseYear,
+      type: 0,
+      videoStatus: 0,
+      categories: categories
+          .map(
+            (name) => Category(
+              id: 0,
+              name: name,
+            ),
+          )
+          .toList(),
     );
-  }
-
-  static List<String> _parseCategories(
-    dynamic value,
-  ) {
-    if (value is! List) {
-      return [];
-    }
-
-    return value
-        .map(
-          (item) => item.toString(),
-        )
-        .where(
-          (item) => item.isNotEmpty,
-        )
-        .toList();
-  }
-
-  @override
-  String toString() {
-    return 'Favorite('
-        'movieId: $movieId, '
-        'title: $title, '
-        'posterUrl: $posterUrl, '
-        'releaseYear: $releaseYear, '
-        'categories: $categories, '
-        'addedAt: $addedAt'
-        ')';
   }
 }

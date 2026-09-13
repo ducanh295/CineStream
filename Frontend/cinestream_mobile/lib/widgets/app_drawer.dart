@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../core/routes/app_routes.dart';
 import '../core/theme/app_theme.dart';
-import '../services/auth_service.dart';
+import '../providers/auth_provider.dart';
 
-class AppDrawer extends StatefulWidget {
+class AppDrawer extends StatelessWidget {
   const AppDrawer({
     super.key,
     this.currentRoute,
@@ -13,41 +14,11 @@ class AppDrawer extends StatefulWidget {
   final String? currentRoute;
 
   @override
-  State<AppDrawer> createState() => _AppDrawerState();
-}
-
-class _AppDrawerState extends State<AppDrawer> {
-  final AuthService _authService =
-      AuthService.instance;
-
-  bool _isLoggedIn = false;
-  bool _isCheckingLogin = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _checkLoginStatus();
-  }
-
-  Future<void> _checkLoginStatus() async {
-    final isLoggedIn =
-        await _authService.isLoggedIn();
-
-    if (!mounted) {
-      return;
-    }
-
-    setState(() {
-      _isLoggedIn = isLoggedIn;
-      _isCheckingLogin = false;
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
+    final authProvider = context.watch<AuthProvider>();
+
     return Drawer(
-      width:
-          MediaQuery.of(context).size.width * 0.80,
+      width: MediaQuery.of(context).size.width * 0.80,
       backgroundColor: AppTheme.background,
       surfaceTintColor: Colors.transparent,
       shape: const RoundedRectangleBorder(
@@ -59,16 +30,18 @@ class _AppDrawerState extends State<AppDrawer> {
       child: SafeArea(
         child: Column(
           children: [
-            _buildHeader(),
-            _buildAuthButtons(context),
+            _buildHeader(authProvider),
+            _buildAuthSection(
+              context,
+              authProvider,
+            ),
             Padding(
               padding: const EdgeInsets.symmetric(
                 horizontal: 20,
                 vertical: 8,
               ),
               child: Divider(
-                color:
-                    AppTheme.darkGreen.withValues(
+                color: AppTheme.darkGreen.withValues(
                   alpha: 0.10,
                 ),
                 height: 1,
@@ -76,8 +49,7 @@ class _AppDrawerState extends State<AppDrawer> {
             ),
             Expanded(
               child: ListView(
-                padding:
-                    const EdgeInsets.fromLTRB(
+                padding: const EdgeInsets.fromLTRB(
                   12,
                   4,
                   12,
@@ -107,56 +79,22 @@ class _AppDrawerState extends State<AppDrawer> {
                   ),
                   _buildDrawerItem(
                     context,
-                    icon: Icons.star_rounded,
-                    iconColor: Colors.orange,
-                    title: 'Đề xuất',
-                    route: AppRoutes.featured,
-                  ),
-                  _buildDrawerItem(
-                    context,
-                    icon:
-                        Icons.smart_toy_rounded,
-                    iconColor:
-                        Colors.pinkAccent,
+                    icon: Icons.smart_toy_rounded,
+                    iconColor: Colors.pinkAccent,
                     title: 'AI CineBot',
                     route: AppRoutes.chatbot,
                   ),
-
-                  // =====================================================
-                  // YÊU THÍCH - CHỈ HIỂN THỊ KHI ĐÃ ĐĂNG NHẬP
-                  // =====================================================
-
-                  if (!_isCheckingLogin &&
-                      _isLoggedIn) ...[
-                    const SizedBox(height: 6),
-
-                    _buildDrawerItem(
-                      context,
-                      icon:
-                          Icons.bookmark_rounded,
-                      iconColor:
-                          AppTheme.darkGreen,
-                      title: 'Yêu thích',
-                      route:
-                          AppRoutes.favorite,
-                    ),
-                  ],
-
                   const SizedBox(height: 6),
-
                   _buildDrawerItem(
                     context,
                     icon: Icons.person_rounded,
-                    iconColor:
-                        const Color(0xFF35305E),
+                    iconColor: const Color(0xFF35305E),
                     title: 'Hồ sơ',
                     route: AppRoutes.profile,
                   ),
-
                   _buildDrawerItem(
                     context,
-                    icon:
-                        Icons.credit_card_rounded,
+                    icon: Icons.credit_card_rounded,
                     iconColor: Colors.blue,
                     title: 'Nâng cấp Premium',
                     onTap: () {
@@ -168,15 +106,6 @@ class _AppDrawerState extends State<AppDrawer> {
                       );
                     },
                   ),
-
-                  _buildDrawerItem(
-                    context,
-                    icon:
-                        Icons.phone_in_talk_rounded,
-                    iconColor: Colors.pink,
-                    title: 'Liên hệ hỗ trợ',
-                    route: AppRoutes.support,
-                  ),
                 ],
               ),
             ),
@@ -186,75 +115,60 @@ class _AppDrawerState extends State<AppDrawer> {
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(
+    AuthProvider authProvider,
+  ) {
+    final user = authProvider.user;
+
+    final displayName =
+        user?.profile?.displayName
+                    ?.trim()
+                    .isNotEmpty ==
+                true
+            ? user!.profile!.displayName!.trim()
+            : user?.username ?? 'Khách';
+
     return Container(
       width: double.infinity,
-      padding:
-          const EdgeInsets.fromLTRB(
+      padding: const EdgeInsets.fromLTRB(
         22,
         24,
         22,
         26,
       ),
-      decoration:
-          const BoxDecoration(
+      decoration: const BoxDecoration(
         color: AppTheme.darkGreen,
-        borderRadius:
-            BorderRadius.only(
-          bottomRight:
-              Radius.circular(30),
+        borderRadius: BorderRadius.only(
+          bottomRight: Radius.circular(30),
         ),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment:
+            CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 52,
-            height: 52,
-            decoration:
-                BoxDecoration(
-              color:
-                  Colors.white.withValues(
-                alpha: 0.14,
-              ),
-              borderRadius:
-                  BorderRadius.circular(
-                14,
-              ),
-            ),
-            child: const Icon(
-              Icons
-                  .movie_creation_outlined,
-              color:
-                  Color(0xFFD7CBE5),
-              size: 30,
+          Text(
+            user == null
+                ? 'CineStream'
+                : displayName,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 25,
+              fontWeight: FontWeight.w800,
+              fontFamily: 'Georgia',
             ),
           ),
-          const SizedBox(width: 14),
-          const Expanded(
-            child: Column(
-              crossAxisAlignment:
-                  CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'CineStream',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 25,
-                    fontWeight:
-                        FontWeight.w800,
-                    fontFamily: 'Georgia',
-                  ),
-                ),
-                SizedBox(height: 7),
-                Text(
-                  'Trải nghiệm điện ảnh đỉnh cao',
-                  style: TextStyle(
-                    color:
-                        Color(0xFFD9DDD8),
-                    fontSize: 11.5,
-                  ),
-                ),
-              ],
+          const SizedBox(height: 7),
+          Text(
+            user == null
+                ? 'Trải nghiệm điện ảnh đỉnh cao'
+                : user.email,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: Color(0xFFD9DDD8),
+              fontSize: 11.5,
             ),
           ),
         ],
@@ -262,80 +176,26 @@ class _AppDrawerState extends State<AppDrawer> {
     );
   }
 
-  Widget _buildAuthButtons(
+  Widget _buildAuthSection(
+    BuildContext context,
+    AuthProvider authProvider,
+  ) {
+    if (authProvider.isAuthenticated &&
+        authProvider.user != null) {
+      return _buildLoggedInSection(
+        context,
+        authProvider,
+      );
+    }
+
+    return _buildGuestSection(context);
+  }
+
+  Widget _buildGuestSection(
     BuildContext context,
   ) {
-    if (_isCheckingLogin) {
-      return const SizedBox(
-        height: 76,
-        child: Center(
-          child:
-              CircularProgressIndicator(
-            strokeWidth: 2,
-          ),
-        ),
-      );
-    }
-
-    if (_isLoggedIn) {
-      return Padding(
-        padding:
-            const EdgeInsets.fromLTRB(
-          18,
-          20,
-          18,
-          10,
-        ),
-        child: Container(
-          width: double.infinity,
-          padding:
-              const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 13,
-          ),
-          decoration:
-              BoxDecoration(
-            color:
-                AppTheme.darkGreen
-                    .withValues(
-              alpha: 0.08,
-            ),
-            borderRadius:
-                BorderRadius.circular(
-              18,
-            ),
-          ),
-          child: const Row(
-            children: [
-              Icon(
-                Icons
-                    .check_circle_rounded,
-                color:
-                    AppTheme.darkGreen,
-                size: 22,
-              ),
-              SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  'Bạn đã đăng nhập',
-                  style: TextStyle(
-                    color:
-                        AppTheme.black,
-                    fontSize: 13,
-                    fontWeight:
-                        FontWeight.w800,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
     return Padding(
-      padding:
-          const EdgeInsets.fromLTRB(
+      padding: const EdgeInsets.fromLTRB(
         18,
         20,
         18,
@@ -355,16 +215,13 @@ class _AppDrawerState extends State<AppDrawer> {
                     AppRoutes.login,
                   );
                 },
-                style:
-                    ElevatedButton.styleFrom(
+                style: ElevatedButton.styleFrom(
                   backgroundColor:
                       AppTheme.darkGreen,
-                  foregroundColor:
-                      Colors.white,
+                  foregroundColor: Colors.white,
                   elevation: 0,
                   padding: EdgeInsets.zero,
-                  shape:
-                      RoundedRectangleBorder(
+                  shape: RoundedRectangleBorder(
                     borderRadius:
                         BorderRadius.circular(
                       30,
@@ -375,8 +232,7 @@ class _AppDrawerState extends State<AppDrawer> {
                   'Đăng nhập',
                   style: TextStyle(
                     fontSize: 13,
-                    fontWeight:
-                        FontWeight.w800,
+                    fontWeight: FontWeight.w800,
                   ),
                 ),
               ),
@@ -395,20 +251,16 @@ class _AppDrawerState extends State<AppDrawer> {
                     AppRoutes.register,
                   );
                 },
-                style:
-                    OutlinedButton.styleFrom(
+                style: OutlinedButton.styleFrom(
                   backgroundColor:
                       AppTheme.background,
                   foregroundColor:
                       AppTheme.darkGreen,
-                  side:
-                      const BorderSide(
-                    color:
-                        AppTheme.darkGreen,
+                  side: const BorderSide(
+                    color: AppTheme.darkGreen,
                   ),
                   padding: EdgeInsets.zero,
-                  shape:
-                      RoundedRectangleBorder(
+                  shape: RoundedRectangleBorder(
                     borderRadius:
                         BorderRadius.circular(
                       30,
@@ -419,14 +271,117 @@ class _AppDrawerState extends State<AppDrawer> {
                   'Đăng ký',
                   style: TextStyle(
                     fontSize: 13,
-                    fontWeight:
-                        FontWeight.w800,
+                    fontWeight: FontWeight.w800,
                   ),
                 ),
               ),
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildLoggedInSection(
+    BuildContext context,
+    AuthProvider authProvider,
+  ) {
+    final user = authProvider.user!;
+
+    final displayName =
+        user.profile?.displayName
+                    ?.trim()
+                    .isNotEmpty ==
+                true
+            ? user.profile!.displayName!.trim()
+            : user.username;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        18,
+        16,
+        18,
+        10,
+      ),
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(
+            color: AppTheme.darkGreen.withValues(
+              alpha: 0.10,
+            ),
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment:
+              CrossAxisAlignment.start,
+          children: [
+            Text(
+              displayName,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: AppTheme.black,
+                fontSize: 15,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              user.email,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: AppTheme.grey,
+                fontSize: 11,
+              ),
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              height: 42,
+              child: OutlinedButton.icon(
+                onPressed: authProvider.isLoading
+                    ? null
+                    : () {
+                        _logout(context);
+                      },
+                icon: const Icon(
+                  Icons.logout_rounded,
+                  size: 18,
+                ),
+                label: authProvider.isLoading
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child:
+                            CircularProgressIndicator(
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : const Text(
+                        'Đăng xuất',
+                      ),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.redAccent,
+                  side: BorderSide(
+                    color: Colors.redAccent.withValues(
+                      alpha: 0.45,
+                    ),
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius:
+                        BorderRadius.circular(
+                      13,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -440,26 +395,19 @@ class _AppDrawerState extends State<AppDrawer> {
     VoidCallback? onTap,
   }) {
     final selected =
-        route != null &&
-        route == widget.currentRoute;
+        route != null && route == currentRoute;
 
     return Container(
-      margin:
-          const EdgeInsets.symmetric(
+      margin: const EdgeInsets.symmetric(
         vertical: 3,
       ),
-      decoration:
-          BoxDecoration(
+      decoration: BoxDecoration(
         color: selected
-            ? AppTheme.darkGreen
-                .withValues(
-              alpha: 0.08,
-            )
+            ? AppTheme.darkGreen.withValues(
+                alpha: 0.08,
+              )
             : Colors.transparent,
-        borderRadius:
-            BorderRadius.circular(
-          15,
-        ),
+        borderRadius: BorderRadius.circular(15),
       ),
       child: ListTile(
         contentPadding:
@@ -467,8 +415,7 @@ class _AppDrawerState extends State<AppDrawer> {
           horizontal: 12,
           vertical: 2,
         ),
-        onTap:
-            onTap ??
+        onTap: onTap ??
             () {
               if (route == null) {
                 return;
@@ -476,8 +423,7 @@ class _AppDrawerState extends State<AppDrawer> {
 
               _closeDrawer(context);
 
-              if (route ==
-                  widget.currentRoute) {
+              if (route == currentRoute) {
                 return;
               }
 
@@ -489,16 +435,12 @@ class _AppDrawerState extends State<AppDrawer> {
         leading: Container(
           width: 42,
           height: 42,
-          decoration:
-              BoxDecoration(
-            color:
-                iconColor.withValues(
+          decoration: BoxDecoration(
+            color: iconColor.withValues(
               alpha: 0.10,
             ),
             borderRadius:
-                BorderRadius.circular(
-              13,
-            ),
+                BorderRadius.circular(13),
           ),
           child: Icon(
             icon,
@@ -519,25 +461,61 @@ class _AppDrawerState extends State<AppDrawer> {
         trailing: selected
             ? const Icon(
                 Icons.circle,
-                color:
-                    AppTheme.darkGreen,
+                color: AppTheme.darkGreen,
                 size: 8,
               )
             : const Icon(
-                Icons
-                    .chevron_right_rounded,
+                Icons.chevron_right_rounded,
                 color: AppTheme.grey,
                 size: 20,
               ),
-        shape:
-            RoundedRectangleBorder(
+        shape: RoundedRectangleBorder(
           borderRadius:
-              BorderRadius.circular(
-            15,
-          ),
+              BorderRadius.circular(15),
         ),
       ),
     );
+  }
+
+  Future<void> _logout(
+    BuildContext context,
+  ) async {
+    final authProvider =
+        context.read<AuthProvider>();
+
+    try {
+      await authProvider.logout();
+
+      if (!context.mounted) {
+        return;
+      }
+
+      Navigator.pop(context);
+
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Đã đăng xuất tài khoản.',
+            ),
+            behavior:
+                SnackBarBehavior.floating,
+          ),
+        );
+    } catch (e) {
+      if (!context.mounted) {
+        return;
+      }
+
+      _showMessage(
+        context,
+        e.toString().replaceFirst(
+              'Exception: ',
+              '',
+            ),
+      );
+    }
   }
 
   void _closeDrawer(
@@ -551,15 +529,13 @@ class _AppDrawerState extends State<AppDrawer> {
     String message,
   ) {
     ScaffoldMessenger.of(context)
-        .hideCurrentSnackBar();
-
-    ScaffoldMessenger.of(context)
-        .showSnackBar(
-      SnackBar(
-        content: Text(message),
-        behavior:
-            SnackBarBehavior.floating,
-      ),
-    );
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(message),
+          behavior:
+              SnackBarBehavior.floating,
+        ),
+      );
   }
-}
+} 

@@ -1,161 +1,314 @@
-import 'dart:convert';
+import 'package:dio/dio.dart';
 
-import 'package:http/http.dart' as http;
-
+import '../core/constants/api_constants.dart';
 import '../models/favorite.dart';
+import 'auth_service.dart';
+
+class FavoriteStatus {
+  final bool isFavorite;
+
+  const FavoriteStatus({
+    required this.isFavorite,
+  });
+}
 
 class FavoriteService {
-  static const String _baseUrl =
-      'http://10.0.2.2:5182/api';
+  FavoriteService._();
 
-  Future<List<Favorite>> getFavorites(
-    String token,
-  ) async {
-    final response = await http.get(
-      Uri.parse('$_baseUrl/favorites'),
+  static final FavoriteService instance =
+      FavoriteService._();
+
+  final Dio _dio = Dio(
+    BaseOptions(
+      connectTimeout:
+          const Duration(seconds: 15),
+      receiveTimeout:
+          const Duration(seconds: 30),
+      sendTimeout:
+          const Duration(seconds: 15),
       headers: {
-        'Authorization': 'Bearer $token',
-        'Content-Type': 'application/json',
+        'Content-Type':
+            'application/json',
       },
-    );
+    ),
+  );
 
-    if (response.statusCode != 200) {
+  Future<List<Favorite>> getFavorites() async {
+    final token =
+        await AuthService.instance.getToken();
+
+    if (token == null ||
+        token.trim().isEmpty) {
       throw Exception(
-        'Không thể tải danh sách yêu thích: '
-        '${response.statusCode}',
+        'Bạn cần đăng nhập để xem phim yêu thích.',
       );
     }
 
-    final Map<String, dynamic> json =
-        jsonDecode(response.body);
+    try {
+      final response = await _dio.get(
+        '${ApiConstants.baseUrl}${ApiConstants.favorites}',
+        options: Options(
+          headers: {
+            'Authorization':
+                'Bearer $token',
+          },
+        ),
+      );
 
-    if (json['success'] != true) {
+      final body =
+          _asMap(response.data);
+
+      _ensureSuccess(body);
+
+      final data = body['data'];
+
+      if (data is! List) {
+        return const [];
+      }
+
+      return data
+          .whereType<Map>()
+          .map(
+            (item) => Favorite.fromJson(
+              Map<String, dynamic>.from(
+                item,
+              ),
+            ),
+          )
+          .toList();
+    } on DioException catch (error) {
       throw Exception(
-        json['message'] ??
-            'Không thể tải danh sách yêu thích',
+        _getErrorMessage(error),
       );
     }
-
-    final dynamic data = json['data'];
-
-    if (data is! List) {
-      return [];
-    }
-
-    return data
-        .map(
-          (item) => Favorite.fromJson(
-            item as Map<String, dynamic>,
-          ),
-        )
-        .toList();
   }
 
   Future<bool> checkFavorite(
-    String token,
     int movieId,
   ) async {
-    final response = await http.get(
-      Uri.parse(
-        '$_baseUrl/favorites/check/$movieId',
-      ),
-      headers: {
-        'Authorization': 'Bearer $token',
-        'Content-Type': 'application/json',
-      },
-    );
+    final token =
+        await AuthService.instance.getToken();
 
-    if (response.statusCode != 200) {
-      throw Exception(
-        'Không thể kiểm tra trạng thái yêu thích: '
-        '${response.statusCode}',
-      );
-    }
-
-    final Map<String, dynamic> json =
-        jsonDecode(response.body);
-
-    if (json['success'] != true) {
-      throw Exception(
-        json['message'] ??
-            'Không thể kiểm tra trạng thái yêu thích',
-      );
-    }
-
-    final data = json['data'];
-
-    if (data is! Map<String, dynamic>) {
+    if (token == null ||
+        token.trim().isEmpty) {
       return false;
     }
 
-    return data['isFavorite'] == true;
+    try {
+      final response = await _dio.get(
+        '${ApiConstants.baseUrl}${ApiConstants.favorites}/check/$movieId',
+        options: Options(
+          headers: {
+            'Authorization':
+                'Bearer $token',
+          },
+        ),
+      );
+
+      final body =
+          _asMap(response.data);
+
+      _ensureSuccess(body);
+
+      final data =
+          _asMap(body['data']);
+
+      return data['isFavorite'] == true;
+    } on DioException catch (error) {
+      throw Exception(
+        _getErrorMessage(error),
+      );
+    }
   }
 
   Future<bool> addFavorite(
-    String token,
     int movieId,
   ) async {
-    final response = await http.post(
-      Uri.parse(
-        '$_baseUrl/favorites/$movieId',
-      ),
-      headers: {
-        'Authorization': 'Bearer $token',
-        'Content-Type': 'application/json',
-      },
-    );
+    final token =
+        await AuthService.instance.getToken();
 
-    if (response.statusCode != 200) {
+    if (token == null ||
+        token.trim().isEmpty) {
       throw Exception(
-        'Không thể thêm phim vào danh sách yêu thích: '
-        '${response.statusCode}',
+        'Bạn cần đăng nhập để thêm phim yêu thích.',
       );
     }
 
-    final Map<String, dynamic> json =
-        jsonDecode(response.body);
+    try {
+      final response = await _dio.post(
+        '${ApiConstants.baseUrl}${ApiConstants.favorites}/$movieId',
+        options: Options(
+          headers: {
+            'Authorization':
+                'Bearer $token',
+          },
+        ),
+      );
 
-    if (json['success'] != true) {
+      final body =
+          _asMap(response.data);
+
+      _ensureSuccess(body);
+
+      return body['data'] != false;
+    } on DioException catch (error) {
       throw Exception(
-        json['message'] ??
-            'Không thể thêm phim vào danh sách yêu thích',
+        _getErrorMessage(error),
       );
     }
-
-    return json['data'] == true;
   }
 
   Future<bool> removeFavorite(
-    String token,
     int movieId,
   ) async {
-    final response = await http.delete(
-      Uri.parse(
-        '$_baseUrl/favorites/$movieId',
-      ),
-      headers: {
-        'Authorization': 'Bearer $token',
-        'Content-Type': 'application/json',
-      },
-    );
+    final token =
+        await AuthService.instance.getToken();
 
-    if (response.statusCode != 200) {
+    if (token == null ||
+        token.trim().isEmpty) {
       throw Exception(
-        'Không thể xóa phim khỏi danh sách yêu thích: '
-        '${response.statusCode}',
+        'Bạn cần đăng nhập để bỏ phim yêu thích.',
       );
     }
 
-    final Map<String, dynamic> json =
-        jsonDecode(response.body);
+    try {
+      final response = await _dio.delete(
+        '${ApiConstants.baseUrl}${ApiConstants.favorites}/$movieId',
+        options: Options(
+          headers: {
+            'Authorization':
+                'Bearer $token',
+          },
+        ),
+      );
 
-    if (json['success'] != true) {
+      final body =
+          _asMap(response.data);
+
+      _ensureSuccess(body);
+
+      return false;
+    } on DioException catch (error) {
       throw Exception(
-        json['message'] ??
-            'Không thể xóa phim khỏi danh sách yêu thích',
+        _getErrorMessage(error),
+      );
+    }
+  }
+
+  Map<String, dynamic> _asMap(
+    dynamic value,
+  ) {
+    if (value is Map<String, dynamic>) {
+      return value;
+    }
+
+    if (value is Map) {
+      return Map<String, dynamic>.from(
+        value,
       );
     }
 
-    return json['data'] == true;
+    return <String, dynamic>{};
+  }
+
+  void _ensureSuccess(
+    Map<String, dynamic> body,
+  ) {
+    if (body.isEmpty) {
+      throw Exception(
+        'Backend trả về dữ liệu không hợp lệ.',
+      );
+    }
+
+    if (body['success'] == false) {
+      final message =
+          body['message']
+              ?.toString()
+              .trim();
+
+      throw Exception(
+        message == null ||
+                message.isEmpty
+            ? 'Yêu cầu không thành công.'
+            : message,
+      );
+    }
+  }
+
+  String _getErrorMessage(
+    DioException error,
+  ) {
+    final data =
+        error.response?.data;
+
+    if (data is Map) {
+      final body =
+          _asMap(data);
+
+      final message =
+          body['message']
+              ?.toString()
+              .trim();
+
+      if (message != null &&
+          message.isNotEmpty) {
+        return message;
+      }
+
+      final errors =
+          body['errors'];
+
+      if (errors is Map) {
+        for (final value
+            in errors.values) {
+          if (value is List &&
+              value.isNotEmpty) {
+            return value.first.toString();
+          }
+
+          if (value != null) {
+            return value.toString();
+          }
+        }
+      }
+    }
+
+    switch (error.type) {
+      case DioExceptionType.connectionTimeout:
+      case DioExceptionType.sendTimeout:
+      case DioExceptionType.receiveTimeout:
+      case DioExceptionType.transformTimeout:
+        return 'Kết nối tới backend quá lâu. Vui lòng thử lại.';
+
+      case DioExceptionType.connectionError:
+        return 'Không thể kết nối tới backend CineStream.';
+
+      case DioExceptionType.badResponse:
+        final status =
+            error.response?.statusCode;
+
+        if (status == 401) {
+          return 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.';
+        }
+
+        if (status == 403) {
+          return 'Bạn không có quyền thực hiện thao tác này.';
+        }
+
+        if (status == 404) {
+          return 'Không tìm thấy bộ phim.';
+        }
+
+        return 'Backend trả về lỗi HTTP ${status ?? ''}.';
+
+      case DioExceptionType.cancel:
+        return 'Yêu cầu đã bị hủy.';
+
+      case DioExceptionType.badCertificate:
+        return 'Không thể xác thực chứng chỉ kết nối.';
+
+      case DioExceptionType.unknown:
+        return 'Không thể thực hiện thao tác yêu thích.';
+    }
   }
 }

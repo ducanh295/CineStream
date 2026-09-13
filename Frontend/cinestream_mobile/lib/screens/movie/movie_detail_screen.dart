@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
 
 import '../../core/routes/app_routes.dart';
 import '../../core/theme/app_theme.dart';
 import '../../models/movie.dart';
+import '../../providers/auth_provider.dart';
 import '../../services/favorite_service.dart';
-import '../../services/movie_service.dart';
 import '../../widgets/app_bottom_navigation.dart';
 import '../../widgets/app_drawer.dart';
-import '../../widgets/movie_card.dart';
 
 class MovieDetailScreen extends StatefulWidget {
   final Movie? movie;
@@ -26,89 +25,39 @@ class MovieDetailScreen extends StatefulWidget {
 class _MovieDetailScreenState
     extends State<MovieDetailScreen> {
   final FavoriteService _favoriteService =
-      FavoriteService();
+      FavoriteService.instance;
 
-  final MovieService _movieService =
-      MovieService();
-
-  late final Movie _movie;
-
-  bool _isSaved = false;
+  bool _isFavorite = false;
   bool _isCheckingFavorite = true;
   bool _isUpdatingFavorite = false;
-
-  bool _isLoadingRecommendations = true;
-
-  String? _favoriteError;
-  String? _recommendationError;
-
-  List<Movie> _recommendedMovies = [];
 
   @override
   void initState() {
     super.initState();
 
-    _movie = widget.movie ??
-        Movie(
-          id: 1,
-          title: 'The Forgotten Meridian',
-          description:
-              'Một bí mật bị lãng quên giữa thành phố tương lai.',
-          posterUrl:
-              'https://images.unsplash.com/photo-1485846234645-a62644f84728',
-          releaseYear: 2024,
-          duration: 138,
-          averageRating: 8.4,
-          viewCount: 125000,
-          videoStatus: 1,
-        );
-
-    _loadFavoriteStatus();
-    _loadRecommendations();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkFavoriteStatus();
+    });
   }
 
-  // ============================================================
-  // LOAD TOKEN
-  // ============================================================
+  Future<void> _checkFavoriteStatus() async {
+    final movie = widget.movie;
 
-  Future<String?> _getToken() async {
-    final prefs =
-        await SharedPreferences.getInstance();
-
-    const keys = [
-      'token',
-      'accessToken',
-      'jwtToken',
-    ];
-
-    for (final key in keys) {
-      final token = prefs.getString(key);
-
-      if (token != null &&
-          token.trim().isNotEmpty) {
-        return token.trim();
-      }
-    }
-
-    return null;
-  }
-
-  // ============================================================
-  // FAVORITE
-  // ============================================================
-
-  Future<void> _loadFavoriteStatus() async {
-    final token = await _getToken();
-
-    if (!mounted) {
+    if (movie == null) {
       return;
     }
 
-    if (token == null) {
+    final authProvider =
+        context.read<AuthProvider>();
+
+    if (!authProvider.isAuthenticated) {
+      if (!mounted) {
+        return;
+      }
+
       setState(() {
+        _isFavorite = false;
         _isCheckingFavorite = false;
-        _favoriteError = null;
-        _isSaved = false;
       });
 
       return;
@@ -117,8 +66,7 @@ class _MovieDetailScreenState
     try {
       final isFavorite =
           await _favoriteService.checkFavorite(
-        token,
-        _movie.id,
+        movie.id,
       );
 
       if (!mounted) {
@@ -126,87 +74,73 @@ class _MovieDetailScreenState
       }
 
       setState(() {
-        _isSaved = isFavorite;
+        _isFavorite = isFavorite;
         _isCheckingFavorite = false;
-        _favoriteError = null;
       });
-    } catch (e) {
+    } catch (_) {
       if (!mounted) {
         return;
       }
 
       setState(() {
         _isCheckingFavorite = false;
-        _favoriteError =
-            e.toString().replaceFirst(
-                  'Exception: ',
-                  '',
-                );
       });
     }
   }
 
   Future<void> _toggleFavorite() async {
-    if (_isUpdatingFavorite) {
+    final movie = widget.movie;
+
+    if (movie == null ||
+        _isUpdatingFavorite) {
       return;
     }
 
-    final token = await _getToken();
+    final authProvider =
+        context.read<AuthProvider>();
 
-    if (!mounted) {
-      return;
-    }
-
-    if (token == null) {
+    if (!authProvider.isAuthenticated) {
       _showMessage(
-        'Bạn cần đăng nhập để sử dụng danh sách yêu thích.',
+        'Bạn cần đăng nhập để sử dụng Phim yêu thích.',
       );
+
+      Navigator.pushNamed(
+        context,
+        AppRoutes.login,
+      );
+
       return;
     }
 
     setState(() {
       _isUpdatingFavorite = true;
-      _favoriteError = null;
     });
 
     try {
-      if (_isSaved) {
+      if (_isFavorite) {
         await _favoriteService.removeFavorite(
-          token,
-          _movie.id,
-        );
-
-        if (!mounted) {
-          return;
-        }
-
-        setState(() {
-          _isSaved = false;
-          _isUpdatingFavorite = false;
-        });
-
-        _showMessage(
-          'Đã bỏ phim khỏi danh sách yêu thích.',
+          movie.id,
         );
       } else {
         await _favoriteService.addFavorite(
-          token,
-          _movie.id,
-        );
-
-        if (!mounted) {
-          return;
-        }
-
-        setState(() {
-          _isSaved = true;
-          _isUpdatingFavorite = false;
-        });
-
-        _showMessage(
-          'Đã thêm phim vào danh sách yêu thích.',
+          movie.id,
         );
       }
+
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _isFavorite = !_isFavorite;
+        _isUpdatingFavorite = false;
+      });
+
+      _showMessage(
+        _isFavorite
+            ? 'Đã thêm vào phim yêu thích.'
+            : 'Đã bỏ khỏi phim yêu thích.',
+      );
     } catch (e) {
       if (!mounted) {
         return;
@@ -214,70 +148,79 @@ class _MovieDetailScreenState
 
       setState(() {
         _isUpdatingFavorite = false;
-        _favoriteError =
-            e.toString().replaceFirst(
-                  'Exception: ',
-                  '',
-                );
       });
 
       _showMessage(
-        _favoriteError ??
-            'Không thể cập nhật danh sách yêu thích.',
+        _cleanErrorMessage(e),
       );
     }
   }
 
-  // ============================================================
-  // RECOMMENDATIONS
-  // ============================================================
-
-  Future<void> _loadRecommendations() async {
-    try {
-      final movies =
-          await _movieService.getMovies();
-
-      if (!mounted) {
-        return;
-      }
-
-      final recommendations = movies
-          .where(
-            (movie) => movie.id != _movie.id,
-          )
-          .toList();
-
-      setState(() {
-        _recommendedMovies =
-            recommendations.take(10).toList();
-        _isLoadingRecommendations = false;
-        _recommendationError = null;
-      });
-    } catch (e) {
-      if (!mounted) {
-        return;
-      }
-
-      setState(() {
-        _isLoadingRecommendations = false;
-        _recommendationError =
-            e.toString().replaceFirst(
-                  'Exception: ',
-                  '',
-                );
-      });
+  void _showMessage(
+    String message,
+  ) {
+    if (!mounted) {
+      return;
     }
+
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(message),
+          behavior:
+              SnackBarBehavior.floating,
+        ),
+      );
   }
 
-  // ============================================================
-  // BUILD
-  // ============================================================
+  String _cleanErrorMessage(
+    Object error,
+  ) {
+    return error
+        .toString()
+        .replaceFirst(
+          'Exception: ',
+          '',
+        )
+        .trim();
+  }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
+    final currentMovie = widget.movie;
+
+    if (currentMovie == null) {
+      return Scaffold(
+        backgroundColor:
+            AppTheme.background,
+        appBar: AppBar(
+          backgroundColor:
+              AppTheme.background,
+          elevation: 0,
+          title: const Text(
+            'Chi tiết phim',
+          ),
+        ),
+        body: const Center(
+          child: Text(
+            'Không tìm thấy thông tin phim.',
+            style: TextStyle(
+              color: AppTheme.grey,
+              fontSize: 14,
+            ),
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
-      backgroundColor: AppTheme.background,
-      drawerScrimColor: Colors.black.withValues(
+      backgroundColor:
+          AppTheme.background,
+      drawerScrimColor:
+          Colors.black.withValues(
         alpha: 0.58,
       ),
       drawer: const AppDrawer(
@@ -287,7 +230,8 @@ class _MovieDetailScreenState
         child: Stack(
           children: [
             SingleChildScrollView(
-              padding: const EdgeInsets.only(
+              padding:
+                  const EdgeInsets.only(
                 bottom: 105,
               ),
               physics:
@@ -296,16 +240,26 @@ class _MovieDetailScreenState
                 crossAxisAlignment:
                     CrossAxisAlignment.start,
                 children: [
-                  _buildHeroBanner(),
-                  _buildMovieInfo(),
-                  _buildContentSection(),
-                  _buildDirectorSection(),
-                  _buildCastSection(),
-                  _buildRecommendations(),
+                  _buildHeroBanner(
+                    currentMovie,
+                  ),
+                  _buildMovieInfo(
+                    context,
+                    currentMovie,
+                  ),
+                  _buildContentSection(
+                    currentMovie,
+                  ),
+                  _buildMovieMetadata(
+                    currentMovie,
+                  ),
                 ],
               ),
             ),
-            _buildTopBar(),
+            _buildTopBar(
+              context,
+              currentMovie,
+            ),
           ],
         ),
       ),
@@ -316,11 +270,10 @@ class _MovieDetailScreenState
     );
   }
 
-  // ============================================================
-  // TOP BAR
-  // ============================================================
-
-  Widget _buildTopBar() {
+  Widget _buildTopBar(
+    BuildContext context,
+    Movie currentMovie,
+  ) {
     return Positioned(
       top: 0,
       left: 0,
@@ -332,9 +285,12 @@ class _MovieDetailScreenState
           horizontal: 14,
         ),
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
+          gradient:
+              LinearGradient(
+            begin:
+                Alignment.topCenter,
+            end:
+                Alignment.bottomCenter,
             colors: [
               Colors.black.withValues(
                 alpha: 0.58,
@@ -355,21 +311,39 @@ class _MovieDetailScreenState
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                _movie.title,
+                currentMovie.title,
                 maxLines: 1,
                 overflow:
                     TextOverflow.ellipsis,
-                style: const TextStyle(
+                style:
+                    const TextStyle(
                   color: Colors.white,
                   fontSize: 17,
-                  fontWeight: FontWeight.w800,
+                  fontWeight:
+                      FontWeight.w800,
                 ),
               ),
             ),
+            _circleButton(
+              icon: _isFavorite
+                  ? Icons.favorite_rounded
+                  : Icons.favorite_border_rounded,
+              iconColor: _isFavorite
+                  ? Colors.pinkAccent
+                  : Colors.white,
+              onTap:
+                  _toggleFavorite,
+              isLoading:
+                  _isCheckingFavorite ||
+                      _isUpdatingFavorite,
+            ),
+            const SizedBox(width: 8),
             Builder(
-              builder: (scaffoldContext) {
+              builder:
+                  (scaffoldContext) {
                 return _circleButton(
-                  icon: Icons.menu_rounded,
+                  icon:
+                      Icons.menu_rounded,
                   onTap: () {
                     Scaffold.of(
                       scaffoldContext,
@@ -387,6 +361,8 @@ class _MovieDetailScreenState
   Widget _circleButton({
     required IconData icon,
     required VoidCallback onTap,
+    Color iconColor = Colors.white,
+    bool isLoading = false,
   }) {
     return Material(
       color: Colors.black.withValues(
@@ -396,67 +372,61 @@ class _MovieDetailScreenState
       child: InkWell(
         customBorder:
             const CircleBorder(),
-        onTap: onTap,
+        onTap: isLoading ? null : onTap,
         child: SizedBox(
           width: 40,
           height: 40,
-          child: Icon(
-            icon,
-            color: Colors.white,
-            size: 21,
-          ),
+          child: isLoading
+              ? const Padding(
+                  padding:
+                      EdgeInsets.all(11),
+                  child:
+                      CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.white,
+                  ),
+                )
+              : Icon(
+                  icon,
+                  color: iconColor,
+                  size: 21,
+                ),
         ),
       ),
     );
   }
 
-  // ============================================================
-  // HERO
-  // ============================================================
+  Widget _buildHeroBanner(
+    Movie currentMovie,
+  ) {
+    final posterUrl =
+        currentMovie.posterUrl?.trim();
 
-  Widget _buildHeroBanner() {
     return SizedBox(
       width: double.infinity,
       height: 405,
       child: Stack(
         fit: StackFit.expand,
         children: [
-          Image.network(
-            _movie.posterUrl ?? '',
-            fit: BoxFit.cover,
-            errorBuilder: (
-              context,
-              error,
-              stackTrace,
-            ) {
-              return Container(
-                decoration:
-                    const BoxDecoration(
-                  gradient: LinearGradient(
-                    begin:
-                        Alignment.topCenter,
-                    end:
-                        Alignment.bottomCenter,
-                    colors: [
-                      Color(0xFFBC4D8C),
-                      AppTheme.darkGreen2,
-                    ],
-                  ),
+          posterUrl == null ||
+                  posterUrl.isEmpty
+              ? _buildHeroPlaceholder()
+              : Image.network(
+                  posterUrl,
+                  fit: BoxFit.cover,
+                  errorBuilder:
+                      (
+                    context,
+                    error,
+                    stackTrace,
+                  ) {
+                    return _buildHeroPlaceholder();
+                  },
                 ),
-                child: const Center(
-                  child: Icon(
-                    Icons
-                        .movie_creation_outlined,
-                    color: Colors.white30,
-                    size: 90,
-                  ),
-                ),
-              );
-            },
-          ),
           Container(
             decoration: BoxDecoration(
-              gradient: LinearGradient(
+              gradient:
+                  LinearGradient(
                 begin:
                     Alignment.topCenter,
                 end:
@@ -474,26 +444,9 @@ class _MovieDetailScreenState
                   0.35,
                   0.55,
                   0.82,
-                  1,
+                  1.0,
                 ],
               ),
-            ),
-          ),
-          Positioned(
-            top: 78,
-            right: 18,
-            child: _heroFloatingButton(
-              icon: _isCheckingFavorite
-                  ? Icons.hourglass_empty_rounded
-                  : _isSaved
-                      ? Icons.bookmark_rounded
-                      : Icons
-                          .bookmark_border_rounded,
-              onTap:
-                  _isCheckingFavorite ||
-                          _isUpdatingFavorite
-                      ? () {}
-                      : _toggleFavorite,
             ),
           ),
         ],
@@ -501,51 +454,39 @@ class _MovieDetailScreenState
     );
   }
 
-  Widget _heroFloatingButton({
-    required IconData icon,
-    required VoidCallback onTap,
-  }) {
-    return Material(
-      color: Colors.black.withValues(
-        alpha: 0.38,
+  Widget _buildHeroPlaceholder() {
+    return Container(
+      decoration:
+          const BoxDecoration(
+        gradient:
+            LinearGradient(
+          begin:
+              Alignment.topCenter,
+          end:
+              Alignment.bottomCenter,
+          colors: [
+            Color(0xFFBC4D8C),
+            AppTheme.darkGreen2,
+          ],
+        ),
       ),
-      shape: const CircleBorder(),
-      child: InkWell(
-        customBorder:
-            const CircleBorder(),
-        onTap: onTap,
-        child: SizedBox(
-          width: 44,
-          height: 44,
-          child: Center(
-            child: _isUpdatingFavorite
-                ? const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child:
-                        CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: Colors.white,
-                    ),
-                  )
-                : Icon(
-                    icon,
-                    color: Colors.white,
-                    size: 22,
-                  ),
-          ),
+      child: const Center(
+        child: Icon(
+          Icons.movie_creation_outlined,
+          color: Colors.white30,
+          size: 90,
         ),
       ),
     );
   }
 
-  // ============================================================
-  // MOVIE INFO
-  // ============================================================
-
-  Widget _buildMovieInfo() {
+  Widget _buildMovieInfo(
+    BuildContext context,
+    Movie currentMovie,
+  ) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(
+      padding:
+          const EdgeInsets.fromLTRB(
         20,
         0,
         20,
@@ -556,192 +497,175 @@ class _MovieDetailScreenState
             CrossAxisAlignment.start,
         children: [
           Text(
-            _movie.title,
-            style: const TextStyle(
+            currentMovie.title,
+            style:
+                const TextStyle(
               color: AppTheme.black,
               fontSize: 31,
-              fontWeight: FontWeight.w900,
+              fontWeight:
+                  FontWeight.w900,
               fontFamily: 'Georgia',
               height: 1.05,
               letterSpacing: -0.5,
             ),
           ),
           const SizedBox(height: 13),
-          _buildMetaInfo(),
+          _buildMetaInfo(
+            currentMovie,
+          ),
           const SizedBox(height: 19),
-          Row(
-            children: [
-              Expanded(
-                child: SizedBox(
-                  height: 51,
-                  child: ElevatedButton.icon(
-                    onPressed: () {
-                      _openVideoPlayer(
-                        _movie,
-                      );
-                    },
-                    icon: const Icon(
-                      Icons
-                          .play_arrow_rounded,
-                      size: 24,
-                    ),
-                    label: const Text(
-                      'Xem phim',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight:
-                            FontWeight.w800,
-                      ),
-                    ),
-                    style:
-                        ElevatedButton.styleFrom(
-                      backgroundColor:
-                          AppTheme.darkGreen,
-                      foregroundColor:
-                          Colors.white,
-                      elevation: 0,
-                      shape:
-                          RoundedRectangleBorder(
-                        borderRadius:
-                            BorderRadius.circular(
-                          30,
-                        ),
-                      ),
-                    ),
+          SizedBox(
+            width: double.infinity,
+            height: 51,
+            child:
+                ElevatedButton.icon(
+              onPressed:
+                  currentMovie.videoStatus ==
+                          1
+                      ? () {
+                          _openVideoPlayer(
+                            context,
+                            currentMovie,
+                          );
+                        }
+                      : null,
+              icon:
+                  const Icon(
+                Icons.play_arrow_rounded,
+                size: 24,
+              ),
+              label: Text(
+                currentMovie.videoStatus ==
+                        1
+                    ? 'Xem phim'
+                    : 'Video chưa sẵn sàng',
+                style:
+                    const TextStyle(
+                  fontSize: 14,
+                  fontWeight:
+                      FontWeight.w800,
+                ),
+              ),
+              style:
+                  ElevatedButton.styleFrom(
+                backgroundColor:
+                    AppTheme.darkGreen,
+                foregroundColor:
+                    Colors.white,
+                disabledBackgroundColor:
+                    AppTheme.lightGrey,
+                disabledForegroundColor:
+                    AppTheme.grey,
+                elevation: 0,
+                shape:
+                    RoundedRectangleBorder(
+                  borderRadius:
+                      BorderRadius.circular(
+                    30,
                   ),
                 ),
               ),
-              const SizedBox(width: 10),
-              SizedBox(
-                width: 51,
-                height: 51,
-                child: OutlinedButton(
-                  onPressed: () {
-                    _showMessage(
-                      'Tùy chọn chia sẻ sẽ được kết nối sau.',
-                    );
-                  },
-                  style:
-                      OutlinedButton.styleFrom(
-                    foregroundColor:
-                        AppTheme.darkGreen,
-                    side:
-                        const BorderSide(
-                      color:
-                          AppTheme.darkGreen,
-                      width: 1.2,
-                    ),
-                    padding:
-                        EdgeInsets.zero,
-                    shape:
-                        RoundedRectangleBorder(
-                      borderRadius:
-                          BorderRadius.circular(
-                        16,
-                      ),
-                    ),
-                  ),
-                  child: const Icon(
-                    Icons.share_rounded,
-                    size: 21,
-                  ),
-                ),
-              ),
-            ],
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildMetaInfo() {
-    return Row(
-      children: [
-        const Icon(
-          Icons.star_rounded,
-          color: AppTheme.yellow,
-          size: 20,
-        ),
-        const SizedBox(width: 4),
-        Text(
-          '${_movie.averageRating.toStringAsFixed(1)} /10',
-          style: const TextStyle(
-            color: AppTheme.black,
-            fontSize: 13,
-            fontWeight: FontWeight.w800,
+  Widget _buildMetaInfo(
+    Movie currentMovie,
+  ) {
+    final items =
+        <Widget>[];
+
+    if (currentMovie.duration !=
+        null) {
+      items.add(
+        _metaItem(
+          Icons.schedule_rounded,
+          _formatDuration(
+            currentMovie.duration,
           ),
         ),
-        _metaDivider(),
-        const Icon(
-          Icons.schedule_rounded,
+      );
+    }
+
+    if (currentMovie.releaseYear !=
+        null) {
+      items.add(
+        _metaText(
+          currentMovie.releaseYear!
+              .toString(),
+        ),
+      );
+    }
+
+    items.add(
+      _metaText(
+        currentMovie.isSeries
+            ? 'Phim bộ'
+            : 'Phim lẻ',
+      ),
+    );
+
+    return Wrap(
+      spacing: 12,
+      runSpacing: 8,
+      crossAxisAlignment:
+          WrapCrossAlignment.center,
+      children: items,
+    );
+  }
+
+  Widget _metaItem(
+    IconData icon,
+    String text,
+  ) {
+    return Row(
+      mainAxisSize:
+          MainAxisSize.min,
+      children: [
+        Icon(
+          icon,
           color: AppTheme.grey,
           size: 17,
         ),
         const SizedBox(width: 4),
         Text(
-          _formatDuration(
-            _movie.duration,
-          ),
-          style: const TextStyle(
+          text,
+          style:
+              const TextStyle(
             color: AppTheme.grey,
             fontSize: 13,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        _metaDivider(),
-        Text(
-          '${_movie.releaseYear ?? '----'}',
-          style: const TextStyle(
-            color: AppTheme.grey,
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
+            fontWeight:
+                FontWeight.w600,
           ),
         ),
       ],
     );
   }
 
-  Widget _metaDivider() {
-    return const Padding(
-      padding:
-          EdgeInsets.symmetric(
-        horizontal: 10,
-      ),
-      child: Text(
-        '•',
-        style: TextStyle(
-          color: AppTheme.grey,
-          fontSize: 14,
-        ),
+  Widget _metaText(
+    String text,
+  ) {
+    return Text(
+      text,
+      style:
+          const TextStyle(
+        color: AppTheme.grey,
+        fontSize: 13,
+        fontWeight:
+            FontWeight.w600,
       ),
     );
   }
 
-  String _formatDuration(int? duration) {
-    if (duration == null ||
-        duration <= 0) {
-      return '--';
-    }
-
-    final hours = duration ~/ 60;
-    final minutes = duration % 60;
-
-    if (hours == 0) {
-      return '${minutes}m';
-    }
-
-    return minutes == 0
-        ? '${hours}h'
-        : '${hours}h ${minutes.toString().padLeft(2, '0')}m';
-  }
-
-  // ============================================================
-  // CONTENT
-  // ============================================================
-
-  Widget _buildContentSection() {
+  Widget _buildContentSection(
+    Movie currentMovie,
+  ) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(
+      padding:
+          const EdgeInsets.fromLTRB(
         20,
         28,
         20,
@@ -753,18 +677,22 @@ class _MovieDetailScreenState
         children: [
           const Text(
             'Nội dung',
-            style: TextStyle(
+            style:
+                TextStyle(
               color: AppTheme.black,
               fontSize: 21,
-              fontWeight: FontWeight.w900,
-              fontFamily: 'Georgia',
+              fontWeight:
+                  FontWeight.w900,
+              fontFamily:
+                  'Georgia',
             ),
           ),
           const SizedBox(height: 10),
           Text(
-            _movie.description ??
+            currentMovie.description ??
                 'Chưa có mô tả cho bộ phim này.',
-            style: const TextStyle(
+            style:
+                const TextStyle(
               color: AppTheme.grey,
               fontSize: 14,
               height: 1.55,
@@ -775,146 +703,14 @@ class _MovieDetailScreenState
     );
   }
 
-  // ============================================================
-  // DIRECTOR + CATEGORY
-  // ============================================================
-
-  Widget _buildDirectorSection() {
-    final categoryText =
-        _movie.categories.isEmpty
-            ? 'Chưa cập nhật'
-            : _movie.categories
-                .map(
-                  (category) =>
-                      category.name,
-                )
-                .join(' • ');
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        20,
-        25,
-        20,
-        0,
-      ),
-      child: Row(
-        crossAxisAlignment:
-            CrossAxisAlignment.start,
-        children: [
-          const Expanded(
-            child: Column(
-              crossAxisAlignment:
-                  CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Đạo diễn',
-                  style: TextStyle(
-                    color: AppTheme.grey,
-                    fontSize: 12,
-                    fontWeight:
-                        FontWeight.w600,
-                  ),
-                ),
-                SizedBox(height: 6),
-                Text(
-                  'Chưa cập nhật',
-                  style: TextStyle(
-                    color: AppTheme.black,
-                    fontSize: 15,
-                    fontWeight:
-                        FontWeight.w800,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Container(
-            width: 1,
-            height: 40,
-            color: AppTheme.lightGrey,
-          ),
-          const SizedBox(width: 20),
-          Expanded(
-            child: Column(
-              crossAxisAlignment:
-                  CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Thể loại',
-                  style: TextStyle(
-                    color: AppTheme.grey,
-                    fontSize: 12,
-                    fontWeight:
-                        FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  categoryText,
-                  maxLines: 2,
-                  overflow:
-                      TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: AppTheme.black,
-                    fontSize: 15,
-                    fontWeight:
-                        FontWeight.w800,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ============================================================
-  // CAST
-  // ============================================================
-
-  Widget _buildCastSection() {
-    if (_movie.actors.isEmpty) {
-      return Padding(
-        padding:
-            const EdgeInsets.fromLTRB(
-          20,
-          26,
-          20,
-          0,
-        ),
-        child: Column(
-          crossAxisAlignment:
-              CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Diễn viên',
-              style: TextStyle(
-                color: AppTheme.black,
-                fontSize: 21,
-                fontWeight:
-                    FontWeight.w900,
-                fontFamily: 'Georgia',
-              ),
-            ),
-            const SizedBox(height: 12),
-            const Text(
-              'Chưa có thông tin diễn viên.',
-              style: TextStyle(
-                color: AppTheme.grey,
-                fontSize: 13,
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
+  Widget _buildMovieMetadata(
+    Movie currentMovie,
+  ) {
     return Padding(
       padding:
           const EdgeInsets.fromLTRB(
         20,
-        26,
+        28,
         20,
         0,
       ),
@@ -923,251 +719,130 @@ class _MovieDetailScreenState
             CrossAxisAlignment.start,
         children: [
           const Text(
-            'Diễn viên',
-            style: TextStyle(
+            'Thông tin',
+            style:
+                TextStyle(
               color: AppTheme.black,
               fontSize: 21,
-              fontWeight: FontWeight.w900,
-              fontFamily: 'Georgia',
+              fontWeight:
+                  FontWeight.w900,
+              fontFamily:
+                  'Georgia',
             ),
           ),
-          const SizedBox(height: 12),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: _movie.actors.map(
-              (actor) {
-                return Container(
-                  padding:
-                      const EdgeInsets.symmetric(
-                    horizontal: 13,
-                    vertical: 8,
-                  ),
-                  decoration:
-                      BoxDecoration(
-                    color: Colors.white,
-                    borderRadius:
-                        BorderRadius.circular(
-                      30,
-                    ),
-                    border: Border.all(
-                      color: AppTheme.darkGreen
-                          .withValues(
-                        alpha: 0.10,
-                      ),
-                    ),
-                  ),
-                  child: Text(
-                    actor.name,
-                    style:
-                        const TextStyle(
-                      color:
-                          AppTheme.black,
-                      fontSize: 12,
-                      fontWeight:
-                          FontWeight.w600,
-                    ),
-                  ),
-                );
-              },
-            ).toList(),
+          const SizedBox(
+            height: 14,
           ),
+          if (currentMovie.categories
+              .isNotEmpty)
+            _buildInfoRow(
+              'Thể loại',
+              currentMovie.categories
+                  .map(
+                    (category) =>
+                        category.name,
+                  )
+                  .join(', '),
+            ),
+          _buildInfoRow(
+            'Loại',
+            currentMovie.isSeries
+                ? 'Phim bộ'
+                : 'Phim lẻ',
+          ),
+          _buildInfoRow(
+            'Video',
+            currentMovie.videoStatus ==
+                    1
+                ? 'Sẵn sàng'
+                : 'Chưa có video',
+          ),
+          if (currentMovie
+                      .streamType
+                      .isNotEmpty &&
+                  currentMovie
+                          .streamType !=
+                      'NONE')
+            _buildInfoRow(
+              'Kiểu phát',
+              currentMovie.streamType,
+            ),
         ],
       ),
     );
   }
 
-  // ============================================================
-  // RECOMMENDATIONS
-  // ============================================================
-
-  Widget _buildRecommendations() {
+  Widget _buildInfoRow(
+    String label,
+    String value,
+  ) {
     return Padding(
       padding:
-          const EdgeInsets.only(top: 30),
-      child: Column(
+          const EdgeInsets.only(
+        bottom: 10,
+      ),
+      child: Row(
         crossAxisAlignment:
             CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding:
-                const EdgeInsets.symmetric(
-              horizontal: 20,
-            ),
-            child: Row(
-              children: [
-                const Expanded(
-                  child: Text(
-                    'Có thể bạn thích',
-                    style: TextStyle(
-                      color: AppTheme.black,
-                      fontSize: 21,
-                      fontWeight:
-                          FontWeight.w900,
-                      fontFamily: 'Georgia',
-                    ),
-                  ),
-                ),
-                GestureDetector(
-                  onTap: () {
-                    Navigator.pushReplacementNamed(
-                      context,
-                      AppRoutes.search,
-                    );
-                  },
-                  child: const Row(
-                    children: [
-                      Text(
-                        'Xem thêm',
-                        style: TextStyle(
-                          color:
-                              AppTheme.darkGreen,
-                          fontSize: 12,
-                          fontWeight:
-                              FontWeight.w800,
-                        ),
-                      ),
-                      SizedBox(width: 3),
-                      Icon(
-                        Icons
-                            .chevron_right_rounded,
-                        color:
-                            AppTheme.darkGreen,
-                        size: 18,
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+          SizedBox(
+            width: 120,
+            child: Text(
+              label,
+              style:
+                  const TextStyle(
+                color: AppTheme.grey,
+                fontSize: 12.5,
+                fontWeight:
+                    FontWeight.w600,
+              ),
             ),
           ),
-          const SizedBox(height: 14),
-          _buildRecommendationContent(),
+          Expanded(
+            child: Text(
+              value,
+              style:
+                  const TextStyle(
+                color: AppTheme.black,
+                fontSize: 13,
+                fontWeight:
+                    FontWeight.w700,
+              ),
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildRecommendationContent() {
-    if (_isLoadingRecommendations) {
-      return const SizedBox(
-        height: 265,
-        child: Center(
-          child: CircularProgressIndicator(),
-        ),
-      );
-    }
-
-    if (_recommendationError != null) {
-      return Padding(
-        padding:
-            const EdgeInsets.symmetric(
-          horizontal: 20,
-        ),
-        child: Text(
-          _recommendationError!,
-          style: const TextStyle(
-            color: AppTheme.grey,
-            fontSize: 13,
-          ),
-        ),
-      );
-    }
-
-    if (_recommendedMovies.isEmpty) {
-      return const Padding(
-        padding:
-            EdgeInsets.symmetric(
-          horizontal: 20,
-        ),
-        child: Text(
-          'Chưa có phim đề xuất.',
-          style: TextStyle(
-            color: AppTheme.grey,
-            fontSize: 13,
-          ),
-        ),
-      );
-    }
-
-    return SizedBox(
-      height: 265,
-      child: ListView.separated(
-        padding:
-            const EdgeInsets.symmetric(
-          horizontal: 20,
-        ),
-        scrollDirection:
-            Axis.horizontal,
-        physics:
-            const BouncingScrollPhysics(),
-        itemCount:
-            _recommendedMovies.length,
-        separatorBuilder:
-            (context, index) {
-          return const SizedBox(
-            width: 14,
-          );
-        },
-        itemBuilder:
-            (context, index) {
-          final movie =
-              _recommendedMovies[index];
-
-          return MovieCard(
-            movie: movie,
-            onTap: () {
-              _openMovieDetail(movie);
-            },
-          );
-        },
-      ),
-    );
-  }
-
-  // ============================================================
-  // NAVIGATION
-  // ============================================================
-
-  void _openMovieDetail(
-    Movie movie,
+  String _formatDuration(
+    int? duration,
   ) {
-    Navigator.pushNamed(
-      context,
-      AppRoutes.movieDetail,
-      arguments: movie,
-    );
+    if (duration == null ||
+        duration <= 0) {
+      return '--';
+    }
+
+    final hours =
+        duration ~/ 60;
+    final minutes =
+        duration % 60;
+
+    if (hours > 0) {
+      return '${hours}h ${minutes.toString().padLeft(2, '0')}m';
+    }
+
+    return '${minutes}m';
   }
 
   void _openVideoPlayer(
-    Movie movie,
+    BuildContext context,
+    Movie currentMovie,
   ) {
     Navigator.pushNamed(
       context,
       AppRoutes.player,
-      arguments: movie,
-    );
-  }
-
-  // ============================================================
-  // MESSAGE
-  // ============================================================
-
-  void _showMessage(
-    String message,
-  ) {
-    ScaffoldMessenger.of(context)
-        .hideCurrentSnackBar();
-
-    ScaffoldMessenger.of(context)
-        .showSnackBar(
-      SnackBar(
-        content: Text(message),
-        behavior:
-            SnackBarBehavior.floating,
-        duration:
-            const Duration(seconds: 2),
-      ),
+      arguments: currentMovie,
     );
   }
 }

@@ -1,136 +1,79 @@
+import 'profile.dart';
+
 class User {
   final int id;
   final String username;
   final String email;
   final int role;
-  final DateTime? createdAt;
+
+  // Trạng thái tài khoản Premium
+  final bool isPremium;
+
+  // Thời điểm Premium hết hạn
+  final DateTime? premiumExpiresAt;
+
+  final Profile? profile;
 
   const User({
     required this.id,
     required this.username,
     required this.email,
     required this.role,
-    this.createdAt,
+    this.isPremium = false,
+    this.premiumExpiresAt,
+    this.profile,
   });
-
-  // ============================================================
-  // FROM JSON
-  // ============================================================
 
   factory User.fromJson(
     Map<String, dynamic> json,
   ) {
     return User(
-      id: _parseInt(json['id']),
-      username: json['username']?.toString() ?? '',
-      email: json['email']?.toString() ?? '',
-      role: _parseInt(json['role']),
-      createdAt: _parseDateTime(
-        json['createdAt'],
-      ),
+      id: (json['id'] as num?)?.toInt() ?? 0,
+
+      username:
+          json['username']?.toString() ?? '',
+
+      email:
+          json['email']?.toString() ?? '',
+
+      role:
+          (json['role'] as num?)?.toInt() ?? 0,
+
+      isPremium:
+          json['isPremium'] == true,
+
+      premiumExpiresAt:
+          json['premiumExpiresAt'] != null
+              ? DateTime.tryParse(
+                  json['premiumExpiresAt']
+                      .toString(),
+                )
+              : null,
+
+      profile:
+          json['profile']
+                  is Map<String, dynamic>
+              ? Profile.fromJson(
+                  Map<String, dynamic>.from(
+                    json['profile'] as Map,
+                  ),
+                )
+              : null,
     );
   }
-
-  // ============================================================
-  // TO JSON
-  // ============================================================
-
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'username': username,
-      'email': email,
-      'role': role,
-      'createdAt':
-          createdAt?.toIso8601String(),
-    };
-  }
-
-  // ============================================================
-  // COPY WITH
-  // ============================================================
-
-  User copyWith({
-    int? id,
-    String? username,
-    String? email,
-    int? role,
-    DateTime? createdAt,
-  }) {
-    return User(
-      id: id ?? this.id,
-      username: username ?? this.username,
-      email: email ?? this.email,
-      role: role ?? this.role,
-      createdAt:
-          createdAt ?? this.createdAt,
-    );
-  }
-
-  // ============================================================
-  // ROLE
-  // ============================================================
 
   bool get isAdmin => role == 1;
 
-  bool get isUser => role == 0;
-
-  String get roleName {
-    switch (role) {
-      case 1:
-        return 'Quản trị viên';
-      case 0:
-        return 'Người dùng';
-      default:
-        return 'Không xác định';
-    }
-  }
-
-  // ============================================================
-  // HELPERS
-  // ============================================================
-
-  static int _parseInt(
-    dynamic value,
-  ) {
-    if (value is int) {
-      return value;
+  bool get premiumActive {
+    if (!isPremium) {
+      return false;
     }
 
-    if (value is num) {
-      return value.toInt();
+    if (premiumExpiresAt == null) {
+      return true;
     }
 
-    return int.tryParse(
-          value?.toString() ?? '',
-        ) ??
-        0;
-  }
-
-  static DateTime? _parseDateTime(
-    dynamic value,
-  ) {
-    if (value == null) {
-      return null;
-    }
-
-    return DateTime.tryParse(
-      value.toString(),
-    );
-  }
-
-  // ============================================================
-  // DEBUG
-  // ============================================================
-
-  @override
-  String toString() {
-    return 'User('
-        'id: $id, '
-        'username: $username, '
-        'email: $email, '
-        'role: $role, '
-        'createdAt: $createdAt'
-        ')';
+    return premiumExpiresAt!
+        .isAfter(DateTime.now());
   }
 }

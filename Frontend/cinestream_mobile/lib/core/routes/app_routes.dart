@@ -2,26 +2,41 @@ import 'package:flutter/material.dart';
 
 import '../../models/movie.dart';
 
+// ============================================================
+// AUTH
+// ============================================================
+
+import '../../screens/auth/forgot_password_screen.dart';
 import '../../screens/auth/login_screen.dart';
 import '../../screens/auth/register_screen.dart';
-import '../../screens/auth/verify_email_screen.dart';
+
+// ============================================================
+// MAIN SCREENS
+// ============================================================
+
 import '../../screens/category/category_screen.dart';
 import '../../screens/chatbot/chatbot_screen.dart';
-import '../../screens/favorite/favorite_screen.dart';
-import '../../screens/featured/featured_screen.dart';
+import '../../screens/favorites/favorites_screen.dart';
 import '../../screens/home/home_screen.dart';
 import '../../screens/movie/movie_detail_screen.dart';
 import '../../screens/player/video_player_screen.dart';
+import '../../screens/profile/change_password_screen.dart';
+import '../../screens/profile/edit_profile_screen.dart';
 import '../../screens/profile/profile_screen.dart';
 import '../../screens/search/search_screen.dart';
 import '../../screens/splash/splash_screen.dart';
-import '../../screens/support/support_screen.dart';
+
+// ============================================================
+// PAYMENT
+// ============================================================
+
+import '../../screens/Payment/premium_screen.dart';
 
 class AppRoutes {
   AppRoutes._();
 
   // ============================================================
-  // ROUTES
+  // ROUTE NAMES
   // ============================================================
 
   static const String splash = '/';
@@ -36,102 +51,115 @@ class AppRoutes {
 
   static const String profile = '/profile';
 
-  static const String featured = '/featured';
+  static const String favorites = '/favorites';
 
-  static const String favorite = '/favorite';
+  static const String editProfile = '/edit-profile';
 
-  static const String support = '/support';
+  static const String changePassword = '/change-password';
+
+  static const String premium = '/premium';
 
   static const String login = '/login';
 
   static const String register = '/register';
 
-  static const String verifyEmail =
-      '/verify-email';
+  static const String forgotPassword = '/forgot-password';
 
-  static const String movieDetail =
-      '/movie-detail';
+  static const String movieDetail = '/movie-detail';
 
   static const String player = '/player';
 
   // ============================================================
-  // ROUTE MAP
+  // ROUTES MAP
   // ============================================================
 
   static final Map<String, WidgetBuilder> routes = {
-    splash: (context) {
-      return const SplashScreen();
-    },
+    // ----------------------------------------------------------
+    // SPLASH
+    // ----------------------------------------------------------
 
-    home: (context) {
-      return const HomeScreen();
-    },
+    splash: (context) => const SplashScreen(),
 
-    search: (context) {
-      return const SearchScreen();
-    },
+    // ----------------------------------------------------------
+    // HOME
+    // ----------------------------------------------------------
 
-    category: (context) {
-      return const CategoryScreen();
-    },
+    home: (context) => const HomeScreen(),
 
-    chatbot: (context) {
-      return const ChatbotScreen();
-    },
+    // ----------------------------------------------------------
+    // SEARCH
+    // ----------------------------------------------------------
 
-    profile: (context) {
-      return const ProfileScreen();
-    },
+    search: (context) => const SearchScreen(),
 
-    featured: (context) {
-      return const FeaturedScreen();
-    },
+    // ----------------------------------------------------------
+    // CATEGORY
+    // ----------------------------------------------------------
 
-    favorite: (context) {
-      return const FavoriteScreen();
-    },
+    category: (context) => const CategoryScreen(),
 
-    support: (context) {
-      return const SupportScreen();
-    },
+    // ----------------------------------------------------------
+    // AI CHATBOT
+    // ----------------------------------------------------------
 
-    login: (context) {
-      return const LoginScreen();
-    },
+    chatbot: (context) => const ChatbotScreen(),
 
-    register: (context) {
-      return const RegisterScreen();
-    },
+    // ----------------------------------------------------------
+    // PROFILE
+    // ----------------------------------------------------------
 
-    // ==========================================================
-    // VERIFY EMAIL
-    // ==========================================================
+    profile: (context) => const ProfileScreen(),
 
-    verifyEmail: (context) {
-      final arguments =
-          ModalRoute.of(context)
-              ?.settings
-              .arguments;
+    // ----------------------------------------------------------
+    // FAVORITES
+    // ----------------------------------------------------------
 
-      if (arguments is String &&
-          arguments.trim().isNotEmpty) {
-        return VerifyEmailScreen(
-          email: arguments,
-        );
-      }
+    favorites: (context) => const FavoritesScreen(),
 
-      return const RegisterScreen();
-    },
+    // ----------------------------------------------------------
+    // EDIT PROFILE
+    // ----------------------------------------------------------
 
-    // ==========================================================
+    editProfile: (context) => const EditProfileScreen(),
+
+    // ----------------------------------------------------------
+    // CHANGE PASSWORD
+    // ----------------------------------------------------------
+
+    changePassword: (context) => const ChangePasswordScreen(),
+
+    // ----------------------------------------------------------
+    // PREMIUM
+    // ----------------------------------------------------------
+
+    premium: (context) => const PremiumScreen(),
+
+    // ----------------------------------------------------------
+    // LOGIN
+    // ----------------------------------------------------------
+
+    login: (context) => const LoginScreen(),
+
+    // ----------------------------------------------------------
+    // REGISTER
+    // ----------------------------------------------------------
+
+    register: (context) => const RegisterScreen(),
+
+    // ----------------------------------------------------------
+    // FORGOT PASSWORD
+    // ----------------------------------------------------------
+
+    forgotPassword: (context) =>
+        const ForgotPasswordScreen(),
+
+    // ----------------------------------------------------------
     // MOVIE DETAIL
-    // ==========================================================
+    // ----------------------------------------------------------
 
     movieDetail: (context) {
       final arguments =
-          ModalRoute.of(context)
-              ?.settings
-              .arguments;
+          ModalRoute.of(context)?.settings.arguments;
 
       if (arguments is Movie) {
         return MovieDetailScreen(
@@ -142,15 +170,13 @@ class AppRoutes {
       return const HomeScreen();
     },
 
-    // ==========================================================
+    // ----------------------------------------------------------
     // VIDEO PLAYER
-    // ==========================================================
+    // ----------------------------------------------------------
 
     player: (context) {
       final arguments =
-          ModalRoute.of(context)
-              ?.settings
-              .arguments;
+          ModalRoute.of(context)?.settings.arguments;
 
       if (arguments is Movie) {
         return VideoPlayerScreen(
@@ -161,4 +187,5 @@ class AppRoutes {
       return const HomeScreen();
     },
   };
-} 
+}
+

@@ -25,310 +25,61 @@ class AuthService {
       final response = await _dio.post(
         ApiConstants.login,
         data: {
-          'usernameOrEmail': usernameOrEmail,
+          'usernameOrEmail':
+              usernameOrEmail.trim(),
           'password': password,
         },
       );
 
-      final dynamic responseData =
-          response.data;
+      final body = _asMap(response.data);
 
-      if (responseData is! Map) {
-        throw Exception(
-          'Phản hồi từ máy chủ không hợp lệ.',
-        );
-      }
-
-      final data =
-          Map<String, dynamic>.from(
-        responseData,
+      _ensureSuccess(
+        body,
+        'Đăng nhập thất bại.',
       );
 
-      if (data['success'] != true) {
-        throw Exception(
-          _extractMessage(data),
-        );
-      }
+      final data = _asMap(body['data']);
 
-      final dynamic authData =
-          data['data'];
+      final token =
+          data['token']?.toString().trim();
 
-      if (authData is! Map) {
-        throw Exception(
-          'Dữ liệu đăng nhập không hợp lệ.',
-        );
-      }
-
-      final dynamic token =
-          authData['token'];
-
-      if (token == null ||
-          token.toString().trim().isEmpty) {
+      if (token == null || token.isEmpty) {
         throw Exception(
           'Đăng nhập thành công nhưng không nhận được JWT token.',
         );
       }
 
-      final dynamic userData =
-          authData['user'];
+      final userJson = data['user'];
 
-      if (userData is! Map) {
+      if (userJson is! Map) {
         throw Exception(
-          'Đăng nhập thành công nhưng không nhận được thông tin người dùng.',
+          'Không nhận được thông tin người dùng.',
         );
       }
 
       final user = User.fromJson(
-        Map<String, dynamic>.from(
-          userData,
-        ),
+        Map<String, dynamic>.from(userJson),
       );
 
-      await StorageService.saveToken(
-        token.toString(),
-      );
-
-      await StorageService.saveUserId(
-        user.id,
-      );
+      await StorageService.saveToken(token);
+      await StorageService.saveUserId(user.id);
 
       return user;
     } on DioException catch (e) {
       throw Exception(
-        _handleLoginError(e),
-      );
-    }
-  }
-
-  // ============================================================
-  // GET CURRENT USER
-  // GET /api/auth/me
-  // ============================================================
-
-  Future<User> getCurrentUser() async {
-    try {
-      final response = await _dio.get(
-        ApiConstants.me,
-      );
-
-      final dynamic responseData =
-          response.data;
-
-      if (responseData is! Map) {
-        throw Exception(
-          'Phản hồi từ máy chủ không hợp lệ.',
-        );
-      }
-
-      final data =
-          Map<String, dynamic>.from(
-        responseData,
-      );
-
-      if (data['success'] != true) {
-        throw Exception(
-          _extractMessage(data),
-        );
-      }
-
-      final dynamic userData =
-          data['data'];
-
-      if (userData is! Map) {
-        throw Exception(
-          'Dữ liệu tài khoản không hợp lệ.',
-        );
-      }
-
-      final user = User.fromJson(
-        Map<String, dynamic>.from(
-          userData,
+        _getErrorMessage(
+          e,
+          'Đăng nhập thất bại. Vui lòng kiểm tra kết nối.',
         ),
       );
-
-      // Đồng bộ UserId vào local storage.
-      await StorageService.saveUserId(
-        user.id,
-      );
-
-      return user;
-    } on DioException catch (e) {
-      throw Exception(
-        _handleCurrentUserError(e),
-      );
     }
-  }
-
-  // ============================================================
-  // CURRENT USER ERROR
-  // ============================================================
-
-  String _handleCurrentUserError(
-    DioException e,
-  ) {
-    final statusCode =
-        e.response?.statusCode;
-
-    final responseData =
-        e.response?.data;
-
-    // JWT không hợp lệ / hết hạn.
-    if (statusCode == 401) {
-      return 'Phiên đăng nhập đã hết hạn. '
-          'Vui lòng đăng nhập lại.';
-    }
-
-    // Không tìm thấy người dùng.
-    if (statusCode == 404) {
-      final message =
-          _extractMessageFromResponse(
-        responseData,
-      );
-
-      if (message.isNotEmpty) {
-        return message;
-      }
-
-      return 'Không tìm thấy thông tin tài khoản.';
-    }
-
-    // Connection error.
-    if (e.type ==
-        DioExceptionType.connectionError) {
-      return 'Không thể kết nối đến máy chủ CineStream.';
-    }
-
-    // Timeout.
-    if (e.type ==
-            DioExceptionType
-                .connectionTimeout ||
-        e.type ==
-            DioExceptionType
-                .sendTimeout ||
-        e.type ==
-            DioExceptionType
-                .receiveTimeout) {
-      return 'Kết nối đến máy chủ quá thời gian. '
-          'Vui lòng thử lại.';
-    }
-
-    // 5xx.
-    if (statusCode != null &&
-        statusCode >= 500) {
-      return 'Máy chủ CineStream đang gặp sự cố. '
-          'Vui lòng thử lại sau.';
-    }
-
-    final message =
-        _extractMessageFromResponse(
-      responseData,
-    );
-
-    if (message.isNotEmpty) {
-      return message;
-    }
-
-    return 'Không thể tải thông tin tài khoản. '
-        'Vui lòng thử lại.';
-  }
-
-  // ============================================================
-  // LOGIN ERROR
-  // ============================================================
-
-  String _handleLoginError(
-    DioException e,
-  ) {
-    final statusCode =
-        e.response?.statusCode;
-
-    final responseData =
-        e.response?.data;
-
-    // 401: Sai tài khoản / mật khẩu
-    if (statusCode == 401) {
-      return 'Tài khoản hoặc mật khẩu không đúng.';
-    }
-
-    // 400: Chưa kích hoạt / bị khóa / nghiệp vụ
-    if (statusCode == 400) {
-      final message =
-          _extractMessageFromResponse(
-        responseData,
-      );
-
-      final normalized =
-          _normalizeText(message);
-
-      if (normalized.contains(
-            'chua duoc kich hoat',
-          ) ||
-          normalized.contains(
-            'chua kich hoat',
-          ) ||
-          normalized.contains(
-            'xac minh email',
-          )) {
-        return 'Tài khoản chưa được kích hoạt email.';
-      }
-
-      if (normalized.contains('khoa') ||
-          normalized.contains('locked')) {
-        return 'Tài khoản của bạn đã bị khóa.';
-      }
-
-      if (message.isNotEmpty) {
-        return message;
-      }
-
-      return 'Thông tin đăng nhập không hợp lệ.';
-    }
-
-    // Connection error.
-    if (e.type ==
-        DioExceptionType.connectionError) {
-      return 'Không thể kết nối đến máy chủ CineStream.';
-    }
-
-    // Timeout.
-    if (e.type ==
-            DioExceptionType
-                .connectionTimeout ||
-        e.type ==
-            DioExceptionType
-                .sendTimeout ||
-        e.type ==
-            DioExceptionType
-                .receiveTimeout) {
-      return 'Kết nối đến máy chủ quá thời gian. '
-          'Vui lòng thử lại.';
-    }
-
-    // 5xx.
-    if (statusCode != null &&
-        statusCode >= 500) {
-      return 'Máy chủ CineStream đang gặp sự cố. '
-          'Vui lòng thử lại sau.';
-    }
-
-    final message =
-        _extractMessageFromResponse(
-      responseData,
-    );
-
-    if (message.isNotEmpty) {
-      return message;
-    }
-
-    return 'Đăng nhập thất bại. '
-        'Vui lòng thử lại.';
   }
 
   // ============================================================
   // REGISTER
   // ============================================================
 
-  Future<User> register({
+  Future<String> register({
     required String username,
     required String email,
     required String password,
@@ -337,130 +88,36 @@ class AuthService {
       final response = await _dio.post(
         ApiConstants.register,
         data: {
-          'username': username,
-          'email': email,
+          'username': username.trim(),
+          'email': email.trim(),
           'password': password,
         },
       );
 
-      final dynamic responseData =
-          response.data;
+      final body = _asMap(response.data);
 
-      if (responseData is! Map) {
-        throw Exception(
-          'Phản hồi từ máy chủ không hợp lệ.',
-        );
-      }
-
-      final data =
-          Map<String, dynamic>.from(
-        responseData,
+      _ensureSuccess(
+        body,
+        'Đăng ký thất bại.',
       );
 
-      if (data['success'] != true) {
-        throw Exception(
-          _extractMessage(data),
-        );
-      }
-
-      final dynamic registerData =
-          data['data'];
-
-      if (registerData is! Map) {
-        throw Exception(
-          'Đăng ký thành công nhưng dữ liệu người dùng không hợp lệ.',
-        );
-      }
-
-      final dynamic userData =
-          registerData['user'];
-
-      if (userData is! Map) {
-        throw Exception(
-          'Đăng ký thành công nhưng không nhận được thông tin người dùng.',
-        );
-      }
-
-      return User.fromJson(
-        Map<String, dynamic>.from(
-          userData,
-        ),
-      );
+      return body['message']?.toString() ??
+          'Đăng ký thành công. Vui lòng kiểm tra email để xác minh tài khoản.';
     } on DioException catch (e) {
       throw Exception(
-        _handleRegisterError(e),
+        _getErrorMessage(
+          e,
+          'Đăng ký thất bại. Vui lòng thử lại.',
+        ),
       );
     }
-  }
-
-  // ============================================================
-  // REGISTER ERROR
-  // ============================================================
-
-  String _handleRegisterError(
-    DioException e,
-  ) {
-    final statusCode =
-        e.response?.statusCode;
-
-    final message =
-        _extractMessageFromResponse(
-      e.response?.data,
-    );
-
-    if (statusCode == 400) {
-      if (message.isNotEmpty) {
-        return message;
-      }
-
-      return 'Thông tin đăng ký không hợp lệ.';
-    }
-
-    if (statusCode == 409) {
-      if (message.isNotEmpty) {
-        return message;
-      }
-
-      return 'Tên đăng nhập hoặc email đã tồn tại.';
-    }
-
-    if (e.type ==
-        DioExceptionType.connectionError) {
-      return 'Không thể kết nối đến máy chủ CineStream.';
-    }
-
-    if (e.type ==
-            DioExceptionType
-                .connectionTimeout ||
-        e.type ==
-            DioExceptionType
-                .sendTimeout ||
-        e.type ==
-            DioExceptionType
-                .receiveTimeout) {
-      return 'Kết nối đến máy chủ quá thời gian. '
-          'Vui lòng thử lại.';
-    }
-
-    if (statusCode != null &&
-        statusCode >= 500) {
-      return 'Máy chủ CineStream đang gặp sự cố. '
-          'Vui lòng thử lại sau.';
-    }
-
-    if (message.isNotEmpty) {
-      return message;
-    }
-
-    return 'Đăng ký thất bại. '
-        'Vui lòng thử lại.';
   }
 
   // ============================================================
   // VERIFY EMAIL
   // ============================================================
 
-  Future<void> verifyEmail({
+  Future<String> verifyEmail({
     required String email,
     required String code,
   }) async {
@@ -468,142 +125,270 @@ class AuthService {
       final response = await _dio.post(
         ApiConstants.verifyEmail,
         data: {
-          'email': email,
-          'code': code,
+          'email': email.trim(),
+          'code': code.trim(),
         },
       );
 
-      final dynamic responseData =
-          response.data;
+      final body = _asMap(response.data);
 
-      if (responseData is! Map) {
-        throw Exception(
-          'Phản hồi từ máy chủ không hợp lệ.',
-        );
-      }
-
-      final data =
-          Map<String, dynamic>.from(
-        responseData,
+      _ensureSuccess(
+        body,
+        'Xác minh email thất bại.',
       );
 
-      if (data['success'] != true) {
-        throw Exception(
-          _extractMessage(data),
-        );
-      }
+      return body['message']?.toString() ??
+          'Xác minh email thành công.';
     } on DioException catch (e) {
-      final message =
-          _extractMessageFromResponse(
-        e.response?.data,
-      );
-
-      if (e.response?.statusCode == 400 &&
-          message.isNotEmpty) {
-        throw Exception(message);
-      }
-
-      if (e.type ==
-          DioExceptionType.connectionError) {
-        throw Exception(
-          'Không thể kết nối đến máy chủ CineStream.',
-        );
-      }
-
-      if (e.type ==
-              DioExceptionType
-                  .connectionTimeout ||
-          e.type ==
-              DioExceptionType
-                  .sendTimeout ||
-          e.type ==
-              DioExceptionType
-                  .receiveTimeout) {
-        throw Exception(
-          'Kết nối đến máy chủ quá thời gian. '
-          'Vui lòng thử lại.',
-        );
-      }
-
-      if (message.isNotEmpty) {
-        throw Exception(message);
-      }
-
       throw Exception(
-        'Xác thực email thất bại. '
-        'Vui lòng thử lại.',
+        _getErrorMessage(
+          e,
+          'Xác minh email thất bại.',
+        ),
       );
     }
   }
 
   // ============================================================
-  // RESEND VERIFICATION EMAIL
+  // RESEND VERIFICATION
   // ============================================================
 
-  Future<void> resendVerificationEmail({
+  Future<String> resendVerification({
     required String email,
   }) async {
     try {
       final response = await _dio.post(
         ApiConstants.resendVerification,
         data: {
-          'email': email,
+          'email': email.trim(),
         },
       );
 
-      final dynamic responseData =
-          response.data;
+      final body = _asMap(response.data);
 
-      if (responseData is! Map) {
-        throw Exception(
-          'Phản hồi từ máy chủ không hợp lệ.',
-        );
-      }
-
-      final data =
-          Map<String, dynamic>.from(
-        responseData,
+      _ensureSuccess(
+        body,
+        'Không thể gửi lại mã xác minh.',
       );
 
-      if (data['success'] != true) {
-        throw Exception(
-          _extractMessage(data),
-        );
-      }
+      return body['message']?.toString() ??
+          'Mã xác minh mới đã được gửi.';
     } on DioException catch (e) {
-      final message =
-          _extractMessageFromResponse(
-        e.response?.data,
+      throw Exception(
+        _getErrorMessage(
+          e,
+          'Không thể gửi lại mã xác minh.',
+        ),
+      );
+    }
+  }
+
+  // ============================================================
+  // FORGOT PASSWORD
+  // ============================================================
+
+  Future<String> forgotPassword({
+    required String email,
+  }) async {
+    try {
+      final response = await _dio.post(
+        ApiConstants.forgotPassword,
+        data: {
+          'email': email.trim(),
+        },
       );
 
-      if (message.isNotEmpty) {
-        throw Exception(message);
-      }
+      final body = _asMap(response.data);
 
-      if (e.type ==
-          DioExceptionType.connectionError) {
-        throw Exception(
-          'Không thể kết nối đến máy chủ CineStream.',
-        );
-      }
+      _ensureSuccess(
+        body,
+        'Không thể yêu cầu đặt lại mật khẩu.',
+      );
 
-      if (e.type ==
-              DioExceptionType
-                  .connectionTimeout ||
-          e.type ==
-              DioExceptionType
-                  .sendTimeout ||
-          e.type ==
-              DioExceptionType
-                  .receiveTimeout) {
-        throw Exception(
-          'Kết nối đến máy chủ quá thời gian. '
-          'Vui lòng thử lại.',
-        );
-      }
-
+      return body['message']?.toString() ??
+          'Mã đặt lại mật khẩu đã được gửi đến email.';
+    } on DioException catch (e) {
       throw Exception(
-        'Không thể gửi lại mã xác thực.',
+        _getErrorMessage(
+          e,
+          'Không thể yêu cầu đặt lại mật khẩu.',
+        ),
+      );
+    }
+  }
+
+  // ============================================================
+  // RESET PASSWORD
+  // ============================================================
+
+  Future<String> resetPassword({
+    required String email,
+    required String code,
+    required String newPassword,
+  }) async {
+    try {
+      final response = await _dio.post(
+        ApiConstants.resetPassword,
+        data: {
+          'email': email.trim(),
+          'code': code.trim(),
+          'newPassword': newPassword,
+        },
+      );
+
+      final body = _asMap(response.data);
+
+      _ensureSuccess(
+        body,
+        'Đặt lại mật khẩu thất bại.',
+      );
+
+      return body['message']?.toString() ??
+          'Đặt lại mật khẩu thành công.';
+    } on DioException catch (e) {
+      throw Exception(
+        _getErrorMessage(
+          e,
+          'Đặt lại mật khẩu thất bại.',
+        ),
+      );
+    }
+  }
+
+  // ============================================================
+  // GET CURRENT USER
+  // ============================================================
+
+  Future<User> getMe() async {
+    try {
+      final response = await _dio.get(
+        ApiConstants.me,
+      );
+
+      final body = _asMap(response.data);
+
+      _ensureSuccess(
+        body,
+        'Không thể lấy thông tin người dùng.',
+      );
+
+      final data = body['data'];
+
+      if (data is! Map) {
+        throw Exception(
+          'Thông tin người dùng trả về không hợp lệ.',
+        );
+      }
+
+      final user = User.fromJson(
+        Map<String, dynamic>.from(data),
+      );
+
+      await StorageService.saveUserId(
+        user.id,
+      );
+
+      return user;
+    } on DioException catch (e) {
+      throw Exception(
+        _getErrorMessage(
+          e,
+          'Không thể lấy thông tin người dùng.',
+        ),
+      );
+    }
+  }
+
+  // ============================================================
+  // UPDATE PROFILE
+  // ============================================================
+
+  Future<User> updateProfile({
+    String? displayName,
+    String? avatarUrl,
+    String? bio,
+  }) async {
+    try {
+      final response = await _dio.put(
+        ApiConstants.profile,
+        data: {
+          'displayName': displayName?.trim(),
+          'avatarUrl': avatarUrl?.trim(),
+          'bio': bio?.trim(),
+        },
+      );
+
+      final body = _asMap(response.data);
+
+      _ensureSuccess(
+        body,
+        'Cập nhật hồ sơ thất bại.',
+      );
+
+      final data = body['data'];
+
+      if (data is! Map) {
+        throw Exception(
+          'Thông tin hồ sơ trả về không hợp lệ.',
+        );
+      }
+
+      final user = User.fromJson(
+        Map<String, dynamic>.from(data),
+      );
+
+      await StorageService.saveUserId(
+        user.id,
+      );
+
+      return user;
+    } on DioException catch (e) {
+      throw Exception(
+        _getErrorMessage(
+          e,
+          'Cập nhật hồ sơ thất bại. Vui lòng thử lại.',
+        ),
+      );
+    }
+  }
+
+  // ============================================================
+  // CHANGE PASSWORD
+  // ============================================================
+
+  Future<String> changePassword({
+    required String currentPassword,
+    required String newPassword,
+    required String confirmNewPassword,
+  }) async {
+    try {
+      final response = await _dio.put(
+        ApiConstants.changePassword,
+        data: {
+          'currentPassword':
+              currentPassword,
+          'newPassword':
+              newPassword,
+          'confirmNewPassword':
+              confirmNewPassword,
+        },
+      );
+
+      final body = _asMap(response.data);
+
+      _ensureSuccess(
+        body,
+        'Đổi mật khẩu thất bại.',
+      );
+
+      return body['message']?.toString() ??
+          'Đổi mật khẩu thành công.';
+    } on DioException catch (e) {
+      throw Exception(
+        _getErrorMessage(
+          e,
+          'Đổi mật khẩu thất bại. Vui lòng thử lại.',
+        ),
       );
     }
   }
@@ -613,170 +398,145 @@ class AuthService {
   // ============================================================
 
   Future<void> logout() async {
-    await StorageService.clearSession();
+    try {
+      await _dio.post(
+        ApiConstants.logout,
+      );
+    } on DioException {
+      // API logout có thể thất bại,
+      // nhưng vẫn phải xóa session local.
+    } finally {
+      await StorageService.clearSession();
+    }
   }
 
   // ============================================================
-  // LOGIN STATUS
+  // SESSION
   // ============================================================
 
   Future<bool> isLoggedIn() async {
     return StorageService.isLoggedIn();
   }
 
-  // ============================================================
-  // GET TOKEN
-  // ============================================================
-
   Future<String?> getToken() async {
     return StorageService.getToken();
   }
 
   // ============================================================
-  // EXTRACT MESSAGE
+  // RESPONSE PARSER
   // ============================================================
 
-  String _extractMessage(
-    Map<String, dynamic> data,
+  Map<String, dynamic> _asMap(
+    dynamic value,
   ) {
-    final message = data['message'];
-
-    if (message != null &&
-        message.toString().trim().isNotEmpty) {
-      return message.toString();
+    if (value is! Map) {
+      throw Exception(
+        'Dữ liệu máy chủ trả về không hợp lệ.',
+      );
     }
 
-    final errors = data['errors'];
+    return Map<String, dynamic>.from(value);
+  }
 
-    if (errors is List &&
-        errors.isNotEmpty) {
-      return errors
-          .map(
-            (error) => error.toString(),
-          )
-          .join('\n');
+  void _ensureSuccess(
+    Map<String, dynamic> body,
+    String defaultMessage,
+  ) {
+    if (body['success'] != true) {
+      throw Exception(
+        body['message']?.toString() ??
+            defaultMessage,
+      );
+    }
+  }
+
+  // ============================================================
+  // ERROR HANDLING
+  // ============================================================
+
+  String _getErrorMessage(
+    DioException error,
+    String defaultMessage,
+  ) {
+    final responseData =
+        error.response?.data;
+
+    if (responseData is Map) {
+      final message =
+          responseData['message'];
+
+      if (message != null &&
+          message.toString().trim().isNotEmpty) {
+        return message.toString();
+      }
+
+      final errors =
+          responseData['errors'];
+
+      if (errors is List &&
+          errors.isNotEmpty) {
+        return errors
+            .map(
+              (error) => error.toString(),
+            )
+            .join('\n');
+      }
+
+      if (errors is Map &&
+          errors.isNotEmpty) {
+        return errors.values
+            .expand(
+              (value) => value is List
+                  ? value
+                  : [value],
+            )
+            .map(
+              (error) => error.toString(),
+            )
+            .join('\n');
+      }
     }
 
-    if (errors is Map &&
-        errors.isNotEmpty) {
-      final messages = <String>[];
+    switch (error.type) {
+      case DioExceptionType.connectionTimeout:
+      case DioExceptionType.sendTimeout:
+      case DioExceptionType.receiveTimeout:
+      case DioExceptionType.transformTimeout:
+        return 'Kết nối đến máy chủ quá thời gian.';
 
-      for (final value in errors.values) {
-        if (value is List) {
-          messages.addAll(
-            value.map(
-              (item) => item.toString(),
-            ),
-          );
-        } else {
-          messages.add(
-            value.toString(),
-          );
+      case DioExceptionType.connectionError:
+        return 'Không thể kết nối đến máy chủ.';
+
+      case DioExceptionType.badCertificate:
+        return 'Chứng chỉ máy chủ không hợp lệ.';
+
+      case DioExceptionType.cancel:
+        return 'Yêu cầu đã bị hủy.';
+
+      case DioExceptionType.badResponse:
+        final statusCode =
+            error.response?.statusCode;
+
+        if (statusCode == 400) {
+          return 'Dữ liệu gửi lên không hợp lệ.';
         }
-      }
 
-      if (messages.isNotEmpty) {
-        return messages.join('\n');
-      }
+        if (statusCode == 401) {
+          return 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.';
+        }
+
+        if (statusCode == 403) {
+          return 'Bạn không có quyền thực hiện thao tác này.';
+        }
+
+        if (statusCode == 404) {
+          return 'Không tìm thấy tài nguyên yêu cầu.';
+        }
+
+        return 'Máy chủ trả về lỗi HTTP ${statusCode ?? ''}.';
+
+      case DioExceptionType.unknown:
+        return defaultMessage;
     }
-
-    return 'Yêu cầu thất bại.';
-  }
-
-  // ============================================================
-  // EXTRACT MESSAGE FROM RESPONSE
-  // ============================================================
-
-  String _extractMessageFromResponse(
-    dynamic responseData,
-  ) {
-    if (responseData is! Map) {
-      return '';
-    }
-
-    return _extractMessage(
-      Map<String, dynamic>.from(
-        responseData,
-      ),
-    );
-  }
-
-  // ============================================================
-  // NORMALIZE TEXT
-  // ============================================================
-
-  String _normalizeText(
-    String value,
-  ) {
-    return value
-        .trim()
-        .toLowerCase()
-        .replaceAll('đ', 'd')
-        .replaceAll('á', 'a')
-        .replaceAll('à', 'a')
-        .replaceAll('ả', 'a')
-        .replaceAll('ã', 'a')
-        .replaceAll('ạ', 'a')
-        .replaceAll('ă', 'a')
-        .replaceAll('ắ', 'a')
-        .replaceAll('ằ', 'a')
-        .replaceAll('ẳ', 'a')
-        .replaceAll('ẵ', 'a')
-        .replaceAll('ặ', 'a')
-        .replaceAll('â', 'a')
-        .replaceAll('ấ', 'a')
-        .replaceAll('ầ', 'a')
-        .replaceAll('ẩ', 'a')
-        .replaceAll('ẫ', 'a')
-        .replaceAll('ậ', 'a')
-        .replaceAll('é', 'e')
-        .replaceAll('è', 'e')
-        .replaceAll('ẻ', 'e')
-        .replaceAll('ẽ', 'e')
-        .replaceAll('ẹ', 'e')
-        .replaceAll('ê', 'e')
-        .replaceAll('ế', 'e')
-        .replaceAll('ề', 'e')
-        .replaceAll('ể', 'e')
-        .replaceAll('ễ', 'e')
-        .replaceAll('ệ', 'e')
-        .replaceAll('í', 'i')
-        .replaceAll('ì', 'i')
-        .replaceAll('ỉ', 'i')
-        .replaceAll('ĩ', 'i')
-        .replaceAll('ị', 'i')
-        .replaceAll('ó', 'o')
-        .replaceAll('ò', 'o')
-        .replaceAll('ỏ', 'o')
-        .replaceAll('õ', 'o')
-        .replaceAll('ọ', 'o')
-        .replaceAll('ô', 'o')
-        .replaceAll('ố', 'o')
-        .replaceAll('ồ', 'o')
-        .replaceAll('ổ', 'o')
-        .replaceAll('ỗ', 'o')
-        .replaceAll('ộ', 'o')
-        .replaceAll('ơ', 'o')
-        .replaceAll('ớ', 'o')
-        .replaceAll('ờ', 'o')
-        .replaceAll('ở', 'o')
-        .replaceAll('ỡ', 'o')
-        .replaceAll('ợ', 'o')
-        .replaceAll('ú', 'u')
-        .replaceAll('ù', 'u')
-        .replaceAll('ủ', 'u')
-        .replaceAll('ũ', 'u')
-        .replaceAll('ụ', 'u')
-        .replaceAll('ư', 'u')
-        .replaceAll('ứ', 'u')
-        .replaceAll('ừ', 'u')
-        .replaceAll('ử', 'u')
-        .replaceAll('ữ', 'u')
-        .replaceAll('ự', 'u')
-        .replaceAll('ý', 'y')
-        .replaceAll('ỳ', 'y')
-        .replaceAll('ỷ', 'y')
-        .replaceAll('ỹ', 'y')
-        .replaceAll('ỵ', 'y');
   }
 }
