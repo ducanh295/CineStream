@@ -12,7 +12,6 @@ import {
   ShieldCheck,
   Check,
   Copy,
-  ExternalLink,
   Loader2,
   Sparkles,
 } from 'lucide-react';
@@ -124,7 +123,9 @@ const Subscriptions = () => {
   }, [page, pageSize]);
 
   useEffect(() => {
-    fetchTransactions();
+    Promise.resolve().then(() => {
+      fetchTransactions();
+    });
   }, [fetchTransactions]);
 
   // Xu ly sao chep noi dung vao clipboard
@@ -253,6 +254,12 @@ const Subscriptions = () => {
           </button>
         </div>
       </div>
+
+      {errorMsg && (
+        <div className="bg-red-500/10 border border-red-500/20 text-red-400 text-sm p-3 rounded-xl">
+          {errorMsg}
+        </div>
+      )}
 
       {/* Thong bao trang thai thao tac */}
       <AnimatePresence>

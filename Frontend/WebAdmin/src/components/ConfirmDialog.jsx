@@ -2,7 +2,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { AlertTriangle, Loader2 } from 'lucide-react';
 
 /**
- * Hộp thoại xác nhận hành động nguy hiểm (xóa, khóa tài khoản...)
+ * hộp thoại thông báo xác nhận hành động nguy hiểm (xóa, khóa tài khoản...)
  * Props:
  *  - open: boolean
  *  - title: string

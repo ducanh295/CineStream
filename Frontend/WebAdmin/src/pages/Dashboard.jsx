@@ -1,10 +1,66 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Users, DollarSign, Tag, Film, Loader2 } from 'lucide-react';
+import { Users, DollarSign, Tag, Film, Loader2, Receipt } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import movieApi from '../api/movieApi';
 import categoryApi from '../api/categoryApi';
 import userApi from '../api/userApi';
+import paymentApi from '../api/paymentApi';
+
+const isSuccessfulTransaction = (transaction) => transaction.status === 1 || transaction.status === 'Success';
+
+const formatCurrency = (amount) => new Intl.NumberFormat('vi-VN', {
+  style: 'currency',
+  currency: 'VND',
+}).format(Number(amount) || 0);
+
+const getLocalDateKey = (date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+const getRecentTransactionStats = (transactions) => {
+  const today = new Date();
+  return Array.from({ length: 7 }, (_, index) => {
+    const date = new Date(today);
+    date.setHours(0, 0, 0, 0);
+    date.setDate(today.getDate() - (6 - index));
+    const dateKey = getLocalDateKey(date);
+    const dailyTransactions = transactions.filter((transaction) => {
+      if (!isSuccessfulTransaction(transaction)) return false;
+      const completedDate = transaction.completedAt || transaction.createdAt;
+      return completedDate && getLocalDateKey(new Date(completedDate)) === dateKey;
+    });
+
+    return {
+      label: date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' }),
+      count: dailyTransactions.length,
+      revenue: dailyTransactions.reduce((total, transaction) => total + (Number(transaction.amount) || 0), 0),
+    };
+  });
+};
+
+const fetchAllTransactions = async () => {
+  const pageSize = 1000;
+  const firstResponse = await paymentApi.getAdminAllTransactions({ page: 1, pageSize });
+  const firstItems = Array.isArray(firstResponse?.data) ? firstResponse.data : [];
+  const total = Number(firstResponse?.total) || firstItems.length;
+  const totalPages = Math.ceil(total / pageSize);
+
+  if (totalPages <= 1) return firstItems;
+
+  const remainingResponses = await Promise.all(
+    Array.from({ length: totalPages - 1 }, (_, index) => (
+      paymentApi.getAdminAllTransactions({ page: index + 2, pageSize })
+    )),
+  );
+
+  return firstItems.concat(
+    ...remainingResponses.map((response) => (Array.isArray(response?.data) ? response.data : [])),
+  );
+};
 
 const StatCard = ({ icon: Icon, label, value, color, delay, note }) => (
   <motion.div
@@ -34,6 +90,7 @@ const Dashboard = () => {
   const [totalMovieCount, setTotalMovieCount] = useState(0);
   const [totalUserCount, setTotalUserCount] = useState(0);
   const [categories, setCategories] = useState([]);
+  const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
 
@@ -41,10 +98,11 @@ const Dashboard = () => {
     setLoading(true);
     setErrorMsg('');
     try {
-      const [movieRes, categoryRes, userRes] = await Promise.all([
+      const [movieRes, categoryRes, userRes, transactionRes] = await Promise.all([
         movieApi.getAll({ page: 1, pageSize: 100 }),
         categoryApi.getAll(),
         userApi.getAllUsers({ page: 1, pageSize: 1 }),
+        fetchAllTransactions(),
       ]);
       const movieData = movieRes?.data;
       setMovies(Array.isArray(movieData) ? movieData : movieData?.items || []);
@@ -52,6 +110,7 @@ const Dashboard = () => {
       setCategories(Array.isArray(categoryRes?.data) ? categoryRes.data : []);
       const userData = userRes?.data;
       setTotalUserCount(Array.isArray(userData) ? userData.length : userData?.totalCount || 0);
+      setTransactions(Array.isArray(transactionRes) ? transactionRes : []);
     } catch (err) {
       setErrorMsg(err.message || 'Không thể tải dữ liệu tổng quan. Vui lòng thử lại!');
     } finally {
@@ -67,6 +126,11 @@ const Dashboard = () => {
 
   // Lấy 5 phim mới nhất theo thứ tự API trả về (giả định API trả theo id tăng dần / mới nhất trước)
   const recentMovies = [...movies].slice(0, 5);
+  const successfulTransactions = transactions.filter(isSuccessfulTransaction);
+  const totalRevenue = successfulTransactions.reduce((total, transaction) => total + (Number(transaction.amount) || 0), 0);
+  const recentTransactionStats = getRecentTransactionStats(transactions);
+  const recentRevenue = recentTransactionStats.reduce((total, item) => total + item.revenue, 0);
+
 
   return (
     <div className="space-y-8">
@@ -88,7 +152,7 @@ const Dashboard = () => {
           value={loading ? '...' : totalMovieCount}
           color="bg-blue-500"
           delay={0.1}
-          note="Dữ liệu thật từ hệ thống"
+          // note="Dữ liệu thật từ hệ thống"
         />
         <StatCard
           icon={Tag}
@@ -96,15 +160,15 @@ const Dashboard = () => {
           value={loading ? '...' : categories.length}
           color="bg-purple-500"
           delay={0.2}
-          note="Dữ liệu thật từ hệ thống"
+          // note="Dữ liệu thật từ hệ thống"
         />
         <StatCard
           icon={DollarSign}
           label="Doanh thu"
-          value="—"
+          value={loading ? '...' : formatCurrency(totalRevenue)}
           color="bg-green-500"
           delay={0.3}
-          note="Backend chưa cung cấp API doanh thu"
+          note={`${successfulTransactions.length} giao dịch thành công`}
         />
         <StatCard
           icon={Users}
@@ -112,7 +176,7 @@ const Dashboard = () => {
           value={loading ? '...' : totalUserCount}
           color="bg-orange-500"
           delay={0.4}
-          note="Dữ liệu thật từ hệ thống"
+          // note="Dữ liệu thật từ hệ thống"
         />
       </div>
 
@@ -183,6 +247,32 @@ const Dashboard = () => {
             </div>
           )}
         </div>
+      </div>
+
+      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+        <div className="flex items-center justify-between gap-4 mb-6">
+          <div>
+            <h2 className="text-xl font-bold text-white">Doanh thu 7 ngày gần nhất</h2>
+            <p className="text-sm text-slate-500 mt-1">Tổng doanh thu: {formatCurrency(recentRevenue)}</p>
+          </div>
+          <Receipt className="text-emerald-400" size={24} />
+        </div>
+
+        {loading ? (
+          <div className="flex justify-center py-10 text-slate-500">
+            <Loader2 className="animate-spin" size={28} />
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
+              {recentTransactionStats.map((item) => (
+                <div key={item.label} className="rounded-lg bg-slate-800/50 px-3 py-2 text-center">
+                  <p className="text-xs text-slate-500">{item.label}</p>
+                  <p className="text-sm font-semibold text-emerald-300 mt-1">{formatCurrency(item.revenue)}</p>
+                  <p className="text-xs text-slate-500 mt-1">{item.count} giao dịch</p>
+                </div>
+              ))}
+          </div>
+        )}
       </div>
     </div>
   );
