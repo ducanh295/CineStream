@@ -62,6 +62,15 @@ const STATUS_CONFIG = {
   Cancelled: { label: 'Đã hủy', bg: 'bg-slate-500/10', text: 'text-slate-400', border: 'border-slate-500/20' },
 };
 
+const STATUS_VALUE_MAP = {
+  pending: '0',
+  success: '1',
+  failed: '2',
+  cancelled: '3',
+};
+
+const getStatusValue = (status) => STATUS_VALUE_MAP[String(status ?? '').toLowerCase()] ?? String(status ?? '');
+
 // Ham hien thi ten goi VIP tu so ngay su dung hoac ma goi
 const getPlanBadge = (tx) => {
   if (tx.planType) return tx.planType;
@@ -216,15 +225,10 @@ const Subscriptions = () => {
       (tx.gatewayTransactionId && tx.gatewayTransactionId.toLowerCase().includes(search.toLowerCase())) ||
       (tx.transactionReference && tx.transactionReference.toLowerCase().includes(search.toLowerCase()));
 
-    const txStatusStr = String(tx.status || '').toLowerCase();
-    const filterStr = statusFilter.toLowerCase();
+    const txStatusValue = getStatusValue(tx.status);
     const matchStatus =
       statusFilter === 'all' ||
-      txStatusStr === filterStr ||
-      (filterStr === 'pending' && (txStatusStr === '0' || txStatusStr === 'pending')) ||
-      (filterStr === 'success' && (txStatusStr === '1' || txStatusStr === 'success')) ||
-      (filterStr === 'failed' && (txStatusStr === '2' || txStatusStr === 'failed')) ||
-      (filterStr === 'cancelled' && (txStatusStr === '3' || txStatusStr === 'cancelled'));
+      txStatusValue === statusFilter;
 
     return matchSearch && matchStatus;
   });
