@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Plus, Search, Edit2, Trash2, PlayCircle, Loader2, Film, X } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import movieApi from '../api/movieApi';
 import categoryApi from '../api/categoryApi';
 import Modal from '../components/Modal';
@@ -258,7 +259,11 @@ const Movies = () => {
                     key={movie.id} className="hover:bg-slate-800/30 transition-colors group"
                   >
                     <td className="px-6 py-4">
-                      <div className="flex items-center gap-4">
+                      <Link
+                        to={`/movies/${movie.id}`}
+                        className="flex items-center gap-4 group/movie hover:text-blue-400 transition-colors"
+                        title={`Xem chi tiết ${movie.title}`}
+                      >
                         <div className="w-12 h-16 bg-slate-800 rounded-lg flex items-center justify-center border border-slate-700 group-hover:border-blue-500 transition-all overflow-hidden relative shrink-0">
                           {movie.posterUrl ? (
                             <img src={movie.posterUrl} alt={movie.title} className="w-full h-full object-cover" />
@@ -267,10 +272,10 @@ const Movies = () => {
                           )}
                         </div>
                         <div>
-                          <p className="font-bold text-white">{movie.title}</p>
+                          <p className="font-bold text-white group-hover/movie:text-blue-300 transition-colors">{movie.title}</p>
                           <span className="text-xs text-slate-500">ID: {movie.id}</span>
                         </div>
-                      </div>
+                      </Link>
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex flex-wrap gap-1 max-w-50">
