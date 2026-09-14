@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
 
 import '../constants/api_constants.dart';
 import '../storage/storage_service.dart';
@@ -20,6 +21,10 @@ class ApiClient {
 
     dio.interceptors.add(
       InterceptorsWrapper(
+        // ============================================================
+        // REQUEST
+        // ============================================================
+
         onRequest: (options, handler) async {
           final token = await StorageService.getToken();
 
@@ -29,7 +34,16 @@ class ApiClient {
 
           handler.next(options);
         },
-        onError: (error, handler) {
+
+        // ============================================================
+        // ERROR
+        // ============================================================
+
+        onError: (error, handler) async {
+          if (error.response?.statusCode == 401) {
+            await _handleUnauthorized();
+          }
+
           handler.next(error);
         },
       ),
@@ -39,4 +53,72 @@ class ApiClient {
   static final ApiClient instance = ApiClient._internal();
 
   late final Dio dio;
+
+  // ================================================================
+  // GLOBAL NAVIGATOR
+  // ================================================================
+
+  static final GlobalKey<NavigatorState> navigatorKey =
+      GlobalKey<NavigatorState>();
+
+  // ================================================================
+  // AUTH PROVIDER CALLBACK
+  // ================================================================
+
+  VoidCallback? _unauthorizedHandler;
+
+  void setUnauthorizedHandler(VoidCallback handler) {
+    _unauthorizedHandler = handler;
+  }
+
+  // ================================================================
+  // 401 CONTROL
+  // ================================================================
+
+  bool _isHandlingUnauthorized = false;
+
+  Future<void> _handleUnauthorized() async {
+    // Nếu nhiều request cùng lúc trả 401,
+    // chỉ xử lý request đầu tiên.
+    if (_isHandlingUnauthorized) {
+      return;
+    }
+
+    _isHandlingUnauthorized = true;
+
+    try {
+      // ------------------------------------------------------------
+      // 1. XÓA JWT + USER ID
+      // ------------------------------------------------------------
+
+      await StorageService.clearSession();
+
+      // ------------------------------------------------------------
+      // 2. RESET AUTH PROVIDER
+      // ------------------------------------------------------------
+
+      _unauthorizedHandler?.call();
+
+      // ------------------------------------------------------------
+      // 3. ĐIỀU HƯỚNG VỀ LOGIN
+      // ------------------------------------------------------------
+
+      final navigator = navigatorKey.currentState;
+
+      if (navigator == null) {
+        return;
+      }
+
+      // Xóa toàn bộ stack cũ.
+      // Người dùng không thể bấm Back quay lại màn hình
+      // đang sử dụng token đã hết hạn.
+      navigator.pushNamedAndRemoveUntil(
+        '/login',
+        (route) => false,
+      );
+    } finally {
+      _isHandlingUnauthorized = false;
+    }
+  }
 }
+

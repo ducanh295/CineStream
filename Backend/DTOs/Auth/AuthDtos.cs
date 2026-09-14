@@ -3,114 +3,304 @@ using CineStream.Models.Enums;
 
 namespace CineStream.DTOs.Auth;
 
-// DTO nhận dữ liệu đăng ký tài khoản
+// ================================================================
+// REGISTER
+// ================================================================
+
 public class RegisterRequestDto
 {
-    [Required(ErrorMessage = "Ten dang nhap khong duoc de trong!")]
-    [StringLength(50, MinimumLength = 3, ErrorMessage = "Ten dang nhap phai tu 3 den 50 ky tu!")]
+    [Required(ErrorMessage = "Tên đăng nhập không được để trống!")]
+    [StringLength(
+        50,
+        MinimumLength = 3,
+        ErrorMessage = "Tên đăng nhập phải từ 3 đến 50 ký tự!"
+    )]
     public string Username { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "Email khong duoc de trong!")]
-    [EmailAddress(ErrorMessage = "Dinh dang email khong hop le!")]
-    [StringLength(100, ErrorMessage = "Email khong duoc vuot qua 100 ky tu!")]
+    [Required(ErrorMessage = "Email không được để trống!")]
+    [EmailAddress(ErrorMessage = "Định dạng email không hợp lệ!")]
+    [StringLength(
+        100,
+        ErrorMessage = "Email không được vượt quá 100 ký tự!"
+    )]
     public string Email { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "Mat khau khong duoc de trong!")]
-    [StringLength(100, MinimumLength = 6, ErrorMessage = "Mat khau phai co it nhat 6 ky tu!")]
+    [Required(ErrorMessage = "Mật khẩu không được để trống!")]
+    [StringLength(
+        100,
+        MinimumLength = 6,
+        ErrorMessage = "Mật khẩu phải có ít nhất 6 ký tự!"
+    )]
     public string Password { get; set; } = string.Empty;
 }
 
-// DTO nhận dữ liệu đăng nhập
+// ================================================================
+// LOGIN
+// ================================================================
+
 public class LoginRequestDto
 {
-    // Cho phép người dùng đăng nhập linh hoạt bằng Email hoặc Username
-    [Required(ErrorMessage = "Ten dang nhap hoac email khong duoc de trong!")]
-    [StringLength(100, ErrorMessage = "Ten dang nhap hoac email khong duoc vuot qua 100 ky tu!")]
+    [Required(
+        ErrorMessage =
+            "Tên đăng nhập hoặc email không được để trống!"
+    )]
+    [StringLength(
+        100,
+        ErrorMessage =
+            "Tên đăng nhập hoặc email không được vượt quá 100 ký tự!"
+    )]
     public string UsernameOrEmail { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "Mat khau khong duoc de trong!")]
+    [Required(
+        ErrorMessage =
+            "Mật khẩu không được để trống!"
+    )]
     public string Password { get; set; } = string.Empty;
 }
 
-//  DTO thông tin hồ sơ người dùng (Profile)
+// ================================================================
+// PROFILE
+// ================================================================
+
 public class ProfileDto
 {
     public string? DisplayName { get; set; }
+
     public string? AvatarUrl { get; set; }
+
     public string? Bio { get; set; }
 }
 
 public class UpdateProfileDto
 {
+    [StringLength(
+        100,
+        ErrorMessage =
+            "Display Name không được vượt quá 100 ký tự!"
+    )]
     public string? DisplayName { get; set; }
+
+    [StringLength(
+        500,
+        ErrorMessage =
+            "Avatar URL không được vượt quá 500 ký tự!"
+    )]
     public string? AvatarUrl { get; set; }
+
+    [StringLength(
+        500,
+        ErrorMessage =
+            "Bio không được vượt quá 500 ký tự!"
+    )]
     public string? Bio { get; set; }
 }
 
-//  DTO tóm tắt thông tin User trả về client (TUYỆT ĐỐI KHÔNG chứa PasswordHash)
+// ================================================================
+// CHANGE PASSWORD
+// ================================================================
+
+public class ChangePasswordRequestDto
+{
+    [Required(
+        ErrorMessage =
+            "Mật khẩu hiện tại không được để trống!"
+    )]
+    public string CurrentPassword { get; set; }
+        = string.Empty;
+
+    [Required(
+        ErrorMessage =
+            "Mật khẩu mới không được để trống!"
+    )]
+    [StringLength(
+        100,
+        MinimumLength = 6,
+        ErrorMessage =
+            "Mật khẩu mới phải có ít nhất 6 ký tự!"
+    )]
+    public string NewPassword { get; set; }
+        = string.Empty;
+
+    [Required(
+        ErrorMessage =
+            "Xác nhận mật khẩu không được để trống!"
+    )]
+    [Compare(
+        nameof(NewPassword),
+        ErrorMessage =
+            "Xác nhận mật khẩu không khớp!"
+    )]
+    public string ConfirmPassword { get; set; }
+        = string.Empty;
+}
+
+// ================================================================
+// USER RESPONSE
+// ================================================================
+
 public class UserDto
 {
     public int Id { get; set; }
-    public string Username { get; set; } = string.Empty;
-    public string Email { get; set; } = string.Empty;
+
+    public string Username { get; set; }
+        = string.Empty;
+
+    public string Email { get; set; }
+        = string.Empty;
+
     public UserRole Role { get; set; }
+
     public ProfileDto? Profile { get; set; }
+
+    // Premium
+    public bool IsPremium { get; set; }
+
+    public DateTime? PremiumExpiresAt { get; set; }
 }
 
-// DTO trả về sau khi đăng nhập / đăng ký thành công
+// ================================================================
+// AUTH RESPONSE
+// ================================================================
+
 public class AuthResponseDto
 {
-    // JWT Token để client gắn vào header Authorization: Bearer <token>
-    public string Token { get; set; } = string.Empty;
+    public string Token { get; set; }
+        = string.Empty;
+
     public DateTime ExpiresAt { get; set; }
-    public UserDto User { get; set; } = null!;
+
+    public UserDto User { get; set; }
+        = null!;
 }
 
-// DTO yêu cầu xác minh email bằng mã OTP
+// ================================================================
+// VERIFY EMAIL
+// ================================================================
+
 public class VerifyEmailRequestDto
 {
-    [Required(ErrorMessage = "Email không được để trống!")]
-    [EmailAddress(ErrorMessage = "Định dạng email không hợp lệ!")]
-    [StringLength(100, ErrorMessage = "Email không được vượt quá 100 ký tự!")]
-    public string Email { get; set; } = string.Empty;
+    [Required(
+        ErrorMessage =
+            "Email không được để trống!"
+    )]
+    [EmailAddress(
+        ErrorMessage =
+            "Định dạng email không hợp lệ!"
+    )]
+    [StringLength(
+        100,
+        ErrorMessage =
+            "Email không được vượt quá 100 ký tự!"
+    )]
+    public string Email { get; set; }
+        = string.Empty;
 
-    [Required(ErrorMessage = "Mã xác thực không được để trống!")]
-    [StringLength(10, MinimumLength = 4, ErrorMessage = "Mã xác thực phải từ 4 đến 10 ký tự!")]
-    public string Code { get; set; } = string.Empty;
+    [Required(
+        ErrorMessage =
+            "Mã xác thực không được để trống!"
+    )]
+    [StringLength(
+        10,
+        MinimumLength = 4,
+        ErrorMessage =
+            "Mã xác thực phải từ 4 đến 10 ký tự!"
+    )]
+    public string Code { get; set; }
+        = string.Empty;
 }
 
-// DTO yêu cầu gửi lại mã OTP xác minh email
+// ================================================================
+// RESEND VERIFICATION
+// ================================================================
+
 public class ResendVerificationEmailDto
 {
-    [Required(ErrorMessage = "Email không được để trống!")]
-    [EmailAddress(ErrorMessage = "Định dạng email không hợp lệ!")]
-    [StringLength(100, ErrorMessage = "Email không được vượt quá 100 ký tự!")]
-    public string Email { get; set; } = string.Empty;
+    [Required(
+        ErrorMessage =
+            "Email không được để trống!"
+    )]
+    [EmailAddress(
+        ErrorMessage =
+            "Định dạng email không hợp lệ!"
+    )]
+    [StringLength(
+        100,
+        ErrorMessage =
+            "Email không được vượt quá 100 ký tự!"
+    )]
+    public string Email { get; set; }
+        = string.Empty;
 }
 
-// DTO yêu cầu cấp mã khôi phục mật khẩu khi bị quên
+// ================================================================
+// FORGOT PASSWORD
+// ================================================================
+
 public class ForgotPasswordRequestDto
 {
-    [Required(ErrorMessage = "Email không được để trống!")]
-    [EmailAddress(ErrorMessage = "Định dạng email không hợp lệ!")]
-    [StringLength(100, ErrorMessage = "Email không được vượt quá 100 ký tự!")]
-    public string Email { get; set; } = string.Empty;
+    [Required(
+        ErrorMessage =
+            "Email không được để trống!"
+    )]
+    [EmailAddress(
+        ErrorMessage =
+            "Định dạng email không hợp lệ!"
+    )]
+    [StringLength(
+        100,
+        ErrorMessage =
+            "Email không được vượt quá 100 ký tự!"
+    )]
+    public string Email { get; set; }
+        = string.Empty;
 }
 
-// DTO đặt lại mật khẩu mới kèm mã OTP xác thực
+// ================================================================
+// RESET PASSWORD
+// ================================================================
+
 public class ResetPasswordRequestDto
 {
-    [Required(ErrorMessage = "Email không được để trống!")]
-    [EmailAddress(ErrorMessage = "Định dạng email không hợp lệ!")]
-    [StringLength(100, ErrorMessage = "Email không được vượt quá 100 ký tự!")]
-    public string Email { get; set; } = string.Empty;
+    [Required(
+        ErrorMessage =
+            "Email không được để trống!"
+    )]
+    [EmailAddress(
+        ErrorMessage =
+            "Định dạng email không hợp lệ!"
+    )]
+    [StringLength(
+        100,
+        ErrorMessage =
+            "Email không được vượt quá 100 ký tự!"
+    )]
+    public string Email { get; set; }
+        = string.Empty;
 
-    [Required(ErrorMessage = "Mã xác thực không được để trống!")]
-    [StringLength(10, MinimumLength = 4, ErrorMessage = "Mã xác thực phải từ 4 đến 10 ký tự!")]
-    public string Code { get; set; } = string.Empty;
+    [Required(
+        ErrorMessage =
+            "Mã xác thực không được để trống!"
+    )]
+    [StringLength(
+        10,
+        MinimumLength = 4,
+        ErrorMessage =
+            "Mã xác thực phải từ 4 đến 10 ký tự!"
+    )]
+    public string Code { get; set; }
+        = string.Empty;
 
-    [Required(ErrorMessage = "Mật khẩu mới không được để trống!")]
-    [StringLength(100, MinimumLength = 6, ErrorMessage = "Mật khẩu mới phải có ít nhất 6 ký tự!")]
-    public string NewPassword { get; set; } = string.Empty;
+    [Required(
+        ErrorMessage =
+            "Mật khẩu mới không được để trống!"
+    )]
+    [StringLength(
+        100,
+        MinimumLength = 6,
+        ErrorMessage =
+            "Mật khẩu mới phải có ít nhất 6 ký tự!"
+    )]
+    public string NewPassword { get; set; }
+        = string.Empty;
 }
 

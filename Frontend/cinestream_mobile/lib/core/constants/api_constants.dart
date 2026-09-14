@@ -1,41 +1,117 @@
+import 'package:flutter/foundation.dart';
+
 class ApiConstants {
-ApiConstants._();
+  ApiConstants._();
 
-// Android Emulator -> máy tính host
-static const String baseUrl =
-'http://10.0.2.2:5182/api';
+  // ================================================================
+  // BASE URL
+  // ================================================================
 
-// Auth
-static const String login = '/auth/login';
-static const String register = '/auth/register';
-static const String verifyEmail = '/auth/verify-email';
-static const String resendVerification =
-'/auth/resend-verification';
-static const String logout = '/auth/logout';
-static const String forgotPassword =
-'/auth/forgot-password';
-static const String resetPassword =
-'/auth/reset-password';
-static const String me = '/auth/me';
+  // Tự động chọn địa chỉ Backend theo nền tảng:
+  //
+  // Web / Chrome:
+  //   http://localhost:5182/api
+  //
+  // Android Emulator:
+  //   http://10.0.2.2:5182/api
+  static String get baseUrl {
+    if (kIsWeb) {
+      return 'http://localhost:5182/api';
+    }
 
-// Movies
-static const String movies = '/movies';
+    return 'http://10.0.2.2:5182/api';
+  }
 
-// Categories
-static const String categories = '/categories';
+  // ================================================================
+  // AUTH
+  // ================================================================
 
-// Favorites
-static const String favorites = '/favorites';
+  // Đăng nhập
+  static const String login =
+      '/auth/login';
 
-// AI
-static const String aiChat = '/ai/chat';
-static const String aiHistory = '/ai/history';
+  // Đăng ký
+  static const String register =
+      '/auth/register';
 
-// Payments
-static const String createPayment =
-'/payments/create';
-static const String paymentHistory =
-'/payments/history';
-static const String paymentStatus =
-'/payments/status';
+  // Xác thực email bằng OTP
+  static const String verifyEmail =
+      '/auth/verify-email';
+
+  // Gửi lại OTP xác thực email
+  static const String resendVerification =
+      '/auth/resend-verification';
+
+  // Đăng xuất
+  static const String logout =
+      '/auth/logout';
+
+  // Quên mật khẩu
+  static const String forgotPassword =
+      '/auth/forgot-password';
+
+  // Đặt lại mật khẩu bằng OTP
+  static const String resetPassword =
+      '/auth/reset-password';
+
+  // Lấy thông tin user hiện tại
+  static const String me =
+      '/auth/me';
+
+  // Cập nhật Profile
+  static const String updateProfile =
+      '/auth/profile';
+
+  // Đổi mật khẩu
+  static const String changePassword =
+      '/auth/change-password';
+
+  // ================================================================
+  // MOVIES
+  // ================================================================
+
+  static const String movies =
+      '/movies';
+
+  // ================================================================
+  // CATEGORIES
+  // ================================================================
+
+  static const String categories =
+      '/categories';
+
+  // ================================================================
+  // FAVORITES
+  // ================================================================
+
+  static const String favorites =
+      '/favorites';
+
+  // ================================================================
+  // AI CINEBOT
+  // ================================================================
+
+  static const String aiChat =
+      '/ai/chat';
+
+  static const String aiHistory =
+      '/ai/history';
+
+  // ================================================================
+  // PAYMENTS / PREMIUM
+  // ================================================================
+
+  // Tạo đơn thanh toán Premium
+  static const String createPayment =
+      '/payments/create';
+
+  // Lịch sử thanh toán
+  static const String paymentHistory =
+      '/payments/history';
+
+  // Kiểm tra trạng thái đơn hàng:
+  // /payments/status/{orderCode}
+  static const String paymentStatus =
+      '/payments/status';
 }
+

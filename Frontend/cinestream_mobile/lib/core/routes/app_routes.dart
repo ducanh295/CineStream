@@ -2,13 +2,19 @@ import 'package:flutter/material.dart';
 
 import '../../models/movie.dart';
 
+import '../../screens/auth/forgot_password_screen.dart';
 import '../../screens/auth/login_screen.dart';
 import '../../screens/auth/register_screen.dart';
+import '../../screens/auth/registration_otp_screen.dart';
 import '../../screens/category/category_screen.dart';
 import '../../screens/chatbot/chatbot_screen.dart';
+import '../../screens/favorites/favorites_screen.dart';
 import '../../screens/home/home_screen.dart';
 import '../../screens/movie/movie_detail_screen.dart';
+import '../../screens/payment/payment_screen.dart';
 import '../../screens/player/video_player_screen.dart';
+import '../../screens/profile/change_password_screen.dart';
+import '../../screens/profile/edit_profile_screen.dart';
 import '../../screens/profile/profile_screen.dart';
 import '../../screens/search/search_screen.dart';
 import '../../screens/splash/splash_screen.dart';
@@ -16,36 +22,148 @@ import '../../screens/splash/splash_screen.dart';
 class AppRoutes {
   AppRoutes._();
 
+  // ================================================================
+  // ROUTES
+  // ================================================================
+
   static const String splash = '/';
+
   static const String home = '/home';
+
   static const String search = '/search';
+
   static const String category = '/category';
+
   static const String chatbot = '/chatbot';
+
   static const String profile = '/profile';
+
+  static const String editProfile = '/edit-profile';
+
+  static const String changePassword = '/change-password';
+
+  static const String favorites = '/favorites';
+
+  static const String payment = '/payment';
+
   static const String login = '/login';
+
   static const String register = '/register';
-  static const String movieDetail = '/movie-detail';
+
+  static const String forgotPassword =
+      '/forgot-password';
+
+  static const String registrationOtp =
+      '/registration-otp';
+
+  static const String movieDetail =
+      '/movie-detail';
+
   static const String player = '/player';
 
+  // ================================================================
+  // ROUTE TABLE
+  // ================================================================
+
   static final Map<String, WidgetBuilder> routes = {
+    // --------------------------------------------------------------
+    // SPLASH
+    // --------------------------------------------------------------
+
     splash: (context) => const SplashScreen(),
+
+    // --------------------------------------------------------------
+    // HOME
+    // --------------------------------------------------------------
 
     home: (context) => const HomeScreen(),
 
+    // --------------------------------------------------------------
+    // SEARCH
+    // --------------------------------------------------------------
+
     search: (context) => const SearchScreen(),
+
+    // --------------------------------------------------------------
+    // CATEGORY
+    // --------------------------------------------------------------
 
     category: (context) => const CategoryScreen(),
 
+    // --------------------------------------------------------------
+    // AI CINEBOT
+    // --------------------------------------------------------------
+
     chatbot: (context) => const ChatbotScreen(),
+
+    // --------------------------------------------------------------
+    // PROFILE
+    // --------------------------------------------------------------
 
     profile: (context) => const ProfileScreen(),
 
+    // --------------------------------------------------------------
+    // EDIT PROFILE
+    // --------------------------------------------------------------
+
+    editProfile: (context) =>
+        const EditProfileScreen(),
+
+    // --------------------------------------------------------------
+    // CHANGE PASSWORD
+    // --------------------------------------------------------------
+
+    changePassword: (context) =>
+        const ChangePasswordScreen(),
+
+    // --------------------------------------------------------------
+    // FAVORITES
+    // --------------------------------------------------------------
+
+    favorites: (context) =>
+        const FavoritesScreen(),
+
+    // --------------------------------------------------------------
+    // PAYMENT / PREMIUM
+    // --------------------------------------------------------------
+
+    payment: (context) =>
+        const PaymentScreen(),
+
+    // --------------------------------------------------------------
+    // LOGIN
+    // --------------------------------------------------------------
+
     login: (context) => const LoginScreen(),
 
-    register: (context) => const RegisterScreen(),
+    // --------------------------------------------------------------
+    // REGISTER
+    // --------------------------------------------------------------
+
+    register: (context) =>
+        const RegisterScreen(),
+
+    // --------------------------------------------------------------
+    // FORGOT PASSWORD
+    // --------------------------------------------------------------
+
+    forgotPassword: (context) =>
+        const ForgotPasswordScreen(),
+
+    // --------------------------------------------------------------
+    // REGISTRATION OTP
+    // --------------------------------------------------------------
+
+    registrationOtp: (context) =>
+        const RegistrationOtpScreen(),
+
+    // --------------------------------------------------------------
+    // MOVIE DETAIL
+    // --------------------------------------------------------------
 
     movieDetail: (context) {
-      final arguments = ModalRoute.of(context)?.settings.arguments;
+      final arguments =
+          ModalRoute.of(context)?.settings.arguments;
 
       if (arguments is Movie) {
         return MovieDetailScreen(
@@ -56,8 +174,13 @@ class AppRoutes {
       return const HomeScreen();
     },
 
+    // --------------------------------------------------------------
+    // VIDEO PLAYER
+    // --------------------------------------------------------------
+
     player: (context) {
-      final arguments = ModalRoute.of(context)?.settings.arguments;
+      final arguments =
+          ModalRoute.of(context)?.settings.arguments;
 
       if (arguments is Movie) {
         return VideoPlayerScreen(
@@ -69,3 +192,4 @@ class AppRoutes {
     },
   };
 }
+

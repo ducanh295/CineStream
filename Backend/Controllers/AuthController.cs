@@ -13,121 +13,327 @@ public class AuthController : ControllerBase
 {
     private readonly IAuthService _authService;
 
-    public AuthController(IAuthService authService)
+    public AuthController(
+        IAuthService authService)
     {
         _authService = authService;
     }
 
-    // POST /api/auth/register: Tiếp nhận thông tin đăng ký tài khoản mới và gửi mã OTP kích hoạt
+    // ============================================================
+    // REGISTER
+    // POST /api/auth/register
+    // ============================================================
+
     [HttpPost("register")]
-    public async Task<ActionResult<ApiResponse<AuthResponseDto>>> Register([FromBody] RegisterRequestDto request)
+    public async Task<ActionResult<ApiResponse<AuthResponseDto>>> Register(
+        [FromBody] RegisterRequestDto request)
     {
-        var result = await _authService.RegisterAsync(request);
+        var result =
+            await _authService.RegisterAsync(request);
+
         if (!result.Success)
         {
             return BadRequest(result);
         }
+
         return Ok(result);
     }
 
-    // POST /api/auth/login: Đăng nhập hệ thống bằng Tên đăng nhập hoặc Email kèm kiểm tra kích hoạt
+    // ============================================================
+    // LOGIN
+    // POST /api/auth/login
+    // ============================================================
+
     [HttpPost("login")]
-    public async Task<ActionResult<ApiResponse<AuthResponseDto>>> Login([FromBody] LoginRequestDto request)
+    public async Task<ActionResult<ApiResponse<AuthResponseDto>>> Login(
+        [FromBody] LoginRequestDto request)
     {
-        var result = await _authService.LoginAsync(request);
+        var result =
+            await _authService.LoginAsync(request);
+
         if (!result.Success)
         {
-            // Trả về BadRequest HTTP 400 nếu tài khoản chưa kích hoạt email hoặc bị khóa bởi Quản trị viên
-            if (result.Message != null && (result.Message.Contains("chưa được kích hoạt") || result.Message.Contains("khóa") || result.Message.Contains("khoá")))
+            // Tài khoản chưa xác thực email
+            // hoặc bị khóa bởi Admin.
+            if (
+                result.Message != null &&
+                (
+                    result.Message.Contains(
+                        "chưa được kích hoạt"
+                    ) ||
+                    result.Message.Contains(
+                        "khóa"
+                    ) ||
+                    result.Message.Contains(
+                        "khoá"
+                    )
+                )
+            )
             {
                 return BadRequest(result);
             }
+
             return Unauthorized(result);
         }
+
         return Ok(result);
     }
 
-    // POST /api/auth/verify-email: Xác thực kích hoạt tài khoản người dùng qua mã số OTP
+    // ============================================================
+    // VERIFY EMAIL
+    // POST /api/auth/verify-email
+    // ============================================================
+
     [HttpPost("verify-email")]
-    public async Task<ActionResult<ApiResponse>> VerifyEmail([FromBody] VerifyEmailRequestDto request)
+    public async Task<ActionResult<ApiResponse>> VerifyEmail(
+        [FromBody] VerifyEmailRequestDto request)
     {
-        var result = await _authService.VerifyEmailAsync(request);
+        var result =
+            await _authService.VerifyEmailAsync(
+                request
+            );
+
         if (!result.Success)
         {
             return BadRequest(result);
         }
+
         return Ok(result);
     }
 
-    // POST /api/auth/resend-verification: Cấp lại mã OTP kích hoạt mới cho tài khoản chưa xác minh
+    // ============================================================
+    // RESEND VERIFICATION
+    // POST /api/auth/resend-verification
+    // ============================================================
+
     [HttpPost("resend-verification")]
-    public async Task<ActionResult<ApiResponse>> ResendVerification([FromBody] ResendVerificationEmailDto request)
+    public async Task<ActionResult<ApiResponse>> ResendVerification(
+        [FromBody] ResendVerificationEmailDto request)
     {
-        var result = await _authService.ResendVerificationEmailAsync(request);
+        var result =
+            await _authService.ResendVerificationEmailAsync(
+                request
+            );
+
         if (!result.Success)
         {
             return BadRequest(result);
         }
+
         return Ok(result);
     }
 
-    // POST /api/auth/logout: Đăng xuất người dùng và kết thúc phiên làm việc
+    // ============================================================
+    // LOGOUT
+    // POST /api/auth/logout
+    // ============================================================
+
     [HttpPost("logout")]
     public async Task<ActionResult<ApiResponse>> Logout()
     {
-        var result = await _authService.LogoutAsync();
+        var result =
+            await _authService.LogoutAsync();
+
         return Ok(result);
     }
 
-    // POST /api/auth/forgot-password: Yêu cầu cấp mã OTP 6 số khôi phục mật khẩu qua email
+    // ============================================================
+    // FORGOT PASSWORD
+    // POST /api/auth/forgot-password
+    // ============================================================
+
     [HttpPost("forgot-password")]
-    public async Task<ActionResult<ApiResponse>> ForgotPassword([FromBody] ForgotPasswordRequestDto request)
+    public async Task<ActionResult<ApiResponse>> ForgotPassword(
+        [FromBody] ForgotPasswordRequestDto request)
     {
-        var result = await _authService.ForgotPasswordAsync(request);
+        var result =
+            await _authService.ForgotPasswordAsync(
+                request
+            );
+
         if (!result.Success)
         {
             return BadRequest(result);
         }
+
         return Ok(result);
     }
 
-    // POST /api/auth/reset-password: Xác thực mã OTP và tiến hành cập nhật mật khẩu mới
+    // ============================================================
+    // RESET PASSWORD
+    // POST /api/auth/reset-password
+    // ============================================================
+
     [HttpPost("reset-password")]
-    public async Task<ActionResult<ApiResponse>> ResetPassword([FromBody] ResetPasswordRequestDto request)
+    public async Task<ActionResult<ApiResponse>> ResetPassword(
+        [FromBody] ResetPasswordRequestDto request)
     {
-        var result = await _authService.ResetPasswordAsync(request);
+        var result =
+            await _authService.ResetPasswordAsync(
+                request
+            );
+
         if (!result.Success)
         {
             return BadRequest(result);
         }
+
         return Ok(result);
     }
 
-    // Yêu cầu phải có Header Authorization: Bearer <token>
+    // ============================================================
+    // GET CURRENT USER
+    // GET /api/auth/me
+    // ============================================================
+
     [Authorize]
     [HttpGet("me")]
     public async Task<ActionResult<ApiResponse<UserDto>>> GetMe()
     {
-        // Trích xuất UserId từ thông tin Claims được gắn trong JWT Token
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+        var userId =
+            GetCurrentUserId();
+
+        if (userId == null)
         {
-            return Unauthorized(ApiResponse<UserDto>.Fail("Không xác định được danh tính người dùng!"));
+            return Unauthorized(
+                ApiResponse<UserDto>.Fail(
+                    "Không xác định được danh tính người dùng!"
+                )
+            );
         }
 
-        var result = await _authService.GetCurrentUserAsync(userId);
+        var result =
+            await _authService.GetCurrentUserAsync(
+                userId.Value
+            );
+
         if (!result.Success)
         {
             return NotFound(result);
         }
+
         return Ok(result);
     }
 
-    // Yêu cầu quyền Quản trị viên theo Authorization Policy AdminOnly
+    // ============================================================
+    // UPDATE PROFILE
+    // PUT /api/auth/profile
+    // ============================================================
+
+    [Authorize]
+    [HttpPut("profile")]
+    public async Task<ActionResult<ApiResponse<UserDto>>> UpdateProfile(
+        [FromBody] UpdateProfileDto request)
+    {
+        var userId =
+            GetCurrentUserId();
+
+        if (userId == null)
+        {
+            return Unauthorized(
+                ApiResponse<UserDto>.Fail(
+                    "Không xác định được danh tính người dùng!"
+                )
+            );
+        }
+
+        var result =
+            await _authService.UpdateProfileAsync(
+                userId.Value,
+                request
+            );
+
+        if (!result.Success)
+        {
+            return BadRequest(result);
+        }
+
+        return Ok(result);
+    }
+
+    // ============================================================
+    // CHANGE PASSWORD
+    // POST /api/auth/change-password
+    // ============================================================
+
+    [Authorize]
+    [HttpPost("change-password")]
+    public async Task<ActionResult<ApiResponse>> ChangePassword(
+        [FromBody] ChangePasswordRequestDto request)
+    {
+        var userId =
+            GetCurrentUserId();
+
+        if (userId == null)
+        {
+            return Unauthorized(
+                ApiResponse.Fail(
+                    "Không xác định được danh tính người dùng!"
+                )
+            );
+        }
+
+        var result =
+            await _authService.ChangePasswordAsync(
+                userId.Value,
+                request
+            );
+
+        if (!result.Success)
+        {
+            return BadRequest(result);
+        }
+
+        return Ok(result);
+    }
+
+    // ============================================================
+    // ADMIN CHECK
+    // GET /api/auth/admin-check
+    // ============================================================
+
     [Authorize(Policy = "AdminOnly")]
     [HttpGet("admin-check")]
     public ActionResult<ApiResponse<string>> AdminCheck()
     {
-        return Ok(ApiResponse<string>.Ok("Xác thực quyền Quản trị viên thành công!"));
+        return Ok(
+            ApiResponse<string>.Ok(
+                "Xác thực quyền Quản trị viên thành công!"
+            )
+        );
+    }
+
+    // ============================================================
+    // GET CURRENT USER ID FROM JWT
+    // ============================================================
+
+    private int? GetCurrentUserId()
+    {
+        var userIdClaim =
+            User.FindFirst(
+                ClaimTypes.NameIdentifier
+            )?.Value;
+
+        if (
+            string.IsNullOrWhiteSpace(
+                userIdClaim
+            )
+        )
+        {
+            return null;
+        }
+
+        if (
+            !int.TryParse(
+                userIdClaim,
+                out int userId
+            )
+        )
+        {
+            return null;
+        }
+
+        return userId;
     }
 }
+
