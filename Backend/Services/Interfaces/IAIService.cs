@@ -14,4 +14,13 @@ public interface IAIService
 
     // Xóa toàn bộ lịch sử trò chuyện để bắt đầu phiên hội thoại mới
     Task<ApiResponse<bool>> ClearChatHistoryAsync(int userId);
+
+    // Lấy thông tin cấu hình Gemini API Key hiện tại của hệ thống (ưu tiên database, dự phòng appsettings)
+    Task<ApiResponse<AiConfigResponseDto>> GetAiConfigAsync();
+
+    // Cập nhật hoặc lưu mới cấu hình Gemini API Key và Model cho Chatbot vào database
+    Task<ApiResponse<AiConfigResponseDto>> UpdateAiConfigAsync(UpdateAiConfigRequestDto request);
+
+    // Xóa cấu hình API Key tùy chỉnh trong database để hoàn trả về cấu hình mặc định trong appsettings.json
+    Task<ApiResponse<bool>> DeleteAiConfigAsync();
 }

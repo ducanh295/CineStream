@@ -66,4 +66,40 @@
             var result = await _aiService.ClearChatHistoryAsync(userId);
             return Ok(result);
         }
+
+        // ============================================================
+        // CẤU HÌNH GEMINI API KEY (DÀNH CHO QUẢN TRỊ VIÊN)
+        // ============================================================
+
+        // GET /api/ai/config - Lấy thông tin cấu hình API Key và Model Chatbot hiện tại
+        [HttpGet("config")]
+        [Authorize(Policy = "AdminOnly")]
+        public async Task<ActionResult<ApiResponse<AiConfigResponseDto>>> GetConfig()
+        {
+            var result = await _aiService.GetAiConfigAsync();
+            return Ok(result);
+        }
+
+        // POST /api/ai/config - Cập nhật hoặc lưu mới API Key và Model cho Chatbot
+        [HttpPost("config")]
+        [Authorize(Policy = "AdminOnly")]
+        public async Task<ActionResult<ApiResponse<AiConfigResponseDto>>> UpdateConfig([FromBody] UpdateAiConfigRequestDto request)
+        {
+            var result = await _aiService.UpdateAiConfigAsync(request);
+            if (!result.Success)
+            {
+                return BadRequest(result);
+            }
+
+            return Ok(result);
+        }
+
+        // DELETE /api/ai/config - Xóa cấu hình tùy chỉnh để khôi phục về API Key mặc định của hệ thống
+        [HttpDelete("config")]
+        [Authorize(Policy = "AdminOnly")]
+        public async Task<ActionResult<ApiResponse<bool>>> DeleteConfig()
+        {
+            var result = await _aiService.DeleteAiConfigAsync();
+            return Ok(result);
+        }
     }

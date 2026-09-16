@@ -9,6 +9,15 @@ const aiApi = {
 
   // DELETE /api/ai/history
   clearHistory: () => axiosInstance.delete('/ai/history'),
+
+  // GET /api/ai/config - Quan tri vien lay cau hinh API Key
+  getConfig: () => axiosInstance.get('/ai/config'),
+
+  // POST /api/ai/config - Quan tri vien luu/cap nhat API Key
+  updateConfig: (data) => axiosInstance.post('/ai/config', data),
+
+  // DELETE /api/ai/config - Quan tri vien xoa/khoi phuc API Key mac dinh
+  deleteConfig: () => axiosInstance.delete('/ai/config'),
 };
 
 export default aiApi;

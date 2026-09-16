@@ -38,15 +38,15 @@ public class PaymentService : IPaymentService
         switch (dto.PlanType?.Trim().ToUpperInvariant())
         {
             case "1M":
-                amount = 50000m;
+                amount = 2000m;
                 planDurationDays = 30;
                 break;
             case "3M":
-                amount = 135000m;
+                amount = 5000m;
                 planDurationDays = 90;
                 break;
             case "1Y":
-                amount = 480000m;
+                amount = 10000m;
                 planDurationDays = 365;
                 break;
             default:

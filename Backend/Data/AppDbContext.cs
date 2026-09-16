@@ -24,6 +24,8 @@ public class AppDbContext : DbContext
 
     public DbSet<PaymentTransaction> PaymentTransactions => Set<PaymentTransaction>();
 
+    public DbSet<SystemSetting> SystemSettings => Set<SystemSetting>();
+
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -46,12 +48,16 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<PaymentTransaction>().HasIndex(pt => pt.OrderCode).IsUnique();
         modelBuilder.Entity<PaymentTransaction>().HasIndex(pt => pt.UserId);
 
+        // Ràng buộc chỉ mục duy nhất cho SystemSetting Key để tra cứu nhanh
+        modelBuilder.Entity<SystemSetting>().HasIndex(s => s.Key).IsUnique();
+
         modelBuilder.Entity<User>().HasQueryFilter(u => !u.IsDeleted);
         modelBuilder.Entity<Movie>().HasQueryFilter(m => !m.IsDeleted);
         modelBuilder.Entity<Category>().HasQueryFilter(c => !c.IsDeleted);
         modelBuilder.Entity<Series>().HasQueryFilter(s => !s.IsDeleted);
         modelBuilder.Entity<ChatLog>().HasQueryFilter(cl => !cl.IsDeleted);
         modelBuilder.Entity<PaymentTransaction>().HasQueryFilter(pt => !pt.IsDeleted);
+        modelBuilder.Entity<SystemSetting>().HasQueryFilter(s => !s.IsDeleted);
 
         // Đánh chỉ mục cho UserId trong ChatLog để tối ưu hóa tốc độ truy vấn lịch sử trò chuyện
         modelBuilder.Entity<ChatLog>().HasIndex(cl => cl.UserId);

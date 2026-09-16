@@ -318,19 +318,19 @@ class _PaymentScreenState
       _PaymentPlan(
         type: '1M',
         title: '1 tháng',
-        price: 50000,
+        price: 2000,
         days: 30,
       ),
       _PaymentPlan(
         type: '3M',
         title: '3 tháng',
-        price: 135000,
+        price: 5000,
         days: 90,
       ),
       _PaymentPlan(
         type: '1Y',
         title: '1 năm',
-        price: 480000,
+        price: 10000,
         days: 365,
       ),
     ];

@@ -50,7 +50,7 @@ public class PaymentServiceTests
         // Assert
         Assert.NotNull(result);
         Assert.StartsWith("CINE", result.OrderCode);
-        Assert.Equal(50000m, result.Amount);
+        Assert.Equal(2000m, result.Amount);
         Assert.Equal(30, result.PlanDurationDays);
         Assert.Equal("MB", result.BankName);
         Assert.Equal("0385941522", result.AccountNumber);
@@ -66,7 +66,7 @@ public class PaymentServiceTests
     public async Task CreatePaymentAsync_ValidPlan3M_AppliesCorrectPricing()
     {
         var result = await _paymentService.CreatePaymentAsync(1, new CreatePaymentRequestDto { PlanType = "3M" });
-        Assert.Equal(135000m, result.Amount);
+        Assert.Equal(5000m, result.Amount);
         Assert.Equal(90, result.PlanDurationDays);
     }
 
@@ -74,7 +74,7 @@ public class PaymentServiceTests
     public async Task CreatePaymentAsync_ValidPlan1Y_AppliesCorrectPricing()
     {
         var result = await _paymentService.CreatePaymentAsync(1, new CreatePaymentRequestDto { PlanType = "1Y" });
-        Assert.Equal(480000m, result.Amount);
+        Assert.Equal(10000m, result.Amount);
         Assert.Equal(365, result.PlanDurationDays);
     }
 

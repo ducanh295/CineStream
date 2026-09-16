@@ -24,7 +24,7 @@ const PLANS = [
   {
     id: '1M',
     name: 'Gói VIP 1 Tháng',
-    price: 50000,
+    price: 2000,
     days: 30,
     discount: null,
     highlight: false,
@@ -33,16 +33,16 @@ const PLANS = [
   {
     id: '3M',
     name: 'Gói VIP 3 Tháng',
-    price: 135000,
+    price: 5000,
     days: 90,
-    discount: 'Tiết kiệm 10%',
+    discount: 'Tiết kiệm',
     highlight: true,
     description: 'Lựa chọn phổ biến nhất. Xem phim mượt mà chuẩn 4K, hỗ trợ đa thiết bị trong 90 ngày.',
   },
   {
     id: '1Y',
     name: 'Gói VIP 1 Năm',
-    price: 480000,
+    price: 10000,
     days: 365,
     discount: 'Tiết kiệm 20%',
     highlight: false,

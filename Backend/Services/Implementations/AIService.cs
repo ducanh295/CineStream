@@ -59,13 +59,15 @@ public class AIService : IAIService
         string aiReplyText;
         var recommendedMovieIds = new List<int>();
 
-        // 3. Kiểm tra và gọi Gemini API nếu có cấu hình ApiKey hợp lệ
-        if (!string.IsNullOrWhiteSpace(_geminiOptions.ApiKey))
+        // 3. Lấy cấu hình API Key và Model đang kích hoạt (ưu tiên Database, dự phòng appsettings)
+        var activeConfig = await GetActiveConfigAsync();
+
+        if (!string.IsNullOrWhiteSpace(activeConfig.ApiKey))
         {
             try
             {
                 var systemPrompt = BuildSystemPrompt(availableMovies, recentLogs, userMessage);
-                var geminiResponse = await CallGeminiApiAsync(systemPrompt);
+                var geminiResponse = await CallGeminiApiAsync(systemPrompt, activeConfig.ApiKey, activeConfig.Model);
 
                 if (!string.IsNullOrWhiteSpace(geminiResponse))
                 {
@@ -221,15 +223,15 @@ public class AIService : IAIService
         return sb.ToString();
     }
 
-    // Gọi REST API của Google Gemini
-    private async Task<string?> CallGeminiApiAsync(string prompt)
+    // Gọi REST API của Google Gemini sử dụng khóa và mô hình động
+    private async Task<string?> CallGeminiApiAsync(string prompt, string apiKey, string modelName)
     {
-        var model = string.IsNullOrWhiteSpace(_geminiOptions.Model) ? "gemini-1.5-flash" : _geminiOptions.Model;
+        var model = string.IsNullOrWhiteSpace(modelName) ? "gemini-1.5-flash" : modelName;
         var baseUrl = string.IsNullOrWhiteSpace(_geminiOptions.BaseUrl) 
             ? "https://generativelanguage.googleapis.com/v1beta" 
             : _geminiOptions.BaseUrl.TrimEnd('/');
 
-        var endpoint = $"{baseUrl}/models/{model}:generateContent?key={_geminiOptions.ApiKey}";
+        var endpoint = $"{baseUrl}/models/{model}:generateContent?key={apiKey}";
 
         var requestBody = new
         {
@@ -335,5 +337,133 @@ public class AIService : IAIService
         var topMovies = availableMovies.Take(2).ToList();
         recommendedIds = topMovies.Select(m => m.Id).ToList();
         return "Chào bạn! CineBot đã ghi nhận yêu cầu của bạn. Dưới đây là những bộ phim đặc sắc và đang được yêu thích nhất trên CineStream mà bạn không nên bỏ lỡ:";
+    }
+
+    // ============================================================
+    // QUẢN TRỊ CẤU HÌNH GEMINI API KEY (CRUD)
+    // ============================================================
+
+    // Lấy thông tin cấu hình Gemini API Key hiện tại (ưu tiên bảng SystemSettings, dự phòng appsettings.json)
+    public async Task<ApiResponse<AiConfigResponseDto>> GetAiConfigAsync()
+    {
+        var activeConfig = await GetActiveConfigAsync();
+        var dbKey = await _context.SystemSettings.FirstOrDefaultAsync(s => s.Key == "Gemini:ApiKey");
+
+        var dto = new AiConfigResponseDto
+        {
+            ApiKey = activeConfig.ApiKey,
+            MaskedApiKey = MaskApiKey(activeConfig.ApiKey),
+            Model = activeConfig.Model,
+            BaseUrl = _geminiOptions.BaseUrl ?? "https://generativelanguage.googleapis.com/v1beta",
+            IsCustom = activeConfig.IsCustom,
+            UpdatedAt = dbKey?.UpdatedAt ?? dbKey?.CreatedAt
+        };
+
+        return ApiResponse<AiConfigResponseDto>.Ok(dto, "Lấy cấu hình AI thành công!");
+    }
+
+    // Cập nhật hoặc lưu mới cấu hình Gemini API Key và Model cho Chatbot vào database
+    public async Task<ApiResponse<AiConfigResponseDto>> UpdateAiConfigAsync(UpdateAiConfigRequestDto request)
+    {
+        if (string.IsNullOrWhiteSpace(request.ApiKey))
+        {
+            return ApiResponse<AiConfigResponseDto>.Fail("API Key không được để trống!");
+        }
+
+        var trimmedKey = request.ApiKey.Trim();
+        var trimmedModel = string.IsNullOrWhiteSpace(request.Model) ? "gemini-3.5-flash-lite" : request.Model.Trim();
+
+        // 1. Cập nhật hoặc tạo mới Gemini:ApiKey trong bảng SystemSettings
+        var existingKey = await _context.SystemSettings.FirstOrDefaultAsync(s => s.Key == "Gemini:ApiKey");
+        if (existingKey != null)
+        {
+            existingKey.Value = trimmedKey;
+            existingKey.UpdatedAt = DateTime.UtcNow;
+            _context.SystemSettings.Update(existingKey);
+        }
+        else
+        {
+            await _context.SystemSettings.AddAsync(new SystemSetting
+            {
+                Key = "Gemini:ApiKey",
+                Value = trimmedKey,
+                Description = "Google Gemini API Key cấu hình từ WebAdmin",
+                CreatedAt = DateTime.UtcNow
+            });
+        }
+
+        // 2. Cập nhật hoặc tạo mới Gemini:Model
+        var existingModel = await _context.SystemSettings.FirstOrDefaultAsync(s => s.Key == "Gemini:Model");
+        if (existingModel != null)
+        {
+            existingModel.Value = trimmedModel;
+            existingModel.UpdatedAt = DateTime.UtcNow;
+            _context.SystemSettings.Update(existingModel);
+        }
+        else
+        {
+            await _context.SystemSettings.AddAsync(new SystemSetting
+            {
+                Key = "Gemini:Model",
+                Value = trimmedModel,
+                Description = "Mã Model Gemini AI cấu hình từ WebAdmin",
+                CreatedAt = DateTime.UtcNow
+            });
+        }
+
+        await _context.SaveChangesAsync();
+
+        var responseDto = new AiConfigResponseDto
+        {
+            ApiKey = trimmedKey,
+            MaskedApiKey = MaskApiKey(trimmedKey),
+            Model = trimmedModel,
+            BaseUrl = _geminiOptions.BaseUrl ?? "https://generativelanguage.googleapis.com/v1beta",
+            IsCustom = true,
+            UpdatedAt = DateTime.UtcNow
+        };
+
+        return ApiResponse<AiConfigResponseDto>.Ok(responseDto, "Lưu cấu hình Gemini API Key thành công!");
+    }
+
+    // Xóa cấu hình API Key tùy chỉnh trong database để hoàn trả về cấu hình mặc định trong appsettings.json
+    public async Task<ApiResponse<bool>> DeleteAiConfigAsync()
+    {
+        var settingsToRemove = await _context.SystemSettings
+            .Where(s => s.Key == "Gemini:ApiKey" || s.Key == "Gemini:Model")
+            .ToListAsync();
+
+        if (settingsToRemove.Any())
+        {
+            _context.SystemSettings.RemoveRange(settingsToRemove);
+            await _context.SaveChangesAsync();
+        }
+
+        return ApiResponse<bool>.Ok(true, "Đã xóa cấu hình tùy chỉnh, hệ thống đã khôi phục về API Key mặc định.");
+    }
+
+    // Truy vấn cấu hình kích hoạt thực tế hiện tại
+    private async Task<(string ApiKey, string Model, bool IsCustom)> GetActiveConfigAsync()
+    {
+        var dbKey = await _context.SystemSettings.FirstOrDefaultAsync(s => s.Key == "Gemini:ApiKey");
+        var dbModel = await _context.SystemSettings.FirstOrDefaultAsync(s => s.Key == "Gemini:Model");
+
+        bool isCustom = dbKey != null && !string.IsNullOrWhiteSpace(dbKey.Value);
+        string apiKey = isCustom ? dbKey!.Value : (_geminiOptions.ApiKey ?? string.Empty);
+        string model = (dbModel != null && !string.IsNullOrWhiteSpace(dbModel.Value))
+            ? dbModel.Value
+            : (_geminiOptions.Model ?? "gemini-3.5-flash-lite");
+
+        return (apiKey, model, isCustom);
+    }
+
+    // Làm mờ một phần API Key để đảm bảo an toàn thông tin khi hiển thị lên giao diện
+    private static string MaskApiKey(string key)
+    {
+        if (string.IsNullOrWhiteSpace(key) || key.Length <= 8)
+        {
+            return "********";
+        }
+        return $"{key[..4]}...{key[^4..]}";
     }
 }

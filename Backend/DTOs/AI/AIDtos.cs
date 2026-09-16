@@ -41,3 +41,24 @@ public class GeminiOptions
     public string Model { get; set; } = "gemini-3.5-flash-lite";
     public string BaseUrl { get; set; } = "https://generativelanguage.googleapis.com/v1beta";
 }
+
+// DTO tiếp nhận yêu cầu cập nhật hoặc lưu cấu hình Gemini API Key
+public class UpdateAiConfigRequestDto
+{
+    [Required(ErrorMessage = "API Key không được để trống!")]
+    [StringLength(250, MinimumLength = 5, ErrorMessage = "API Key phải từ 5 đến 250 ký tự!")]
+    public string ApiKey { get; set; } = string.Empty;
+
+    public string? Model { get; set; } = "gemini-3.5-flash-lite";
+}
+
+// DTO phản hồi thông tin cấu hình Gemini API Key cho trang quản trị
+public class AiConfigResponseDto
+{
+    public string ApiKey { get; set; } = string.Empty;
+    public string MaskedApiKey { get; set; } = string.Empty;
+    public string Model { get; set; } = "gemini-3.5-flash-lite";
+    public string BaseUrl { get; set; } = "https://generativelanguage.googleapis.com/v1beta";
+    public bool IsCustom { get; set; } = false;
+    public DateTime? UpdatedAt { get; set; }
+}
