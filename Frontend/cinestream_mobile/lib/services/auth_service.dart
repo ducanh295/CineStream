@@ -642,8 +642,16 @@ class AuthService {
         final statusCode =
             error.response?.statusCode;
 
-        if (statusCode != null) {
-          return 'Máy chủ trả về lỗi HTTP $statusCode.';
+        if (statusCode == 401) {
+          return 'Thông tin đăng nhập không chính xác hoặc phiên đã hết hạn.';
+        }
+
+        if (statusCode == 403) {
+          return 'Bạn không có quyền thực hiện thao tác này.';
+        }
+
+        if (statusCode != null && statusCode >= 500) {
+          return 'Hệ thống máy chủ đang bận. Vui lòng thử lại sau.';
         }
 
         return defaultMessage;

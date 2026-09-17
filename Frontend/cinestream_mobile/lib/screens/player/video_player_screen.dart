@@ -115,7 +115,13 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
     }
 
     try {
-      final uri = Uri.tryParse(streamUrl);
+      // Chuẩn hóa đường dẫn: nếu là đường dẫn tương đối thì ghép địa chỉ máy chủ Backend
+      var resolvedUrl = streamUrl.trim();
+      if (resolvedUrl.startsWith('/')) {
+        resolvedUrl = 'http://localhost:5182$resolvedUrl';
+      }
+
+      final uri = Uri.tryParse(resolvedUrl);
 
       if (uri == null ||
           !uri.hasScheme ||

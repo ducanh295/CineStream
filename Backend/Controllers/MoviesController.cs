@@ -53,6 +53,14 @@ public class MoviesController : ControllerBase
         return Ok(result);
     }
 
+    // GET /api/movies/available-streams - Quét và lấy danh sách luồng phát HLS nội bộ cùng các video mẫu CDN
+    [HttpGet("available-streams")]
+    public async Task<ActionResult<ApiResponse<AvailableStreamsResponseDto>>> GetAvailableStreams()
+    {
+        var result = await _movieService.GetAvailableStreamsAsync();
+        return Ok(result);
+    }
+
     // POST /api/movies - Tạo mới một bộ phim kèm danh sách thể loại liên kết (Chỉ Quản trị viên)
     [Authorize(Policy = "AdminOnly")]
     [HttpPost]

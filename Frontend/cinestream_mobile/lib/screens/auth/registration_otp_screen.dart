@@ -28,6 +28,24 @@ class _RegistrationOtpScreenState
   int _resendSeconds = 0;
   Timer? _resendTimer;
 
+  bool _initializedFromArgs = false;
+  bool _isEmailFromRegistration = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_initializedFromArgs) {
+      _initializedFromArgs = true;
+      final args = ModalRoute.of(context)?.settings.arguments;
+      if (args is String && args.trim().isNotEmpty) {
+        _emailController.text = args.trim();
+        _codeSent = true;
+        _isEmailFromRegistration = true;
+        _startResendCooldown();
+      }
+    }
+  }
+
   @override
   void dispose() {
     _resendTimer?.cancel();
@@ -372,9 +390,11 @@ class _RegistrationOtpScreenState
               // TITLE
               // ==================================================
 
-              const Text(
-                'Xác minh email',
-                style: TextStyle(
+              Text(
+                _isEmailFromRegistration
+                    ? 'Kích hoạt tài khoản'
+                    : 'Xác minh email',
+                style: const TextStyle(
                   color: AppTheme.black,
                   fontSize: 30,
                   fontWeight:
@@ -385,9 +405,11 @@ class _RegistrationOtpScreenState
 
               const SizedBox(height: 8),
 
-              const Text(
-                'Nhập email đăng ký để nhận mã OTP xác minh tài khoản.',
-                style: TextStyle(
+              Text(
+                _isEmailFromRegistration
+                    ? 'Mã OTP gồm 6 chữ số đã được gửi đến email của bạn. Vui lòng kiểm tra hộp thư để kích hoạt tài khoản.'
+                    : 'Nhập email đăng ký để nhận mã OTP xác minh tài khoản.',
+                style: const TextStyle(
                   color: AppTheme.grey,
                   fontSize: 13,
                   height: 1.5,
@@ -416,6 +438,7 @@ class _RegistrationOtpScreenState
                 controller:
                     _emailController,
                 enabled:
+                    !_isEmailFromRegistration &&
                     !_isSending &&
                     !_isVerifying,
                 keyboardType:
@@ -426,8 +449,9 @@ class _RegistrationOtpScreenState
                     _inputDecoration(
                   hint:
                       'Nhập email đăng ký',
-                  icon:
-                      Icons.email_outlined,
+                  icon: _isEmailFromRegistration
+                      ? Icons.lock_outline_rounded
+                      : Icons.email_outlined,
                 ),
               ),
 
@@ -650,10 +674,12 @@ class _RegistrationOtpScreenState
                   ),
                 ),
                 child:
-                    const Text(
-                  'Bạn cần tạo tài khoản trước trong trang Đăng ký. Trang này dùng để gửi lại và xác minh mã OTP khi chưa đăng nhập.',
+                    Text(
+                  _isEmailFromRegistration
+                      ? 'Mã OTP có hiệu lực trong vòng 24 giờ. Vui lòng kiểm tra hộp thư đến hoặc mục Thư rác (Spam) để lấy mã xác thực.'
+                      : 'Bạn cần tạo tài khoản trước trong trang Đăng ký. Trang này dùng để gửi lại và xác minh mã OTP khi chưa đăng nhập.',
                   style:
-                      TextStyle(
+                      const TextStyle(
                     color:
                         AppTheme.grey,
                     fontSize: 12,

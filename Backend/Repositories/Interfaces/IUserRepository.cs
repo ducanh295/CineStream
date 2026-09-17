@@ -33,4 +33,17 @@ public interface IUserRepository : IBaseRepository<User>
 
     // Đếm tổng số người dùng thỏa mãn điều kiện lọc phục vụ tính toán số trang
     Task<int> CountAsync(string? search, UserRole? role, bool? isLocked);
+
+    // Kiểm tra email đã thuộc về tài khoản đã xác nhận hay chưa
+    Task<bool> ConfirmedEmailExistsAsync(string email);
+
+    // Kiểm tra username đã thuộc về tài khoản đã xác nhận hay chưa
+    Task<bool> ConfirmedUsernameExistsAsync(string username);
+
+    // Lấy danh sách các tài khoản chưa kích hoạt email trùng email hoặc username để dọn dẹp
+    Task<List<User>> GetUnconfirmedUsersByEmailOrUsernameAsync(string email, string username);
+
+    // Xóa vĩnh viễn tài khoản chưa xác thực khỏi cơ sở dữ liệu
+    Task HardDeleteAsync(User user);
 }
+

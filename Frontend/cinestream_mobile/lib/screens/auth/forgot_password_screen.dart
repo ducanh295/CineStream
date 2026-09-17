@@ -142,7 +142,7 @@ class _ForgotPasswordScreenState
             email: _emailController.text.trim(),
             code: _codeController.text.trim(),
             newPassword:
-                _newPasswordController.text,
+                _newPasswordController.text.trim(),
           )
           .timeout(
         const Duration(seconds: 15),

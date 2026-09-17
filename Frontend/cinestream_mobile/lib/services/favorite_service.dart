@@ -51,7 +51,7 @@ class FavoriteService {
       }
 
       throw Exception(
-        'Dữ liệu Favorites từ Backend không hợp lệ.',
+        'Dữ liệu danh sách yêu thích không hợp lệ.',
       );
     } on DioException catch (e) {
       throw Exception(
@@ -133,7 +133,7 @@ class FavoriteService {
       }
 
       throw Exception(
-        'Không xác định được trạng thái phim yêu thích từ Backend.',
+        'Không thể xác định trạng thái phim yêu thích.',
       );
     } on DioException catch (e) {
       throw Exception(
@@ -286,7 +286,7 @@ class FavoriteService {
     }
 
     throw Exception(
-      'Response từ Backend không hợp lệ.',
+      'Dữ liệu phản hồi từ máy chủ không hợp lệ.',
     );
   }
 
@@ -368,58 +368,43 @@ class FavoriteService {
       switch (statusCode) {
         case 400:
           return responseText.isNotEmpty
-              ? 'API Favorites lỗi 400: $responseText'
-              : 'API Favorites lỗi 400: Request không hợp lệ.';
+              ? responseText
+              : 'Yêu cầu không hợp lệ. Vui lòng thử lại.';
 
         case 401:
-          return responseText.isNotEmpty
-              ? 'API Favorites lỗi 401: $responseText'
-              : 'API Favorites lỗi 401: Bạn chưa đăng nhập hoặc token không hợp lệ.';
+          return 'Vui lòng đăng nhập để sử dụng tính năng này.';
 
         case 403:
-          return responseText.isNotEmpty
-              ? 'API Favorites lỗi 403: $responseText'
-              : 'API Favorites lỗi 403: Bạn không có quyền thực hiện thao tác này.';
+          return 'Bạn không có quyền thực hiện thao tác này.';
 
         case 404:
-          return responseText.isNotEmpty
-              ? 'API Favorites lỗi 404: $responseText'
-              : 'API Favorites lỗi 404: Không tìm thấy endpoint hoặc phim.';
+          return 'Không tìm thấy thông tin phim.';
 
         case 500:
-          return responseText.isNotEmpty
-              ? 'API Favorites lỗi 500: $responseText'
-              : 'API Favorites lỗi 500: Backend đang xảy ra lỗi.';
+          return 'Hệ thống đang bận. Vui lòng thử lại sau.';
 
         default:
           return responseText.isNotEmpty
-              ? 'API Favorites lỗi HTTP $statusCode: $responseText'
-              : 'API Favorites lỗi HTTP $statusCode.';
+              ? responseText
+              : 'Đã có lỗi xảy ra. Vui lòng thử lại sau.';
       }
     }
 
     if (error.type ==
-        DioExceptionType.connectionTimeout) {
-      return 'Kết nối Backend bị timeout.';
-    }
-
-    if (error.type ==
-        DioExceptionType.sendTimeout) {
-      return 'Gửi request tới Backend bị timeout.';
-    }
-
-    if (error.type ==
+        DioExceptionType.connectionTimeout ||
+        error.type ==
+        DioExceptionType.sendTimeout ||
+        error.type ==
         DioExceptionType.receiveTimeout) {
-      return 'Backend phản hồi quá chậm.';
+      return 'Kết nối mạng bị gián đoạn. Vui lòng thử lại.';
     }
 
     if (error.type ==
         DioExceptionType.connectionError) {
-      return 'Không thể kết nối tới Backend. Hãy kiểm tra Backend đang chạy.';
+      return 'Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng.';
     }
 
-    return 'Lỗi gọi API Favorites: '
-        '${error.message ?? error.toString()}';
+    return 'Đã có lỗi xảy ra. Vui lòng thử lại sau.';
   }
 }
 

@@ -48,7 +48,7 @@ class _LoginScreenState extends State<LoginScreen> {
         _usernameOrEmailController.text.trim();
 
     final password =
-        _passwordController.text;
+        _passwordController.text.trim();
 
     if (usernameOrEmail.isEmpty ||
         password.isEmpty) {
@@ -550,45 +550,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ],
               ),
-
-              const SizedBox(
-                height: 8,
-              ),
-
-              // ==================================================
-              // REGISTRATION OTP
-              // ==================================================
-
-              Center(
-                child:
-                    TextButton(
-                  onPressed:
-                      _isSubmitting
-                          ? null
-                          : () {
-                              Navigator
-                                  .pushNamed(
-                                context,
-                                AppRoutes
-                                    .registrationOtp,
-                              );
-                            },
-                  child:
-                      const Text(
-                    'Đã đăng ký nhưng chưa nhận được mã OTP?',
-                    textAlign:
-                        TextAlign.center,
-                    style:
-                        TextStyle(
-                      color:
-                          AppTheme.darkGreen,
-                      fontSize: 12,
-                      fontWeight:
-                          FontWeight.w700,
-                    ),
-                  ),
-                ),
-              ),
             ],
           ),
         ),
@@ -596,4 +557,5 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 }
+
 

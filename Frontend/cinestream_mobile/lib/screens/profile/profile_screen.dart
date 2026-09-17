@@ -602,7 +602,7 @@ class _ProfileScreenState
         IconButton(
           onPressed: () {
             _showMessage(
-              'Backend hiện chưa có API thông báo.',
+              'Hiện tại bạn chưa có thông báo mới.',
             );
           },
           icon:

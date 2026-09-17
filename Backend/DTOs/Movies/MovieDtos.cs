@@ -4,7 +4,7 @@ using CineStream.Models.Enums;
 
 namespace CineStream.DTOs.Movies;
 
-//DTO tóm tắt hiển thị danh sách phim ngoài trang chủ/tìm kiếm (gọn nhẹ)
+// DTO hiển thị thông tin phim và luồng phát cho danh sách và quản trị
 public class MovieDto
 {
     public int Id { get; set; }
@@ -12,20 +12,20 @@ public class MovieDto
     public string? Description { get; set; }
     public string? PosterUrl { get; set; }
     public string? TrailerUrl { get; set; }
+    public string? VideoUrl { get; set; }
+    public string StreamType { get; set; } = "NONE";
     public int? Duration { get; set; }
     public int? ReleaseYear { get; set; }
     public MovieType Type { get; set; }
     public int VideoStatus { get; set; }
 
-    //Danh sách các thể loại của phim (dạng tóm tắt, ngăn chặn lỗi đệ quy vòng lặp)
+    // Danh sách các thể loại của phim dạng tóm tắt để ngăn vòng lặp tuần hoàn
     public List<CategoryDto> Categories { get; set; } = new();
 }
 
-//DTO chi tiết khi người dùng click vào xem phim (có VideoUrl để phát video stream)
+// DTO chi tiết khi người dùng xem chi tiết phim (kế thừa đầy đủ thuộc tính từ MovieDto)
 public class MovieDetailDto : MovieDto
 {
-    public string? VideoUrl { get; set; }
-    public string StreamType { get; set; } = "NONE";
     public DateTime CreatedAt { get; set; }
 }
 
@@ -102,4 +102,35 @@ public class UpdateMovieDto
 
     // Cập nhật lại danh sách ID thể loại
     public List<int> CategoryIds { get; set; } = new();
+}
+
+// DTO mô tả luồng phát HLS có sẵn trong kho lưu trữ của máy chủ
+public class AvailableStreamDto
+{
+    public string StreamKey { get; set; } = string.Empty;
+    public string RelativeUrl { get; set; } = string.Empty;
+    public string AbsoluteUrl { get; set; } = string.Empty;
+    public string Format { get; set; } = "HLS";
+    public int SegmentCount { get; set; }
+    public double TotalSizeMb { get; set; }
+    public bool IsAssigned { get; set; }
+    public int? AssignedMovieId { get; set; }
+    public string? AssignedMovieTitle { get; set; }
+}
+
+// DTO mô tả video mẫu CDN kiểm định sẵn
+public class CdnPresetVideoDto
+{
+    public string Title { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public string VideoUrl { get; set; } = string.Empty;
+    public string Format { get; set; } = "MP4";
+    public int Duration { get; set; }
+}
+
+// DTO phản hồi danh sách kho luồng phát HLS và video mẫu
+public class AvailableStreamsResponseDto
+{
+    public List<AvailableStreamDto> InternalStreams { get; set; } = new();
+    public List<CdnPresetVideoDto> CdnPresets { get; set; } = new();
 }

@@ -34,27 +34,37 @@ public class AuthService : IAuthService
         var email = request.Email.Trim();
         var username = request.Username.Trim();
 
-        // Kiểm tra Email đã tồn tại
-        bool emailExists =
-            await _userRepo.EmailExistsAsync(email);
+        // Kiem tra email da thuoc ve tai khoan da xac nhan hay chua
+        bool confirmedEmailExists =
+            await _userRepo.ConfirmedEmailExistsAsync(email);
 
-        if (emailExists)
+        if (confirmedEmailExists)
         {
             return ApiResponse<AuthResponseDto>.Fail(
                 "Email đã được sử dụng"
             );
         }
 
-        // Kiểm tra Username đã tồn tại
-        bool usernameExists =
-            await _userRepo.UsernameExistsAsync(username);
+        // Kiem tra ten dang nhap da thuoc ve tai khoan da xac nhan hay chua
+        bool confirmedUsernameExists =
+            await _userRepo.ConfirmedUsernameExistsAsync(username);
 
-        if (usernameExists)
+        if (confirmedUsernameExists)
         {
             return ApiResponse<AuthResponseDto>.Fail(
                 "Tên đăng nhập đã được sử dụng"
             );
         }
+
+        // Don dep cac tai khoan chua xac thuc cu neu co cung email hoac username (phien dang ky do dang)
+        var staleUsers =
+            await _userRepo.GetUnconfirmedUsersByEmailOrUsernameAsync(email, username);
+
+        foreach (var staleUser in staleUsers)
+        {
+            await _userRepo.HardDeleteAsync(staleUser);
+        }
+
 
         // Mã hóa mật khẩu bằng BCrypt
         string hashedPassword =

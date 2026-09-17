@@ -23,4 +23,7 @@ public interface IMovieService
 
     // Xóa mềm một bộ phim theo định danh
     Task<ApiResponse<bool>> DeleteAsync(int id);
+
+    // Quét và lấy danh sách các luồng phát video HLS có sẵn trong kho lưu trữ và các video mẫu CDN
+    Task<ApiResponse<AvailableStreamsResponseDto>> GetAvailableStreamsAsync();
 }

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, Search, Edit2, Trash2, PlayCircle, Loader2, Film, X } from 'lucide-react';
+import { Plus, Search, Edit2, Trash2, PlayCircle, Loader2, Film, X, Layers } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import movieApi from '../api/movieApi';
 import categoryApi from '../api/categoryApi';
@@ -39,6 +39,10 @@ const Movies = () => {
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleting, setDeleting] = useState(false);
 
+  // Danh sách luồng phát có sẵn từ kho HLS nội bộ
+  const [availableStreams, setAvailableStreams] = useState({ internalStreams: [], cdnPresets: [] });
+  const [showHlsPicker, setShowHlsPicker] = useState(false);
+
   const fetchMovies = useCallback(async (searchTerm = '') => {
     setLoading(true);
     setErrorMsg('');
@@ -66,12 +70,24 @@ const Movies = () => {
     }
   }, []);
 
+  const fetchAvailableStreams = useCallback(async () => {
+    try {
+      const result = await movieApi.getAvailableStreams();
+      if (result?.data) {
+        setAvailableStreams(result.data);
+      }
+    } catch {
+      // Không chặn trang nếu không tải được danh sách luồng phát có sẵn
+    }
+  }, []);
+
   useEffect(() => {
     Promise.resolve().then(() => {
       fetchMovies();
       fetchCategories();
+      fetchAvailableStreams();
     });
-  }, [fetchMovies, fetchCategories]);
+  }, [fetchMovies, fetchCategories, fetchAvailableStreams]);
 
   // Debounce tìm kiếm để không gọi API liên tục khi gõ
   useEffect(() => {
@@ -86,11 +102,13 @@ const Movies = () => {
     setEditingId(null);
     setForm(EMPTY_FORM);
     setFormErrors({});
+    setShowHlsPicker(false);
     setModalOpen(true);
   };
 
-  const openEditModal = (movie) => {
+  const openEditModal = async (movie) => {
     setEditingId(movie.id);
+    setShowHlsPicker(false);
     setForm({
       title: movie.title || '',
       description: movie.description || '',
@@ -105,10 +123,34 @@ const Movies = () => {
     });
     setFormErrors({});
     setModalOpen(true);
+
+    // Nạp thêm chi tiết từ API getById để đảm bảo dữ liệu luôn đầy đủ và mới nhất
+    try {
+      const res = await movieApi.getById(movie.id);
+      if (res?.data) {
+        const detail = res.data;
+        setForm((prev) => ({
+          ...prev,
+          title: detail.title ?? prev.title,
+          description: detail.description ?? prev.description,
+          posterUrl: detail.posterUrl ?? prev.posterUrl,
+          videoUrl: detail.videoUrl ?? prev.videoUrl,
+          trailerUrl: detail.trailerUrl ?? prev.trailerUrl,
+          duration: detail.duration ?? prev.duration,
+          releaseYear: detail.releaseYear ?? prev.releaseYear,
+          type: detail.type ?? prev.type,
+          videoStatus: detail.videoStatus ?? prev.videoStatus,
+          categoryIds: (detail.categories || []).map((c) => c.id),
+        }));
+      }
+    } catch {
+      // Giữ nguyên dữ liệu từ bảng danh sách nếu không thể gọi API chi tiết
+    }
   };
 
   const closeModal = () => {
     if (saving) return;
+    setShowHlsPicker(false);
     setModalOpen(false);
   };
 
@@ -376,14 +418,73 @@ const Movies = () => {
             </div>
           </div>
 
-          <div className="space-y-1">
-            <label className="text-slate-400 text-xs font-bold uppercase ml-1">Video URL (HLS .m3u8 hoặc MP4)</label>
+          <div className="space-y-2">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <label className="text-slate-400 text-xs font-bold uppercase ml-1">Video URL (HLS .m3u8 hoặc MP4)</label>
+              <button
+                type="button"
+                onClick={() => setShowHlsPicker(!showHlsPicker)}
+                className={`px-2.5 py-1 text-xs rounded-lg border font-medium transition-all flex items-center gap-1.5 ${
+                  showHlsPicker
+                    ? 'bg-blue-600 text-white border-blue-500 shadow-md shadow-blue-500/20'
+                    : 'bg-slate-800/80 text-blue-400 border-slate-700 hover:bg-slate-800'
+                }`}
+                title="Chọn nhanh từ các thư mục video HLS đã băm trên máy chủ bằng split_video.bat"
+              >
+                <Layers size={13} />
+                <span>Kho HLS nội bộ ({availableStreams.internalStreams.length})</span>
+              </button>
+            </div>
+
+            {/* Panel chọn nhanh HLS nội bộ */}
+            {showHlsPicker && (
+              <div className="bg-slate-900 border border-blue-500/30 rounded-xl p-3 space-y-2 animate-fadeIn shadow-lg">
+                <div className="flex items-center justify-between text-xs text-slate-400 pb-1.5 border-b border-slate-800">
+                  <span className="font-semibold text-blue-300">Kho video HLS trên máy chủ Kestrel:</span>
+                  <span className="text-[11px] text-blue-400 font-mono">Bấm để tự động điền URL</span>
+                </div>
+                {availableStreams.internalStreams.length === 0 ? (
+                  <p className="text-xs text-slate-500 italic py-1">Chưa phát hiện thư mục HLS nào trong wwwroot/videos. Hãy dùng split_video.bat để băm video.</p>
+                ) : (
+                  <div className="space-y-1.5 max-h-44 overflow-y-auto pr-1">
+                    {availableStreams.internalStreams.map((s) => (
+                      <button
+                        key={s.streamKey}
+                        type="button"
+                        onClick={() => {
+                          setForm((prev) => ({ ...prev, videoUrl: s.relativeUrl, videoStatus: 1 }));
+                          setShowHlsPicker(false);
+                        }}
+                        className="w-full text-left p-2 rounded-lg bg-slate-800/60 hover:bg-blue-600/20 border border-slate-700/60 hover:border-blue-500/40 transition-all flex items-center justify-between gap-3 group"
+                      >
+                        <div>
+                          <p className="text-xs font-semibold text-white group-hover:text-blue-300 transition-colors">
+                            Thư mục #{s.streamKey} — {s.relativeUrl}
+                          </p>
+                          <p className="text-[11px] text-slate-400">
+                            {s.segmentCount} phân đoạn .ts • {s.totalSizeMb} MB
+                          </p>
+                        </div>
+                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium shrink-0 ${
+                          s.isAssigned
+                            ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                            : 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
+                        }`}>
+                          {s.isAssigned ? `Đang gán: ${s.assignedMovieTitle}` : 'Sẵn sàng'}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
             <input
               type="text"
               value={form.videoUrl}
               onChange={(e) => setForm({ ...form, videoUrl: e.target.value })}
-              placeholder="https://..."
-              className="w-full bg-slate-800/50 border border-slate-700 text-white rounded-xl py-3 px-4 outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+              placeholder="Ví dụ: /videos/1/master.m3u8 (hoặc bấm Kho HLS nội bộ ở trên để chọn)"
+              className="w-full bg-slate-800/50 border border-slate-700 text-white rounded-xl py-3 px-4 outline-none focus:ring-2 focus:ring-blue-500 transition-all font-mono text-sm"
             />
           </div>
 

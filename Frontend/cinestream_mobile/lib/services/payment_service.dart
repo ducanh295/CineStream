@@ -116,7 +116,7 @@ class PaymentService {
     }
 
     throw Exception(
-      'Response từ Backend không hợp lệ.',
+      'Dữ liệu phản hồi từ máy chủ không hợp lệ.',
     );
   }
 
@@ -155,55 +155,42 @@ class PaymentService {
     if (statusCode != null) {
       if (statusCode == 400) {
         return message.isNotEmpty
-            ? 'Thanh toán lỗi 400: $message'
-            : 'Thanh toán lỗi 400: Request không hợp lệ.';
+            ? message
+            : 'Yêu cầu thanh toán không hợp lệ.';
       }
 
       if (statusCode == 401) {
-        return message.isNotEmpty
-            ? 'Thanh toán lỗi 401: $message'
-            : 'Thanh toán lỗi 401: Bạn chưa đăng nhập hoặc token không hợp lệ.';
+        return 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.';
       }
 
       if (statusCode == 404) {
-        return message.isNotEmpty
-            ? 'Thanh toán lỗi 404: $message'
-            : 'Thanh toán lỗi 404: Không tìm thấy đơn hàng hoặc endpoint.';
+        return 'Không tìm thấy thông tin đơn hàng hoặc gói dịch vụ.';
       }
 
       if (statusCode >= 500) {
-        return message.isNotEmpty
-            ? 'Thanh toán lỗi $statusCode: $message'
-            : 'Backend thanh toán đang xảy ra lỗi.';
+        return 'Hệ thống thanh toán đang bận. Vui lòng thử lại sau.';
       }
 
       return message.isNotEmpty
-          ? 'Thanh toán lỗi HTTP $statusCode: $message'
-          : 'Thanh toán lỗi HTTP $statusCode.';
+          ? message
+          : 'Đã có lỗi xảy ra trong quá trình thanh toán. Vui lòng thử lại sau.';
     }
 
     if (error.type ==
-        DioExceptionType.connectionTimeout) {
-      return 'Kết nối Backend thanh toán bị timeout.';
-    }
-
-    if (error.type ==
-        DioExceptionType.sendTimeout) {
-      return 'Gửi yêu cầu thanh toán bị timeout.';
-    }
-
-    if (error.type ==
+        DioExceptionType.connectionTimeout ||
+        error.type ==
+        DioExceptionType.sendTimeout ||
+        error.type ==
         DioExceptionType.receiveTimeout) {
-      return 'Backend thanh toán phản hồi quá chậm.';
+      return 'Kết nối tới cổng thanh toán bị gián đoạn. Vui lòng thử lại.';
     }
 
     if (error.type ==
         DioExceptionType.connectionError) {
-      return 'Không thể kết nối tới Backend thanh toán.';
+      return 'Không thể kết nối đến hệ thống thanh toán. Vui lòng kiểm tra kết nối mạng.';
     }
 
-    return 'Lỗi thanh toán: '
-        '${error.message ?? error.toString()}';
+    return 'Đã có lỗi xảy ra trong quá trình thanh toán. Vui lòng thử lại sau.';
   }
 }
 

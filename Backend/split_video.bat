@@ -14,20 +14,35 @@ if "%~1"=="" (
 )
 
 set INPUT_FILE=%~1
-set /p MOVIE_ID="Nhap ID cua bo phim trong Database (vi du: 1, 2, 4): "
+set DEFAULT_NAME=%~n1
 
-if "%MOVIE_ID%"=="" (
-    echo [LOI]: ID phim khong duoc de trong!
-    pause
-    exit /b
+echo [*] Tep video dau vao: "%~nx1"
+echo.
+set /p FOLDER_NAME="Nhap ten thu muc phim [Nhan ENTER de dung mac dinh: %DEFAULT_NAME%]: "
+
+if "%FOLDER_NAME%"=="" (
+    set FOLDER_NAME=%DEFAULT_NAME%
 )
 
-set OUTPUT_DIR=%~dp0wwwroot\videos\%MOVIE_ID%
+set OUTPUT_DIR=%~dp0wwwroot\videos\%FOLDER_NAME%
 
-if not exist "%OUTPUT_DIR%" (
-    mkdir "%OUTPUT_DIR%"
-) else (
+REM Kiem tra an toan du lieu: Neu thu muc da ton tai thi yeu cau xac nhan truoc khi xoa de
+if exist "%OUTPUT_DIR%" (
+    echo.
+    echo [CANH BAO]: Thu muc "%FOLDER_NAME%" da ton tai trong wwwroot\videos!
+    echo Neu tiep tuc, cac phan doan video cu trong thu muc nay se bi xoa de cap nhat moi.
+    set /p CONFIRM="Ban co chac chan muon ghi de khong? (Y/N): "
+    if /i not "!CONFIRM!"=="Y" if /i not "!CONFIRM!"=="y" (
+        if /i "%CONFIRM%" NEQ "Y" if /i "%CONFIRM%" NEQ "y" (
+            echo.
+            echo [DA HUY]: Thao tac da duoc huy bo de bao ve du lieu cu.
+            pause
+            exit /b
+        )
+    )
     del /q "%OUTPUT_DIR%\*.ts" "%OUTPUT_DIR%\*.m3u8" >nul 2>&1
+) else (
+    mkdir "%OUTPUT_DIR%"
 )
 
 echo.
@@ -52,8 +67,13 @@ if %ERRORLEVEL% EQU 0 (
     echo [THANH CONG]: Da bam phim xong vao thu muc:
     echo %OUTPUT_DIR%
     echo.
-    echo Duong dan videoUrl de luu vao Database:
-    echo http://localhost:5182/videos/%MOVIE_ID%/master.m3u8
+    echo Duong dan tuong doi de chon tren WebAdmin:
+    echo /videos/%FOLDER_NAME%/master.m3u8
+    echo.
+    echo Huong dan su dung tren WebAdmin:
+    echo 1. Vao muc Them/Sua phim tren WebAdmin.
+    echo 2. Bam vao nut 'Kho HLS noi bo' tai muc Video URL.
+    echo 3. Nhap chuot chon thu muc '%FOLDER_NAME%' de tu dong dien 1-click!
     echo.
     echo Ban co the kiem tra xem thu ngay tai:
     echo http://localhost:5182/player.html

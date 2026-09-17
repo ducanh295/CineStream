@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/routes/app_routes.dart';
+import '../../core/storage/storage_service.dart';
 import '../../core/theme/app_theme.dart';
 import '../../models/movie.dart';
 import '../../services/favorite_service.dart';
@@ -51,6 +52,17 @@ class _MovieDetailScreenState
       return;
     }
 
+    // Kiem tra nguoi dung da dang nhap hay chua truoc khi goi API
+    final isLoggedIn = await StorageService.isLoggedIn();
+    if (!isLoggedIn) {
+      if (mounted) {
+        setState(() {
+          _isFavorite = false;
+        });
+      }
+      return;
+    }
+
     setState(() {
       _isCheckingFavorite = true;
     });
@@ -75,24 +87,10 @@ class _MovieDetailScreenState
       }
 
       setState(() {
+        _isFavorite = false;
         _isCheckingFavorite = false;
       });
-
-      // Chỉ hiện lỗi nếu thật sự có lỗi API.
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(
-          SnackBar(
-            content: Text(
-              e.toString().replaceFirst(
-                'Exception: ',
-                '',
-              ),
-            ),
-            behavior:
-                SnackBarBehavior.floating,
-          ),
-        );
+      // Tac vu kiem tra ngam khi tai trang: giu trang thai mac dinh va khong ban SnackBar lam phien nguoi dung
     }
   }
 

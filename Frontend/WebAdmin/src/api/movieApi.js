@@ -19,6 +19,9 @@ const movieApi = {
   // DELETE /api/movies/{id}
   delete: (id) => axiosInstance.delete(`/movies/${id}`),
 
+  // GET /api/movies/available-streams -> Quét kho luồng phát HLS và video mẫu CDN
+  getAvailableStreams: () => axiosInstance.get('/movies/available-streams'),
+
   // Quản lý Tập phim (Episodes) & Mùa phim (Seasons)
   getSeasons: (seriesId) => axiosInstance.get(`/series/${seriesId}/seasons`),
   getEpisodes: (seasonId) => axiosInstance.get(`/seasons/${seasonId}/episodes`),

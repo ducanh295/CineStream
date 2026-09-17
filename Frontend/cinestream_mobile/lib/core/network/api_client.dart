@@ -109,6 +109,12 @@ class ApiClient {
         return;
       }
 
+      // Xóa sạch các SnackBar còn tồn đọng từ màn hình trước đó tránh rò rỉ sang màn hình Đăng nhập
+      final currentContext = navigatorKey.currentContext;
+      if (currentContext != null && currentContext.mounted) {
+        ScaffoldMessenger.of(currentContext).clearSnackBars();
+      }
+
       // Xóa toàn bộ stack cũ.
       // Người dùng không thể bấm Back quay lại màn hình
       // đang sử dụng token đã hết hạn.

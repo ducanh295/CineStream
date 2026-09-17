@@ -11,11 +11,16 @@ public class MovieService : IMovieService
 {
     private readonly IMovieRepository _movieRepo;
     private readonly ICategoryRepository _categoryRepo;
+    private readonly IHttpContextAccessor _httpContextAccessor;
 
-    public MovieService(IMovieRepository movieRepo, ICategoryRepository categoryRepo)
+    public MovieService(
+        IMovieRepository movieRepo,
+        ICategoryRepository categoryRepo,
+        IHttpContextAccessor httpContextAccessor)
     {
         _movieRepo = movieRepo;
         _categoryRepo = categoryRepo;
+        _httpContextAccessor = httpContextAccessor;
     }
 
     public async Task<ApiResponse<PagedResult<MovieDto>>> GetAllAsync(int? categoryId = null, string? search = null, int pageNumber = 1, int pageSize = 10)
@@ -127,12 +132,22 @@ public class MovieService : IMovieService
             return ApiResponse<MovieDetailDto>.Fail("Khong tim thay phim!");
         }
 
-        // Cập nhật các trường thông tin của phim
+        // Cập nhật các trường thông tin cơ bản của phim
         movie.Title = dto.Title.Trim();
         movie.Description = dto.Description?.Trim();
         movie.PosterUrl = dto.PosterUrl?.Trim();
-        movie.VideoUrl = dto.VideoUrl?.Trim();
-        movie.VideoStatus = dto.VideoStatus != 0 ? dto.VideoStatus : (!string.IsNullOrWhiteSpace(dto.VideoUrl) ? 1 : 0);
+
+        // Cơ chế phòng thủ dữ liệu: chỉ cập nhật VideoUrl khi có giá trị mới hoặc khi chủ động đặt VideoStatus = 0
+        if (!string.IsNullOrWhiteSpace(dto.VideoUrl))
+        {
+            movie.VideoUrl = dto.VideoUrl.Trim();
+        }
+        else if (dto.VideoStatus == 0)
+        {
+            movie.VideoUrl = null;
+        }
+
+        movie.VideoStatus = dto.VideoStatus != 0 ? dto.VideoStatus : (!string.IsNullOrWhiteSpace(movie.VideoUrl) ? 1 : 0);
         movie.TrailerUrl = dto.TrailerUrl?.Trim();
         movie.Duration = dto.Duration;
         movie.ReleaseYear = dto.ReleaseYear;
@@ -179,13 +194,33 @@ public class MovieService : IMovieService
         {
             MovieId = movie.Id,
             Title = movie.Title,
-            StreamUrl = movie.VideoUrl,
+            StreamUrl = ResolveStreamUrl(movie.VideoUrl),
             StreamType = DetermineStreamType(movie.VideoUrl),
             VideoStatus = movie.VideoStatus,
             Duration = movie.Duration
         };
 
         return ApiResponse<MoviePlaybackDto>.Ok(playbackDto, "Lay thong tin luong phat thanh cong!");
+    }
+
+    // Chuẩn hóa đường dẫn luồng phát video: nếu là đường dẫn tương đối (/videos/...) thì tự động ghép Base URL của máy chủ
+    private string? ResolveStreamUrl(string? videoUrl)
+    {
+        if (string.IsNullOrWhiteSpace(videoUrl))
+        {
+            return null;
+        }
+
+        if (videoUrl.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+            videoUrl.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+        {
+            return videoUrl;
+        }
+
+        var request = _httpContextAccessor.HttpContext?.Request;
+        var baseUrl = request != null ? $"{request.Scheme}://{request.Host}" : "http://localhost:5182";
+        var normalizedPath = videoUrl.StartsWith('/') ? videoUrl : "/" + videoUrl;
+        return $"{baseUrl}{normalizedPath}";
     }
 
     // Xác định loại luồng phát dựa vào định dạng URL video
@@ -204,8 +239,8 @@ public class MovieService : IMovieService
         return "DIRECT_MP4";
     }
 
-    // Ánh xạ thực thể Movie sang MovieDto (ẩn VideoUrl để tối ưu băng thông)
-    private static MovieDto MapToMovieDto(Movie movie)
+    // Ánh xạ thực thể Movie sang MovieDto (bao gồm VideoUrl đã chuẩn hóa tuyệt đối và StreamType)
+    private MovieDto MapToMovieDto(Movie movie)
     {
         return new MovieDto
         {
@@ -214,6 +249,8 @@ public class MovieService : IMovieService
             Description = movie.Description,
             PosterUrl = movie.PosterUrl,
             TrailerUrl = movie.TrailerUrl,
+            VideoUrl = ResolveStreamUrl(movie.VideoUrl),
+            StreamType = DetermineStreamType(movie.VideoUrl),
             Duration = movie.Duration,
             ReleaseYear = movie.ReleaseYear,
             Type = movie.Type,
@@ -229,8 +266,8 @@ public class MovieService : IMovieService
         };
     }
 
-    // Ánh xạ thực thể Movie sang MovieDetailDto (chứa đầy đủ VideoUrl và CreatedAt)
-    private static MovieDetailDto MapToMovieDetailDto(Movie movie)
+    // Ánh xạ thực thể Movie sang MovieDetailDto (chứa đầy đủ VideoUrl đã chuẩn hóa, StreamType và CreatedAt)
+    private MovieDetailDto MapToMovieDetailDto(Movie movie)
     {
         return new MovieDetailDto
         {
@@ -239,12 +276,12 @@ public class MovieService : IMovieService
             Description = movie.Description,
             PosterUrl = movie.PosterUrl,
             TrailerUrl = movie.TrailerUrl,
+            VideoUrl = ResolveStreamUrl(movie.VideoUrl),
+            StreamType = DetermineStreamType(movie.VideoUrl),
             Duration = movie.Duration,
             ReleaseYear = movie.ReleaseYear,
             Type = movie.Type,
             VideoStatus = movie.VideoStatus,
-            VideoUrl = movie.VideoUrl,
-            StreamType = DetermineStreamType(movie.VideoUrl),
             CreatedAt = movie.CreatedAt,
             Categories = movie.MovieCategories
                 .Where(mc => mc.Category != null)
@@ -255,5 +292,109 @@ public class MovieService : IMovieService
                     Description = mc.Category.Description
                 }).ToList()
         };
+    }
+
+    // Quét và lấy danh sách các luồng phát video HLS có sẵn trong kho lưu trữ và các video mẫu CDN
+    public async Task<ApiResponse<AvailableStreamsResponseDto>> GetAvailableStreamsAsync()
+    {
+        var response = new AvailableStreamsResponseDto();
+
+        // 1. Quét kho video HLS nội bộ trong wwwroot/videos
+        var webRoot = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "videos");
+        if (Directory.Exists(webRoot))
+        {
+            // Lấy danh sách phim trong database để đối chiếu trạng thái đã gán
+            var allMovies = await _movieRepo.GetAllWithCategoriesAsync();
+
+            var directories = Directory.GetDirectories(webRoot);
+            foreach (var dir in directories)
+            {
+                var dirName = Path.GetFileName(dir);
+                var masterFile = Path.Combine(dir, "master.m3u8");
+
+                if (File.Exists(masterFile))
+                {
+                    var tsFiles = Directory.GetFiles(dir, "*.ts");
+                    var segmentCount = tsFiles.Length;
+
+                    long totalBytes = 0;
+                    try
+                    {
+                        var dirInfo = new DirectoryInfo(dir);
+                        totalBytes = dirInfo.EnumerateFiles("*", SearchOption.AllDirectories).Sum(fi => fi.Length);
+                    }
+                    catch
+                    {
+                        // Giữ nguyên 0 nếu không có quyền đọc toàn bộ file
+                    }
+
+                    var relativeUrl = $"/videos/{dirName}/master.m3u8";
+                    var absoluteUrl = ResolveStreamUrl(relativeUrl) ?? relativeUrl;
+
+                    // Đối chiếu với cơ sở dữ liệu xem luồng này đã được gán cho phim nào chưa
+                    var assignedMovie = allMovies.FirstOrDefault(m =>
+                        !string.IsNullOrWhiteSpace(m.VideoUrl) &&
+                        (m.VideoUrl.Equals(relativeUrl, StringComparison.OrdinalIgnoreCase) ||
+                         m.VideoUrl.EndsWith($"/videos/{dirName}/master.m3u8", StringComparison.OrdinalIgnoreCase)));
+
+                    response.InternalStreams.Add(new AvailableStreamDto
+                    {
+                        StreamKey = dirName,
+                        RelativeUrl = relativeUrl,
+                        AbsoluteUrl = absoluteUrl,
+                        Format = "HLS",
+                        SegmentCount = segmentCount,
+                        TotalSizeMb = Math.Round((double)totalBytes / (1024 * 1024), 1),
+                        IsAssigned = assignedMovie != null,
+                        AssignedMovieId = assignedMovie?.Id,
+                        AssignedMovieTitle = assignedMovie?.Title
+                    });
+                }
+            }
+        }
+
+        // Sắp xếp các luồng nội bộ theo tên định danh
+        response.InternalStreams = response.InternalStreams
+            .OrderBy(s => s.StreamKey)
+            .ToList();
+
+        // 2. Danh sách các video mẫu CDN công khai hỗ trợ CORS ổn định
+        response.CdnPresets = new List<CdnPresetVideoDto>
+        {
+            new CdnPresetVideoDto
+            {
+                Title = "Big Buck Bunny 720p (Hoạt hình 3D)",
+                Description = "Video mẫu chuẩn MP4 Blender Foundation, máy chủ Cloudflare nhanh",
+                VideoUrl = "https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/720/Big_Buck_Bunny_720_10s_1MB.mp4",
+                Format = "MP4",
+                Duration = 10
+            },
+            new CdnPresetVideoDto
+            {
+                Title = "Sintel 720p (Phiêu lưu hoạt họa)",
+                Description = "Video mẫu chuẩn MP4 độ nét cao, máy chủ Cloudflare nhanh",
+                VideoUrl = "https://test-videos.co.uk/vids/sintel/mp4/h264/720/Sintel_720_10s_1MB.mp4",
+                Format = "MP4",
+                Duration = 15
+            },
+            new CdnPresetVideoDto
+            {
+                Title = "Oceans Nature 720p (Tài liệu thiên nhiên)",
+                Description = "Video mẫu chuẩn MP4 VideoJS ZenCDN, tương thích mọi trình duyệt",
+                VideoUrl = "https://vjs.zencdn.net/v/oceans.mp4",
+                Format = "MP4",
+                Duration = 46
+            },
+            new CdnPresetVideoDto
+            {
+                Title = "Jellyfish 720p (Kiểm thử đồ họa)",
+                Description = "Video mẫu kiểm tra màu sắc và giải mã bitrate ổn định",
+                VideoUrl = "https://test-videos.co.uk/vids/jellyfish/mp4/h264/720/Jellyfish_720_10s_1MB.mp4",
+                Format = "MP4",
+                Duration = 10
+            }
+        };
+
+        return ApiResponse<AvailableStreamsResponseDto>.Ok(response, "Lay danh sach luong phat co san thanh cong!");
     }
 }

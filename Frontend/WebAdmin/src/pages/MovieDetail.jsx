@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Calendar, Clock3, Film, Loader2, Play, Tag, Video, X } from 'lucide-react';
+import { ArrowLeft, Calendar, Clock3, Film, Loader2, Play, Tag, Video, X, Terminal, Trash2, Activity } from 'lucide-react';
 import Hls from 'hls.js';
 import movieApi from '../api/movieApi';
 
@@ -15,7 +15,18 @@ const MovieDetail = () => {
   const [playbackLoading, setPlaybackLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [playbackError, setPlaybackError] = useState('');
+  const [logs, setLogs] = useState([]);
+  const [streamStatus, setStreamStatus] = useState('Sẵn sàng');
+  const [statusTone, setStatusTone] = useState('idle');
   const videoRef = useRef(null);
+
+  const addLog = useCallback((message, type = 'info') => {
+    const time = new Date().toLocaleTimeString();
+    setLogs((prev) => [
+      { id: Date.now() + Math.random(), time, message, type },
+      ...prev.slice(0, 199),
+    ]);
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -45,13 +56,97 @@ const MovieDetail = () => {
     const streamUrl = playback?.streamUrl;
     if (!video || !streamUrl) return undefined;
 
+    // Chuẩn hóa đường dẫn: nếu là đường dẫn tương đối thì ghép máy chủ Backend cổng 5182
+    let finalUrl = streamUrl;
+    if (finalUrl.startsWith('/')) {
+      finalUrl = 'http://localhost:5182' + finalUrl;
+    }
+
+    setLogs([]);
+    setStreamStatus('Đang khởi tạo kết nối luồng...');
+    setStatusTone('connecting');
+    addLog(`Bắt đầu kết nối tới URL: ${finalUrl}`, 'info');
+
     let hls;
-    if (streamUrl.includes('.m3u8') && Hls.isSupported()) {
-      hls = new Hls();
-      hls.loadSource(streamUrl);
+    if (finalUrl.includes('.m3u8') && Hls.isSupported()) {
+      hls = new Hls({
+        enableWorker: true,
+        lowLatencyMode: false,
+      });
+
+      hls.loadSource(finalUrl);
       hls.attachMedia(video);
+
+      hls.on(Hls.Events.MANIFEST_PARSED, (event, data) => {
+        setStreamStatus(`HLS Manifest nạp thành công (${data.levels.length} tầng chất lượng)`);
+        setStatusTone('success');
+        addLog(`HLS Manifest nạp thành công. Tìm thấy ${data.levels.length} tầng chất lượng (tối đa: ${data.levels[0]?.height || 'HD'}p).`, 'success');
+        video.play().catch(() => {
+          addLog('Bấm Play trên khung phát để bắt đầu xem video.', 'warning');
+        });
+      });
+
+      hls.on(Hls.Events.FRAG_LOADED, (event, data) => {
+        const fragUrl = data.frag.relurl || data.frag.url;
+        const duration = data.frag.duration?.toFixed(1) || '0.0';
+        const bytes = data.stats?.loaded || data.frag?.stats?.loaded || data.frag?.loaded || 0;
+        const sizeText = bytes > 0 ? `${(bytes / 1024).toFixed(1)} KB` : 'Chuẩn nén';
+        setStreamStatus(`Đang phát phân đoạn ${data.frag.sn ?? ''}`);
+        setStatusTone('playing');
+        addLog(`Tải phân đoạn [${data.frag.sn ?? 'ts'}]: ${fragUrl} (Thời lượng: ${duration}s | Dung lượng: ${sizeText})`, 'segment');
+      });
+
+      hls.on(Hls.Events.LEVEL_SWITCHED, (event, data) => {
+        addLog(`Tự động điều chỉnh bitrate phù hợp đường truyền: Tầng ${data.level}`, 'info');
+      });
+
+      hls.on(Hls.Events.ERROR, (event, data) => {
+        if (data.fatal) {
+          setStreamStatus('Lỗi phát luồng HLS');
+          setStatusTone('error');
+          setPlaybackError('Lỗi phát luồng HLS: ' + (data.details || 'Không thể giải mã manifest.'));
+          addLog(`Lỗi nghiêm trọng: ${data.details}`, 'error');
+        } else {
+          addLog(`Cảnh báo luồng: ${data.details}`, 'warning');
+        }
+      });
     } else {
-      video.src = streamUrl;
+      video.src = finalUrl;
+      const onLoadedMetadata = () => {
+        setStreamStatus('Tải video trực tiếp thành công');
+        setStatusTone('success');
+        addLog(`Đã nạp metadata video: Thời lượng ${Math.round(video.duration)}s, độ phân giải ${video.videoWidth}x${video.videoHeight}.`, 'success');
+        video.play().catch(() => {
+          addLog('Bấm Play trên khung phát để bắt đầu xem video.', 'warning');
+        });
+      };
+      const onError = () => {
+        setStreamStatus('Lỗi tải video trực tiếp');
+        setStatusTone('error');
+        setPlaybackError('Không thể tải file video từ đường dẫn.');
+        addLog('Không thể tải file video từ đường dẫn đã cung cấp.', 'error');
+      };
+      const onWaiting = () => {
+        addLog('Đang chờ đệm dữ liệu video (Buffering)...', 'warning');
+      };
+      const onPlaying = () => {
+        setStreamStatus('Đang phát nội dung');
+        setStatusTone('playing');
+      };
+
+      video.addEventListener('loadedmetadata', onLoadedMetadata);
+      video.addEventListener('error', onError);
+      video.addEventListener('waiting', onWaiting);
+      video.addEventListener('playing', onPlaying);
+
+      return () => {
+        video.removeEventListener('loadedmetadata', onLoadedMetadata);
+        video.removeEventListener('error', onError);
+        video.removeEventListener('waiting', onWaiting);
+        video.removeEventListener('playing', onPlaying);
+        video.removeAttribute('src');
+        video.load();
+      };
     }
 
     return () => {
@@ -59,7 +154,7 @@ const MovieDetail = () => {
       video.removeAttribute('src');
       video.load();
     };
-  }, [playback]);
+  }, [playback, addLog]);
 
   const handlePlay = async () => {
     setPlaybackLoading(true);
@@ -130,9 +225,95 @@ const MovieDetail = () => {
       {playbackError && <div className="bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl p-4">{playbackError}</div>}
 
       {playback && (
-        <section className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-          <div className="flex items-center justify-between gap-4 mb-4"><div><h2 className="text-xl font-bold text-white">Phát thử nội dung</h2><p className="text-slate-500 text-sm mt-1">Loại stream: {playback.streamType}</p></div><button type="button" onClick={() => setPlayback(null)} className="p-2 rounded-lg text-slate-500 hover:text-white hover:bg-slate-800"><X size={18} /></button></div>
-          {playback.streamUrl ? <video ref={videoRef} controls playsInline className="w-full max-h-140 rounded-xl bg-black">Trình duyệt không hỗ trợ phát video.</video> : <p className="text-slate-400">Backend chưa trả về đường dẫn stream cho phim này.</p>}
+        <section className="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-6">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <h2 className="text-xl font-bold text-white">Phát thử nội dung</h2>
+              <div className="flex items-center gap-3 mt-1 text-sm text-slate-400">
+                <span>Loại stream: <strong className="text-blue-400">{playback.streamType}</strong></span>
+                <span>•</span>
+                <span className="flex items-center gap-1.5">
+                  <span className={`w-2 h-2 rounded-full ${
+                    statusTone === 'playing' || statusTone === 'success'
+                      ? 'bg-emerald-400 animate-pulse'
+                      : statusTone === 'connecting'
+                      ? 'bg-amber-400 animate-pulse'
+                      : statusTone === 'error'
+                      ? 'bg-rose-400'
+                      : 'bg-slate-500'
+                  }`} />
+                  <span className={
+                    statusTone === 'playing' || statusTone === 'success'
+                      ? 'text-emerald-400'
+                      : statusTone === 'connecting'
+                      ? 'text-amber-400'
+                      : statusTone === 'error'
+                      ? 'text-rose-400'
+                      : 'text-slate-400'
+                  }>{streamStatus}</span>
+                </span>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setPlayback(null)}
+              className="p-2 rounded-lg text-slate-500 hover:text-white hover:bg-slate-800 transition-colors"
+              title="Đóng khung phát"
+            >
+              <X size={18} />
+            </button>
+          </div>
+
+          {playback.streamUrl ? (
+            <video ref={videoRef} controls playsInline className="w-full max-h-140 rounded-xl bg-black border border-slate-800">
+              Trình duyệt không hỗ trợ phát video.
+            </video>
+          ) : (
+            <p className="text-slate-400">Backend chưa trả về đường dẫn stream cho phim này.</p>
+          )}
+
+          {/* Bảng điều khiển Console Log thời gian thực tương tự player.html */}
+          <div className="bg-slate-950 border border-slate-800/80 rounded-xl p-4 shadow-inner">
+            <div className="flex items-center justify-between gap-2 mb-3 pb-2.5 border-b border-slate-800/70">
+              <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-400">
+                <Terminal size={15} className="text-blue-400" />
+                <span>Nhật ký phân đoạn & render thời gian thực (Real-time Segment Log)</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] text-slate-500 font-mono">{logs.length} bản ghi</span>
+                <button
+                  type="button"
+                  onClick={() => setLogs([])}
+                  className="flex items-center gap-1 px-2.5 py-1 text-xs text-slate-400 hover:text-white hover:bg-slate-800 rounded-md transition-colors"
+                  title="Xóa log"
+                >
+                  <Trash2 size={13} />
+                  <span>Xóa</span>
+                </button>
+              </div>
+            </div>
+
+            <div className="font-mono text-xs text-slate-300 max-h-56 overflow-y-auto space-y-1 pr-1 select-text">
+              {logs.length === 0 ? (
+                <p className="text-slate-600 italic">Đang chờ sự kiện luồng phát...</p>
+              ) : (
+                logs.map((item) => (
+                  <div key={item.id} className="leading-relaxed border-b border-slate-900/80 pb-1 flex items-start gap-2">
+                    <span className="text-slate-500 shrink-0">[{item.time}]</span>
+                    <span className={
+                      item.type === 'segment' ? 'text-cyan-300' :
+                      item.type === 'success' ? 'text-emerald-400 font-semibold' :
+                      item.type === 'warning' ? 'text-amber-400' :
+                      item.type === 'error' ? 'text-rose-400 font-semibold' :
+                      'text-slate-300'
+                    }>
+                      {item.message}
+                    </span>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
         </section>
       )}
     </div>

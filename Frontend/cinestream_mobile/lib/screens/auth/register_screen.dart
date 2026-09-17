@@ -151,10 +151,11 @@ class _RegisterScreenState
         return;
       }
 
-      // Chuyển sang trang OTP riêng.
+      // Chuyển sang trang OTP riêng kèm email vừa đăng ký.
       Navigator.pushReplacementNamed(
         context,
         AppRoutes.registrationOtp,
+        arguments: email,
       );
     } on TimeoutException {
       if (!mounted) {

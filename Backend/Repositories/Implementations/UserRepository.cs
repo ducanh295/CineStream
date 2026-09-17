@@ -59,6 +59,38 @@ public class UserRepository : BaseRepository<User>, IUserRepository
         return await _dbSet.IgnoreQueryFilters().AnyAsync(u => u.Username.ToLower() == cleanUsername);
     }
 
+    public async Task<bool> ConfirmedEmailExistsAsync(string email)
+    {
+        // Kiem tra email da duoc xac thuc tren toan bo co so du lieu ke ca ban ghi da xoa mem
+        var cleanEmail = email.Trim().ToLower();
+        return await _dbSet.IgnoreQueryFilters().AnyAsync(u => u.Email.ToLower() == cleanEmail && u.IsEmailConfirmed);
+    }
+
+    public async Task<bool> ConfirmedUsernameExistsAsync(string username)
+    {
+        // Kiem tra username da duoc xac thuc tren toan bo co so du lieu ke ca ban ghi da xoa mem
+        var cleanUsername = username.Trim().ToLower();
+        return await _dbSet.IgnoreQueryFilters().AnyAsync(u => u.Username.ToLower() == cleanUsername && u.IsEmailConfirmed);
+    }
+
+    public async Task<List<User>> GetUnconfirmedUsersByEmailOrUsernameAsync(string email, string username)
+    {
+        // Truy van tat ca tai khoan chua xac thuc co trung email hoac username de chuan bi huy bo
+        var cleanEmail = email.Trim().ToLower();
+        var cleanUsername = username.Trim().ToLower();
+        return await _dbSet.IgnoreQueryFilters()
+            .Where(u => !u.IsEmailConfirmed && (u.Email.ToLower() == cleanEmail || u.Username.ToLower() == cleanUsername))
+            .ToListAsync();
+    }
+
+    public async Task HardDeleteAsync(User user)
+    {
+        // Xoa vinh vien ban ghi chua xac thuc khoi co so du lieu, cascading delete se tu don Profile
+        _dbSet.Remove(user);
+        await _context.SaveChangesAsync();
+    }
+
+
     public async Task<User?> GetDetailWithStatsAsync(int id)
     {
         // Nap kem Profile, Favorites va ChatLogs de dem tong so luong hoat dong thuc te

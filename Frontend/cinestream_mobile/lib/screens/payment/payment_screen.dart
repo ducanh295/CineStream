@@ -83,13 +83,13 @@ class _PaymentScreenState
 
       if (payment.orderCode.isEmpty) {
         throw Exception(
-          'Backend không trả về mã đơn hàng.',
+          'Không thể khởi tạo mã đơn hàng. Vui lòng thử lại.',
         );
       }
 
       if (payment.qrCodeUrl.isEmpty) {
         throw Exception(
-          'Backend không trả về URL VietQR.',
+          'Không thể khởi tạo mã VietQR. Vui lòng thử lại.',
         );
       }
 

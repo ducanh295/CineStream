@@ -191,7 +191,7 @@ public static class DataSeeder
                     Description = "Bộ phim hoạt hình 3D nổi tiếng của Blender Foundation kể về cuộc trả đũa hài hước đầy sáng tạo của chú thỏ khổng lồ tốt bụng trước ba kẻ chuyên ức hiếp muôn thú trong rừng già.",
                     PosterUrl = "https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?w=600",
                     TrailerUrl = "https://www.youtube.com/watch?v=aqz-KE-bpKQ",
-                    VideoUrl = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+                    VideoUrl = "https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/720/Big_Buck_Bunny_720_10s_1MB.mp4",
                     Duration = 10,
                     ReleaseYear = 2023,
                     Type = MovieType.Single,
@@ -207,7 +207,7 @@ public static class DataSeeder
                     Description = "Câu chuyện phiêu lưu xúc động về cô gái trẻ Sintel vượt qua sa mạc khắc nghiệt và vùng đất băng tuyết hiểm trở để tìm lại chú rồng nhỏ Scales mà cô đã cưu mang.",
                     PosterUrl = "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=600",
                     TrailerUrl = "https://www.youtube.com/watch?v=eRsGyueVLvQ",
-                    VideoUrl = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4",
+                    VideoUrl = "https://test-videos.co.uk/vids/sintel/mp4/h264/720/Sintel_720_10s_1MB.mp4",
                     Duration = 15,
                     ReleaseYear = 2022,
                     Type = MovieType.Single,
@@ -223,7 +223,7 @@ public static class DataSeeder
                     Description = "Một chuyến du hành thị giác kỳ ảo vào bên trong cỗ máy khổng lồ vô tận, nơi hai nhân vật Proog và Emo đối mặt với những ảo ảnh cơ khí và sự bất đồng trong nhận thức thế giới.",
                     PosterUrl = "https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=600",
                     TrailerUrl = "https://www.youtube.com/watch?v=TLkA0RELQ1E",
-                    VideoUrl = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
+                    VideoUrl = "https://vjs.zencdn.net/v/oceans.mp4",
                     Duration = 11,
                     ReleaseYear = 2021,
                     Type = MovieType.Single,
@@ -264,8 +264,10 @@ public static class DataSeeder
                     existingMovie.UpdatedAt = DateTime.UtcNow;
                 }
 
-                // Cập nhật đường dẫn video chuẩn nếu chưa có
-                if (string.IsNullOrWhiteSpace(existingMovie.VideoUrl) || existingMovie.VideoStatus == 0)
+                // Cập nhật đường dẫn video chuẩn nếu chưa có hoặc đang chứa URL cũ Google Storage bị lỗi 403
+                if (string.IsNullOrWhiteSpace(existingMovie.VideoUrl) ||
+                    existingMovie.VideoStatus == 0 ||
+                    existingMovie.VideoUrl.Contains("googleapis.com", StringComparison.OrdinalIgnoreCase))
                 {
                     existingMovie.VideoUrl = item.Movie.VideoUrl;
                     existingMovie.VideoStatus = 1;
