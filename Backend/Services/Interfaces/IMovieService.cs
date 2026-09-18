@@ -26,4 +26,10 @@ public interface IMovieService
 
     // Quét và lấy danh sách các luồng phát video HLS có sẵn trong kho lưu trữ và các video mẫu CDN
     Task<ApiResponse<AvailableStreamsResponseDto>> GetAvailableStreamsAsync();
+
+    // Lấy danh sách phim nổi bật hiển thị trên Banner Carousel trang chủ (tối đa theo limit, có fallback nếu chưa đánh dấu)
+    Task<ApiResponse<List<MovieDto>>> GetFeaturedMoviesAsync(int limit = 5);
+
+    // Chuyển đổi nhanh trạng thái phim nổi bật (Bật / Tắt) cho Quản trị viên
+    Task<ApiResponse<bool>> ToggleFeaturedAsync(int id);
 }

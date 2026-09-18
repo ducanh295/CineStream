@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, Search, Edit2, Trash2, PlayCircle, Loader2, Film, X, Layers } from 'lucide-react';
+import { Plus, Search, Edit2, Trash2, PlayCircle, Loader2, Film, X, Layers, Star } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import movieApi from '../api/movieApi';
 import categoryApi from '../api/categoryApi';
@@ -17,6 +17,7 @@ const EMPTY_FORM = {
   releaseYear: '',
   type: 0, // MovieType.Single = 0, Series = 1
   videoStatus: 1,
+  isFeatured: false,
   categoryIds: [],
 };
 
@@ -119,6 +120,7 @@ const Movies = () => {
       releaseYear: movie.releaseYear ?? '',
       type: movie.type ?? 0,
       videoStatus: movie.videoStatus ?? 1,
+      isFeatured: Boolean(movie.isFeatured),
       categoryIds: (movie.categories || []).map((c) => c.id),
     });
     setFormErrors({});
@@ -140,6 +142,7 @@ const Movies = () => {
           releaseYear: detail.releaseYear ?? prev.releaseYear,
           type: detail.type ?? prev.type,
           videoStatus: detail.videoStatus ?? prev.videoStatus,
+          isFeatured: detail.isFeatured ?? prev.isFeatured,
           categoryIds: (detail.categories || []).map((c) => c.id),
         }));
       }
@@ -198,6 +201,7 @@ const Movies = () => {
         duration: form.duration ? Number(form.duration) : null,
         releaseYear: form.releaseYear ? Number(form.releaseYear) : null,
         type: Number(form.type),
+        isFeatured: Boolean(form.isFeatured),
         categoryIds: form.categoryIds,
       };
 
@@ -233,6 +237,18 @@ const Movies = () => {
       setDeleteTarget(null);
     } finally {
       setDeleting(false);
+    }
+  };
+
+  // Chuyển đổi nhanh trạng thái phim nổi bật (Bật / Tắt trực tiếp trên từng dòng bảng)
+  const handleToggleFeatured = async (movie) => {
+    try {
+      await movieApi.toggleFeatured(movie.id);
+      setMovies((prev) =>
+        prev.map((m) => (m.id === movie.id ? { ...m, isFeatured: !m.isFeatured } : m))
+      );
+    } catch (err) {
+      setErrorMsg(err.message || 'Không thể thay đổi trạng thái phim nổi bật!');
     }
   };
 
@@ -314,7 +330,14 @@ const Movies = () => {
                           )}
                         </div>
                         <div>
-                          <p className="font-bold text-white group-hover/movie:text-blue-300 transition-colors">{movie.title}</p>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <p className="font-bold text-white group-hover/movie:text-blue-300 transition-colors">{movie.title}</p>
+                            {movie.isFeatured && (
+                              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-400 border border-amber-500/30 shrink-0">
+                                Nổi bật
+                              </span>
+                            )}
+                          </div>
                           <span className="text-xs text-slate-500">ID: {movie.id}</span>
                         </div>
                       </Link>
@@ -336,6 +359,18 @@ const Movies = () => {
                     <td className="px-6 py-4 text-sm">{movie.releaseYear || '—'}</td>
                     <td className="px-6 py-4">
                       <div className="flex items-center justify-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleToggleFeatured(movie)}
+                          className={`p-2 rounded-lg transition-all ${
+                            movie.isFeatured
+                              ? 'bg-amber-500/15 text-amber-400 hover:bg-amber-500/25 border border-amber-500/30'
+                              : 'hover:bg-slate-700/50 text-slate-400 hover:text-amber-400'
+                          }`}
+                          title={movie.isFeatured ? "Hạ khỏi Banner nổi bật" : "Đặt làm Phim nổi bật trên Banner"}
+                        >
+                          <Star size={18} className={movie.isFeatured ? "fill-amber-400" : ""} />
+                        </button>
                         <button
                           onClick={() => openEditModal(movie)}
                           className="p-2 hover:bg-blue-500/10 hover:text-blue-400 rounded-lg transition-all"
@@ -564,6 +599,36 @@ const Movies = () => {
                 })
               )}
             </div>
+          </div>
+
+          {/* Tùy chọn Phim nổi bật (Banner Carousel) */}
+          <div className="p-3.5 rounded-xl bg-slate-800/40 border border-slate-700/60 flex items-center justify-between gap-4">
+            <div>
+              <p className="text-sm font-bold text-white flex items-center gap-2">
+                <span>Đánh dấu là Phim nổi bật</span>
+                {form.isFeatured && (
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                    Banner ON
+                  </span>
+                )}
+              </p>
+              <p className="text-xs text-slate-400 mt-0.5">
+                Hiển thị phim này trên Banner Carousel trang chủ của ứng dụng mobile.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setForm((prev) => ({ ...prev, isFeatured: !prev.isFeatured }))}
+              className={`w-12 h-6 rounded-full transition-colors relative p-0.5 shrink-0 outline-none focus:ring-2 focus:ring-amber-500/50 ${
+                form.isFeatured ? 'bg-amber-500' : 'bg-slate-700'
+              }`}
+            >
+              <div
+                className={`w-5 h-5 rounded-full bg-white transition-transform ${
+                  form.isFeatured ? 'translate-x-6' : 'translate-x-0'
+                }`}
+              />
+            </button>
           </div>
 
           <div className="flex gap-3 pt-2">

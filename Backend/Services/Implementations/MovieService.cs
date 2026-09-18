@@ -103,6 +103,7 @@ public class MovieService : IMovieService
             Duration = dto.Duration,
             ReleaseYear = dto.ReleaseYear,
             Type = dto.Type,
+            IsFeatured = dto.IsFeatured,
             MovieCategories = dto.CategoryIds?
                 .Distinct()
                 .Select(catId => new MovieCategory { CategoryId = catId })
@@ -152,6 +153,7 @@ public class MovieService : IMovieService
         movie.Duration = dto.Duration;
         movie.ReleaseYear = dto.ReleaseYear;
         movie.Type = dto.Type;
+        movie.IsFeatured = dto.IsFeatured;
 
         _movieRepo.Update(movie);
 
@@ -255,6 +257,7 @@ public class MovieService : IMovieService
             ReleaseYear = movie.ReleaseYear,
             Type = movie.Type,
             VideoStatus = movie.VideoStatus,
+            IsFeatured = movie.IsFeatured,
             Categories = movie.MovieCategories
                 .Where(mc => mc.Category != null)
                 .Select(mc => new CategoryDto
@@ -282,6 +285,7 @@ public class MovieService : IMovieService
             ReleaseYear = movie.ReleaseYear,
             Type = movie.Type,
             VideoStatus = movie.VideoStatus,
+            IsFeatured = movie.IsFeatured,
             CreatedAt = movie.CreatedAt,
             Categories = movie.MovieCategories
                 .Where(mc => mc.Category != null)
@@ -396,5 +400,54 @@ public class MovieService : IMovieService
         };
 
         return ApiResponse<AvailableStreamsResponseDto>.Ok(response, "Lay danh sach luong phat co san thanh cong!");
+    }
+
+    // Lấy danh sách phim nổi bật hiển thị trên Banner Carousel trang chủ
+    public async Task<ApiResponse<List<MovieDto>>> GetFeaturedMoviesAsync(int limit = 5)
+    {
+        var allMovies = await _movieRepo.GetAllWithCategoriesAsync();
+
+        // Lọc các bộ phim đã được Quản trị viên đánh dấu là phim nổi bật
+        var featuredMovies = allMovies
+            .Where(m => m.IsFeatured)
+            .OrderByDescending(m => m.CreatedAt)
+            .Take(limit)
+            .Select(MapToMovieDto)
+            .ToList();
+
+        // Cơ chế dự phòng (Fallback): nếu chưa có phim nào được bật nổi bật, lấy các phim mới nhất
+        if (featuredMovies.Count == 0)
+        {
+            featuredMovies = allMovies
+                .OrderByDescending(m => m.CreatedAt)
+                .Take(limit)
+                .Select(MapToMovieDto)
+                .ToList();
+        }
+
+        return ApiResponse<List<MovieDto>>.Ok(featuredMovies, "Lay danh sach phim noi bat thanh cong!");
+    }
+
+    // Chuyển đổi nhanh trạng thái phim nổi bật (Bật / Tắt) cho Quản trị viên
+    public async Task<ApiResponse<bool>> ToggleFeaturedAsync(int id)
+    {
+        var movie = await _movieRepo.GetByIdAsync(id);
+        if (movie == null)
+        {
+            return ApiResponse<bool>.Fail("Khong tim thay phim de thay doi trang thai!");
+        }
+
+        // Đảo ngược trạng thái phim nổi bật
+        movie.IsFeatured = !movie.IsFeatured;
+        movie.UpdatedAt = DateTime.UtcNow;
+
+        _movieRepo.Update(movie);
+        await _movieRepo.SaveChangesAsync();
+
+        var message = movie.IsFeatured
+            ? "Da dat lam phim noi bat tren Banner!"
+            : "Da bo danh dau phim noi bat!";
+
+        return ApiResponse<bool>.Ok(movie.IsFeatured, message);
     }
 }

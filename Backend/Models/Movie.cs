@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using CineStream.Models.Enums;
 
 namespace CineStream.Models;
@@ -19,6 +19,9 @@ public class Movie : BaseEntity
     public int? Duration { get; set; }
     public int? ReleaseYear { get; set; }
     public MovieType Type { get; set; } = MovieType.Single;
+
+    // Đánh dấu phim nổi bật để hiển thị trên Banner Carousel trang chủ
+    public bool IsFeatured { get; set; } = false;
 
     // 1 Movie thuộc nhiều thể loại (M:N thông qua bảng MovieCategory)
     public virtual ICollection<MovieCategory> MovieCategories { get; set; } = new List<MovieCategory>();

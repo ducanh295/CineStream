@@ -61,6 +61,27 @@ public class MoviesController : ControllerBase
         return Ok(result);
     }
 
+    // GET /api/movies/featured - Lấy danh sách phim nổi bật hiển thị trên Banner Carousel trang chủ
+    [HttpGet("featured")]
+    public async Task<ActionResult<ApiResponse<List<MovieDto>>>> GetFeatured([FromQuery] int limit = 5)
+    {
+        var result = await _movieService.GetFeaturedMoviesAsync(limit);
+        return Ok(result);
+    }
+
+    // PATCH /api/movies/{id}/toggle-featured - Bật / Tắt nhanh trạng thái phim nổi bật (Chỉ Quản trị viên)
+    [Authorize(Policy = "AdminOnly")]
+    [HttpPatch("{id}/toggle-featured")]
+    public async Task<ActionResult<ApiResponse<bool>>> ToggleFeatured(int id)
+    {
+        var result = await _movieService.ToggleFeaturedAsync(id);
+        if (!result.Success)
+        {
+            return NotFound(result);
+        }
+        return Ok(result);
+    }
+
     // POST /api/movies - Tạo mới một bộ phim kèm danh sách thể loại liên kết (Chỉ Quản trị viên)
     [Authorize(Policy = "AdminOnly")]
     [HttpPost]

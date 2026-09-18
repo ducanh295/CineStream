@@ -22,6 +22,12 @@ const movieApi = {
   // GET /api/movies/available-streams -> Quét kho luồng phát HLS và video mẫu CDN
   getAvailableStreams: () => axiosInstance.get('/movies/available-streams'),
 
+  // GET /api/movies/featured -> Lấy danh sách phim nổi bật hiển thị trên Banner
+  getFeatured: (limit = 5) => axiosInstance.get('/movies/featured', { params: { limit } }),
+
+  // PATCH /api/movies/{id}/toggle-featured -> Bật / Tắt trạng thái phim nổi bật (Admin)
+  toggleFeatured: (id) => axiosInstance.patch(`/movies/${id}/toggle-featured`),
+
   // Quản lý Tập phim (Episodes) & Mùa phim (Seasons)
   getSeasons: (seriesId) => axiosInstance.get(`/series/${seriesId}/seasons`),
   getEpisodes: (seasonId) => axiosInstance.get(`/seasons/${seasonId}/episodes`),

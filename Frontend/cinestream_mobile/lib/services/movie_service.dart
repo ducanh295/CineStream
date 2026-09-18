@@ -86,6 +86,32 @@ try {
 
 }
 
+Future<List<Movie>> getFeaturedMovies({int limit = 5}) async {
+  try {
+    final response = await _dio.get(
+      '${ApiConstants.movies}/featured',
+      queryParameters: {'limit': limit},
+    );
+
+    final body = response.data;
+    if (body is! Map || body['success'] != true) {
+      return const [];
+    }
+
+    final data = body['data'];
+    if (data is! List) {
+      return const [];
+    }
+
+    return data
+        .whereType<Map>()
+        .map((item) => Movie.fromJson(Map<String, dynamic>.from(item)))
+        .toList();
+  } catch (_) {
+    return const [];
+  }
+}
+
 Future<Movie> getMovieById(int id) async {
 try {
 final response = await _dio.get(

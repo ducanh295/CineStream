@@ -10,6 +10,7 @@ final int? duration;
 final int? releaseYear;
 final int type;
 final int videoStatus;
+final bool isFeatured;
 final List<Category> categories;
 
 // Có ở MovieDetailDto
@@ -29,6 +30,7 @@ this.duration,
 this.releaseYear,
 this.type = 0,
 this.videoStatus = 0,
+this.isFeatured = false,
 this.categories = const [],
 this.videoUrl,
 this.streamType = 'NONE',
@@ -46,6 +48,7 @@ duration: (json['duration'] as num?)?.toInt(),
 releaseYear: (json['releaseYear'] as num?)?.toInt(),
 type: (json['type'] as num?)?.toInt() ?? 0,
 videoStatus: (json['videoStatus'] as num?)?.toInt() ?? 0,
+isFeatured: json['isFeatured'] as bool? ?? false,
 categories: (json['categories'] as List<dynamic>?)
 ?.whereType<Map>()
 .map(
