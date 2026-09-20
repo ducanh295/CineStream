@@ -1,7 +1,6 @@
 import { createContext, useState, useCallback } from 'react';
 import authApi from '../api/authApi';
 
-// eslint-disable-next-line react-refresh/only-export-components
 const AuthContext = createContext(null);
 
 const STORAGE_TOKEN_KEY = 'token';

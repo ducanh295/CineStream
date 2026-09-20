@@ -3,88 +3,114 @@ import 'package:dio/dio.dart';
 import '../core/constants/api_constants.dart';
 import '../core/network/api_client.dart';
 import '../models/movie.dart';
+import '../models/paged_result.dart';
 
 class MovieService {
-MovieService._();
+  MovieService._();
 
-static final MovieService instance = MovieService._();
+  static final MovieService instance = MovieService._();
 
-final Dio _dio = ApiClient.instance.dio;
+  final Dio _dio = ApiClient.instance.dio;
 
-Future<List<Movie>> getMovies({
-int? categoryId,
-String? search,
-int page = 1,
-int pageSize = 10,
-}) async {
-final trimmedSearch = search?.trim();
+  // Lấy danh sách phim phân trang đầy đủ bao gồm tổng số lượng và thông tin trang
+  Future<PagedResult<Movie>> getPagedMovies({
+    int? categoryId,
+    String? search,
+    int page = 1,
+    int pageSize = 10,
+  }) async {
+    final trimmedSearch = search?.trim();
 
+    final queryParameters = <String, dynamic>{
+      'page': page,
+      'pageSize': pageSize,
+    };
 
-final queryParameters = <String, dynamic>{
-  'page': page,
-  'pageSize': pageSize,
-};
+    if (categoryId != null) {
+      queryParameters['categoryId'] = categoryId;
+    }
 
-if (categoryId != null) {
-  queryParameters['categoryId'] = categoryId;
-}
+    if (trimmedSearch != null && trimmedSearch.isNotEmpty) {
+      queryParameters['search'] = trimmedSearch;
+    }
 
-if (trimmedSearch != null && trimmedSearch.isNotEmpty) {
-  queryParameters['search'] = trimmedSearch;
-}
+    try {
+      final response = await _dio.get(
+        ApiConstants.movies,
+        queryParameters: queryParameters,
+      );
 
-try {
-  final response = await _dio.get(
-    ApiConstants.movies,
-    queryParameters: queryParameters,
-  );
+      final body = response.data;
 
-  final body = response.data;
+      if (body is! Map) {
+        throw Exception(
+          'Dữ liệu phim trả về không hợp lệ.',
+        );
+      }
 
-  if (body is! Map) {
-    throw Exception(
-      'Dữ liệu phim trả về không hợp lệ.',
-    );
-  }
+      if (body['success'] != true) {
+        throw Exception(
+          body['message']?.toString() ??
+              'Không thể tải danh sách phim.',
+        );
+      }
 
-  if (body['success'] != true) {
-    throw Exception(
-      body['message']?.toString() ??
-          'Không thể tải danh sách phim.',
-    );
-  }
+      final data = body['data'];
 
-  final data = body['data'];
+      if (data is! Map) {
+        return PagedResult.empty();
+      }
 
-  if (data is! Map) {
-    return const [];
-  }
+      final items = data['items'];
+      final totalCount = (data['totalCount'] as num?)?.toInt() ?? 0;
+      final pageNumber = (data['pageNumber'] as num?)?.toInt() ?? page;
+      final size = (data['pageSize'] as num?)?.toInt() ?? pageSize;
+      final totalPages = (data['totalPages'] as num?)?.toInt() ??
+          (size > 0 ? (totalCount / size).ceil() : 0);
 
-  final items = data['items'];
+      final movies = (items is List)
+          ? items
+              .whereType<Map>()
+              .map(
+                (item) => Movie.fromJson(
+                  Map<String, dynamic>.from(item),
+                ),
+              )
+              .toList()
+          : <Movie>[];
 
-  if (items is! List) {
-    return const [];
-  }
-
-  return items
-      .whereType<Map>()
-      .map(
-        (item) => Movie.fromJson(
-          Map<String, dynamic>.from(item),
+      return PagedResult<Movie>(
+        items: movies,
+        totalCount: totalCount,
+        pageNumber: pageNumber,
+        pageSize: size,
+        totalPages: totalPages,
+      );
+    } on DioException catch (e) {
+      throw Exception(
+        _getErrorMessage(
+          e,
+          'Không thể kết nối đến máy chủ.',
         ),
-      )
-      .toList();
-} on DioException catch (e) {
-  throw Exception(
-    _getErrorMessage(
-      e,
-      'Không thể kết nối đến máy chủ.',
-    ),
-  );
-}
+      );
+    }
+  }
 
-
-}
+  // Lấy danh sách phim thông thường (tương thích ngược với các chức năng sẵn có)
+  Future<List<Movie>> getMovies({
+    int? categoryId,
+    String? search,
+    int page = 1,
+    int pageSize = 10,
+  }) async {
+    final paged = await getPagedMovies(
+      categoryId: categoryId,
+      search: search,
+      page: page,
+      pageSize: pageSize,
+    );
+    return paged.items;
+  }
 
 Future<List<Movie>> getFeaturedMovies({int limit = 5}) async {
   try {

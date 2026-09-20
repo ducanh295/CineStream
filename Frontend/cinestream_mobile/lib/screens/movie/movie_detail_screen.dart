@@ -601,43 +601,46 @@ class _MovieDetailScreenState
                   child:
                       ElevatedButton
                           .icon(
-                    onPressed:
-                        currentMovie
-                                    .videoStatus ==
-                                1
+                    onPressed: currentMovie.isComingSoon
+                        ? () {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  'Bộ phim đang trong kế hoạch phát hành. Hãy đón xem trên CineStream!',
+                                ),
+                                behavior: SnackBarBehavior.floating,
+                              ),
+                            );
+                          }
+                        : (currentMovie.videoStatus == 1
                             ? () {
                                 _openVideoPlayer(
                                   context,
                                   currentMovie,
                                 );
                               }
-                            : null,
-                    icon:
-                        const Icon(
-                      Icons
-                          .play_arrow_rounded,
+                            : null),
+                    icon: Icon(
+                      currentMovie.isComingSoon
+                          ? Icons.schedule_rounded
+                          : Icons.play_arrow_rounded,
                       size: 24,
                     ),
-                    label:
-                        Text(
-                      currentMovie
-                                  .videoStatus ==
-                              1
-                          ? 'Xem phim'
-                          : 'Video chưa sẵn sàng',
-                      style:
-                          const TextStyle(
+                    label: Text(
+                      currentMovie.isComingSoon
+                          ? 'Khởi chiếu sắp tới'
+                          : (currentMovie.videoStatus == 1
+                              ? 'Xem phim'
+                              : 'Video chưa sẵn sàng'),
+                      style: const TextStyle(
                         fontSize: 14,
-                        fontWeight:
-                            FontWeight.w800,
+                        fontWeight: FontWeight.w800,
                       ),
                     ),
-                    style:
-                        ElevatedButton
-                            .styleFrom(
-                      backgroundColor:
-                          AppTheme
-                              .darkGreen,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: currentMovie.isComingSoon
+                          ? const Color(0xFF1E3A8A)
+                          : AppTheme.darkGreen,
                       foregroundColor:
                           Colors.white,
                       disabledBackgroundColor:
@@ -767,6 +770,30 @@ class _MovieDetailScreenState
             : 'Phim lẻ',
       ),
     );
+
+    if (currentMovie.isComingSoon) {
+      items.add(
+        Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: 8,
+            vertical: 3,
+          ),
+          decoration: BoxDecoration(
+            color: const Color(0xFF1E3A8A).withValues(alpha: 0.88),
+            borderRadius: BorderRadius.circular(6),
+          ),
+          child: const Text(
+            'SẮP CHIẾU',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 10.5,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 0.5,
+            ),
+          ),
+        ),
+      );
+    }
 
     return Wrap(
       spacing: 12,

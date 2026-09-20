@@ -2,6 +2,7 @@ using CineStream.DTOs.Categories;
 using CineStream.DTOs.Common;
 using CineStream.DTOs.Movies;
 using CineStream.Models;
+using CineStream.Models.Enums;
 using CineStream.Repositories.Interfaces;
 using CineStream.Services.Interfaces;
 
@@ -23,7 +24,13 @@ public class MovieService : IMovieService
         _httpContextAccessor = httpContextAccessor;
     }
 
-    public async Task<ApiResponse<PagedResult<MovieDto>>> GetAllAsync(int? categoryId = null, string? search = null, int pageNumber = 1, int pageSize = 10)
+    public async Task<ApiResponse<PagedResult<MovieDto>>> GetAllAsync(
+        int? categoryId = null,
+        string? search = null,
+        int pageNumber = 1,
+        int pageSize = 10,
+        int? publishStatus = null,
+        bool includeDraft = false)
     {
         // Dam bao pageNumber va pageSize luon hop le phong ngua tham so sai lech
         if (pageNumber < 1) pageNumber = 1;
@@ -39,6 +46,18 @@ public class MovieService : IMovieService
         else
         {
             movies = await _movieRepo.GetAllWithCategoriesAsync();
+        }
+
+        // Mặc định loại bỏ các phim bản nháp Draft khỏi client thông thường
+        if (!includeDraft)
+        {
+            movies = movies.Where(m => m.PublishStatus != MoviePublishStatus.Draft).ToList();
+        }
+
+        // Lọc theo một trạng thái phát hành cụ thể nếu có yêu cầu
+        if (publishStatus.HasValue)
+        {
+            movies = movies.Where(m => (int)m.PublishStatus == publishStatus.Value).ToList();
         }
 
         // Nếu client truyền từ khóa tìm kiếm thì lọc tiếp theo tiêu đề phim không phân biệt hoa thường
@@ -104,6 +123,7 @@ public class MovieService : IMovieService
             ReleaseYear = dto.ReleaseYear,
             Type = dto.Type,
             IsFeatured = dto.IsFeatured,
+            PublishStatus = dto.PublishStatus,
             MovieCategories = dto.CategoryIds?
                 .Distinct()
                 .Select(catId => new MovieCategory { CategoryId = catId })
@@ -154,6 +174,7 @@ public class MovieService : IMovieService
         movie.ReleaseYear = dto.ReleaseYear;
         movie.Type = dto.Type;
         movie.IsFeatured = dto.IsFeatured;
+        movie.PublishStatus = dto.PublishStatus;
 
         _movieRepo.Update(movie);
 
@@ -258,6 +279,7 @@ public class MovieService : IMovieService
             Type = movie.Type,
             VideoStatus = movie.VideoStatus,
             IsFeatured = movie.IsFeatured,
+            PublishStatus = movie.PublishStatus,
             Categories = movie.MovieCategories
                 .Where(mc => mc.Category != null)
                 .Select(mc => new CategoryDto
@@ -286,6 +308,7 @@ public class MovieService : IMovieService
             Type = movie.Type,
             VideoStatus = movie.VideoStatus,
             IsFeatured = movie.IsFeatured,
+            PublishStatus = movie.PublishStatus,
             CreatedAt = movie.CreatedAt,
             Categories = movie.MovieCategories
                 .Where(mc => mc.Category != null)
@@ -407,18 +430,19 @@ public class MovieService : IMovieService
     {
         var allMovies = await _movieRepo.GetAllWithCategoriesAsync();
 
-        // Lọc các bộ phim đã được Quản trị viên đánh dấu là phim nổi bật
+        // Lọc các bộ phim đã được Quản trị viên đánh dấu là phim nổi bật và đã phát hành
         var featuredMovies = allMovies
-            .Where(m => m.IsFeatured)
+            .Where(m => m.IsFeatured && m.PublishStatus == MoviePublishStatus.Published)
             .OrderByDescending(m => m.CreatedAt)
             .Take(limit)
             .Select(MapToMovieDto)
             .ToList();
 
-        // Cơ chế dự phòng (Fallback): nếu chưa có phim nào được bật nổi bật, lấy các phim mới nhất
+        // Cơ chế dự phòng (Fallback): nếu chưa có phim nào được bật nổi bật, lấy các phim mới nhất đã phát hành
         if (featuredMovies.Count == 0)
         {
             featuredMovies = allMovies
+                .Where(m => m.PublishStatus == MoviePublishStatus.Published)
                 .OrderByDescending(m => m.CreatedAt)
                 .Take(limit)
                 .Select(MapToMovieDto)

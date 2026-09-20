@@ -33,6 +33,10 @@
             var result = await _aiService.ChatAsync(userId, request);
             if (!result.Success)
             {
+                if (result.Message?.Contains("Premium") == true)
+                {
+                    return StatusCode(StatusCodes.Status403Forbidden, result);
+                }
                 return BadRequest(result);
             }
 
@@ -50,6 +54,15 @@
             }
 
             var result = await _aiService.GetChatHistoryAsync(userId, limit);
+            if (!result.Success)
+            {
+                if (result.Message?.Contains("Premium") == true)
+                {
+                    return StatusCode(StatusCodes.Status403Forbidden, result);
+                }
+                return BadRequest(result);
+            }
+
             return Ok(result);
         }
 

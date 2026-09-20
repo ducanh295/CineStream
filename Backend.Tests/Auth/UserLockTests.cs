@@ -156,6 +156,11 @@ internal class FakeUserRepository : IUserRepository
         if (isLocked.HasValue) query = query.Where(u => u.IsLocked == isLocked.Value);
         return Task.FromResult(query.Count());
     }
+
+    public Task<bool> ConfirmedEmailExistsAsync(string email) => Task.FromResult(false);
+    public Task<bool> ConfirmedUsernameExistsAsync(string username) => Task.FromResult(false);
+    public Task<List<User>> GetUnconfirmedUsersByEmailOrUsernameAsync(string email, string username) => Task.FromResult(new List<User>());
+    public Task HardDeleteAsync(User user) => Task.CompletedTask;
 }
 
 // Stub JwtService phuc vu kiem thu

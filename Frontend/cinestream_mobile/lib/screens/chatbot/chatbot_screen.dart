@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../../core/routes/app_routes.dart';
 import '../../core/theme/app_theme.dart';
 import '../../models/movie.dart';
+import '../../providers/auth_provider.dart';
 import '../../services/chat_service.dart';
 import '../../widgets/app_bottom_navigation.dart';
 import '../../widgets/app_drawer.dart';
@@ -38,12 +40,32 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
   bool _isLoadingHistory = true;
   bool _isSending = false;
   String? _historyError;
+  bool _wasPremium = false;
 
   @override
   void initState() {
     super.initState();
+  }
 
-    _loadHistory();
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final authProvider = Provider.of<AuthProvider>(context);
+    final user = authProvider.user;
+    final isPremium = user?.premiumActive == true || user?.isAdmin == true;
+
+    // Tự động kích hoạt nạp lịch sử khi tài khoản nâng cấp lên Premium
+    if (isPremium && !_wasPremium) {
+      _wasPremium = true;
+      _loadHistory();
+    } else if (!isPremium) {
+      _wasPremium = false;
+      if (_isLoadingHistory) {
+        setState(() {
+          _isLoadingHistory = false;
+        });
+      }
+    }
   }
 
   @override
@@ -54,6 +76,20 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
   }
 
   Future<void> _loadHistory() async {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final user = authProvider.user;
+    final isPremium = user?.premiumActive == true || user?.isAdmin == true;
+
+    // Chỉ thực hiện gọi máy chủ khi tài khoản đã được xác thực Premium hoặc Admin
+    if (!isPremium) {
+      if (mounted) {
+        setState(() {
+          _isLoadingHistory = false;
+        });
+      }
+      return;
+    }
+
     if (mounted) {
       setState(() {
         _isLoadingHistory = true;
@@ -91,7 +127,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
           _messages.add(
             const _ChatMessage(
               text:
-                  'Xin chào! Tôi là CineBot 🎬 Hãy cho tôi biết tâm trạng hoặc thể loại phim bạn muốn xem hôm nay.',
+                  'Xin chào! Tôi là CineBot. Hãy cho tôi biết tâm trạng hoặc thể loại phim bạn muốn xem hôm nay.',
               isFromBot: true,
             ),
           );
@@ -112,7 +148,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
           _messages.add(
             const _ChatMessage(
               text:
-                  'Xin chào! Tôi là CineBot 🎬 Hãy cho tôi biết tâm trạng hoặc thể loại phim bạn muốn xem hôm nay.',
+                  'Xin chào! Tôi là CineBot. Hãy cho tôi biết tâm trạng hoặc thể loại phim bạn muốn xem hôm nay.',
               isFromBot: true,
             ),
           );
@@ -241,7 +277,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
         _messages.add(
           const _ChatMessage(
             text:
-                'Xin chào! Tôi là CineBot 🎬 Hãy cho tôi biết tâm trạng hoặc thể loại phim bạn muốn xem hôm nay.',
+                'Xin chào! Tôi là CineBot. Hãy cho tôi biết tâm trạng hoặc thể loại phim bạn muốn xem hôm nay.',
             isFromBot: true,
           ),
         );
@@ -262,6 +298,10 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final authProvider = context.watch<AuthProvider>();
+    final user = authProvider.user;
+    final isPremium = user?.premiumActive == true || user?.isAdmin == true;
+
     return Scaffold(
       backgroundColor: AppTheme.background,
       drawerScrimColor: Colors.black.withValues(
@@ -270,26 +310,27 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
       drawer: const AppDrawer(
         currentRoute: AppRoutes.chatbot,
       ),
-      appBar: _buildAppBar(),
+      appBar: _buildAppBar(isPremium),
       body: SafeArea(
-        child: Column(
-          children: [
-            Expanded(
-              child: _buildChatContent(),
-            ),
-            _buildSuggestionSection(),
-            _buildMessageInput(),
-          ],
-        ),
+        child: isPremium
+            ? Column(
+                children: [
+                  Expanded(
+                    child: _buildChatContent(),
+                  ),
+                  _buildSuggestionSection(),
+                  _buildMessageInput(),
+                ],
+              )
+            : _buildPaywallGatekeeper(context, authProvider),
       ),
-      bottomNavigationBar:
-          const AppBottomNavigation(
+      bottomNavigationBar: const AppBottomNavigation(
         currentIndex: 3,
       ),
     );
   }
 
-  PreferredSizeWidget _buildAppBar() {
+  PreferredSizeWidget _buildAppBar(bool isPremium) {
     return AppBar(
       backgroundColor: AppTheme.background,
       surfaceTintColor: Colors.transparent,
@@ -319,8 +360,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
               color: AppTheme.darkGreen.withValues(
                 alpha: 0.10,
               ),
-              borderRadius:
-                  BorderRadius.circular(9),
+              borderRadius: BorderRadius.circular(9),
             ),
             child: const Icon(
               Icons.movie_creation_outlined,
@@ -341,28 +381,285 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
         ],
       ),
       actions: [
-        PopupMenuButton<String>(
-          icon: const Icon(
-            Icons.more_vert_rounded,
-            color: AppTheme.black,
+        if (isPremium)
+          PopupMenuButton<String>(
+            icon: const Icon(
+              Icons.more_vert_rounded,
+              color: AppTheme.black,
+            ),
+            onSelected: (value) {
+              if (value == 'clear') {
+                _showClearHistoryDialog();
+              }
+            },
+            itemBuilder: (context) {
+              return const [
+                PopupMenuItem<String>(
+                  value: 'clear',
+                  child: Text(
+                    'Xóa lịch sử trò chuyện',
+                  ),
+                ),
+              ];
+            },
           ),
-          onSelected: (value) {
-            if (value == 'clear') {
-              _showClearHistoryDialog();
-            }
-          },
-          itemBuilder: (context) {
-            return const [
-              PopupMenuItem<String>(
-                value: 'clear',
-                child: Text(
-                  'Xóa lịch sử trò chuyện',
+      ],
+    );
+  }
+
+  // Giao diện giới thiệu đặc quyền Premium dành riêng cho tính năng AI Chatbot
+  Widget _buildPaywallGatekeeper(
+    BuildContext context,
+    AuthProvider authProvider,
+  ) {
+    final isAuthenticated = authProvider.isAuthenticated;
+
+    return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
+      padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 20),
+      child: Column(
+        children: [
+          const SizedBox(height: 12),
+
+          // Huy hiệu biểu tượng Premium mạ vàng
+          Container(
+            width: 84,
+            height: 84,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color(0xFFFDE68A),
+                  Color(0xFFD97706),
+                ],
+              ),
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFFD97706).withValues(alpha: 0.35),
+                  blurRadius: 24,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
+            child: const Center(
+              child: Icon(
+                Icons.workspace_premium_rounded,
+                color: Colors.white,
+                size: 46,
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 20),
+
+          // Nhãn đặc quyền gói VIP
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF59E0B).withValues(alpha: 0.14),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: const Color(0xFFF59E0B).withValues(alpha: 0.35),
+              ),
+            ),
+            child: const Text(
+              'ĐẶC QUYỀN GÓI PREMIUM',
+              style: TextStyle(
+                color: Color(0xFFB45309),
+                fontSize: 12,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 1.0,
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 14),
+
+          // Tiêu đề chính
+          const Text(
+            'Trợ Lý Điện Ảnh AI CineBot',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: AppTheme.black,
+              fontSize: 26,
+              fontWeight: FontWeight.w900,
+              fontFamily: 'Georgia',
+              height: 1.2,
+            ),
+          ),
+
+          const SizedBox(height: 10),
+
+          // Đoạn mô tả giá trị cốt lõi
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 8),
+            child: Text(
+              'Mở khóa trí tuệ nhân tạo điện ảnh thế hệ mới độc quyền dành riêng cho thành viên gói Premium của CineStream.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: AppTheme.grey,
+                fontSize: 14,
+                height: 1.5,
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 26),
+
+          // Danh sách 3 giá trị nổi bật của CineBot
+          _buildBenefitItem(
+            icon: Icons.psychology_rounded,
+            title: 'Gợi ý phim theo tâm trạng tức thì',
+            description:
+                'Phân tích cảm xúc và sở thích cá nhân để đưa ra danh sách phim chuẩn gu trong tích tắc.',
+          ),
+          const SizedBox(height: 14),
+          _buildBenefitItem(
+            icon: Icons.auto_awesome_rounded,
+            title: 'Phân tích kịch bản và diễn viên',
+            description:
+                'Hỏi đáp chi tiết về cốt truyện, thông điệp ẩn ý, tiểu sử đạo diễn và dàn sao điện ảnh.',
+          ),
+          const SizedBox(height: 14),
+          _buildBenefitItem(
+            icon: Icons.bolt_rounded,
+            title: 'Trò chuyện không giới hạn 24/7',
+            description:
+                'Tương tác liên tục với trợ lý AI thông minh qua mô hình Google Gemini tân tiến nhất.',
+          ),
+
+          const SizedBox(height: 32),
+
+          // Nút kêu gọi hành động nâng cấp gói
+          SizedBox(
+            width: double.infinity,
+            height: 54,
+            child: ElevatedButton(
+              onPressed: () {
+                if (!isAuthenticated) {
+                  Navigator.pushNamed(context, AppRoutes.login);
+                } else {
+                  Navigator.pushNamed(context, AppRoutes.payment);
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.darkGreen,
+                foregroundColor: Colors.white,
+                elevation: 4,
+                shadowColor: AppTheme.darkGreen.withValues(alpha: 0.4),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(18),
                 ),
               ),
-            ];
-          },
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(
+                    Icons.stars_rounded,
+                    size: 22,
+                    color: Color(0xFFFDE68A),
+                  ),
+                  const SizedBox(width: 10),
+                  Text(
+                    isAuthenticated
+                        ? 'Nâng cấp gói Premium ngay'
+                        : 'Đăng nhập để nâng cấp Premium',
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 0.3,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 14),
+
+          // Chú thích phụ trợ
+          const Text(
+            'Hỗ trợ thanh toán nhanh chóng qua quét mã QR hoặc cổng thanh toán nội địa.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: AppTheme.grey,
+              fontSize: 12,
+            ),
+          ),
+          const SizedBox(height: 20),
+        ],
+      ),
+    );
+  }
+
+  // Thẻ hiển thị từng đặc quyền của tính năng AI
+  Widget _buildBenefitItem({
+    required IconData icon,
+    required String title,
+    required String description,
+  }) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+        border: Border.all(
+          color: Colors.grey.withValues(alpha: 0.12),
         ),
-      ],
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              color: AppTheme.darkGreen.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              icon,
+              color: AppTheme.darkGreen,
+              size: 22,
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    color: AppTheme.black,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  description,
+                  style: const TextStyle(
+                    color: AppTheme.grey,
+                    fontSize: 13,
+                    height: 1.4,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 

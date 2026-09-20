@@ -23,6 +23,9 @@ public class Movie : BaseEntity
     // Đánh dấu phim nổi bật để hiển thị trên Banner Carousel trang chủ
     public bool IsFeatured { get; set; } = false;
 
+    // Trạng thái phát hành: 0 = Draft (Ẩn khỏi app), 1 = ComingSoon (Sắp chiếu), 2 = Published (Đang chiếu)
+    public MoviePublishStatus PublishStatus { get; set; } = MoviePublishStatus.Published;
+
     // 1 Movie thuộc nhiều thể loại (M:N thông qua bảng MovieCategory)
     public virtual ICollection<MovieCategory> MovieCategories { get; set; } = new List<MovieCategory>();
 

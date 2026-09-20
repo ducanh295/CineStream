@@ -30,6 +30,13 @@ class _CategoryScreenState
 
   int? _selectedCategoryId;
 
+  // Trạng thái phân trang danh sách phim
+  int _currentPage = 1;
+  static const int _pageSize = 6;
+  int _totalPages = 1;
+  int _totalCount = 0;
+  final ScrollController _scrollController = ScrollController();
+
   bool _isLoadingCategories = true;
   bool _isLoadingMovies = false;
 
@@ -41,6 +48,12 @@ class _CategoryScreenState
     super.initState();
 
     _loadCategories();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
   }
 
   // ================================================================
@@ -106,20 +119,21 @@ class _CategoryScreenState
 
   Future<void> _loadMovies({
     int? categoryId,
+    int page = 1,
   }) async {
     if (mounted) {
       setState(() {
         _isLoadingMovies = true;
         _movieError = null;
+        _currentPage = page;
       });
     }
 
     try {
-      final movies =
-          await _movieService.getMovies(
+      final pagedResult = await _movieService.getPagedMovies(
         categoryId: categoryId,
-        page: 1,
-        pageSize: 50,
+        page: page,
+        pageSize: _pageSize,
       );
 
       if (!mounted) {
@@ -127,9 +141,21 @@ class _CategoryScreenState
       }
 
       setState(() {
-        _movies = movies;
+        _movies = pagedResult.items;
+        _totalCount = pagedResult.totalCount;
+        _totalPages = pagedResult.totalPages > 0 ? pagedResult.totalPages : 1;
+        _currentPage = pagedResult.pageNumber;
         _isLoadingMovies = false;
       });
+
+      // Cuộn mượt lên đầu danh sách phim khi chuyển trang
+      if (page > 1 && _scrollController.hasClients) {
+        _scrollController.animateTo(
+          220,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
     } catch (e) {
       if (!mounted) {
         return;
@@ -137,12 +163,7 @@ class _CategoryScreenState
 
       setState(() {
         _movieError =
-            e
-                .toString()
-                .replaceFirst(
-                  'Exception: ',
-                  '',
-                );
+            e.toString().replaceFirst('Exception: ', '');
         _isLoadingMovies = false;
       });
     }
@@ -167,11 +188,13 @@ class _CategoryScreenState
     setState(() {
       _selectedCategoryId =
           newCategoryId;
+      _currentPage = 1;
     });
 
     await _loadMovies(
       categoryId:
           newCategoryId,
+      page: 1,
     );
   }
 
@@ -215,6 +238,7 @@ class _CategoryScreenState
               _refresh,
           child:
               SingleChildScrollView(
+            controller: _scrollController,
             physics:
                 const AlwaysScrollableScrollPhysics(
               parent:
@@ -538,6 +562,12 @@ class _CategoryScreenState
             ? null
             : _findSelectedCategory();
 
+    final titleText = selectedCategory == null
+        ? (_totalCount > 0 ? 'TẤT CẢ PHIM ($_totalCount)' : 'TẤT CẢ PHIM')
+        : (_totalCount > 0
+            ? '${selectedCategory.name.toUpperCase()} ($_totalCount)'
+            : selectedCategory.name.toUpperCase());
+
     return Padding(
       padding:
           const EdgeInsets.fromLTRB(
@@ -552,12 +582,7 @@ class _CategoryScreenState
           Expanded(
             child:
                 Text(
-              selectedCategory ==
-                      null
-                  ? 'TẤT CẢ PHIM'
-                  : selectedCategory
-                      .name
-                      .toUpperCase(),
+              titleText,
               style:
                   const TextStyle(
                 color:
@@ -660,29 +685,197 @@ class _CategoryScreenState
       );
     }
 
-    return ListView.separated(
-      padding:
-          const EdgeInsets.symmetric(
-        horizontal: 20,
+    return Column(
+      children: [
+        ListView.separated(
+          padding:
+              const EdgeInsets.symmetric(
+            horizontal: 20,
+          ),
+          shrinkWrap: true,
+          physics:
+              const NeverScrollableScrollPhysics(),
+          itemCount:
+              _movies.length,
+          separatorBuilder:
+              (context, index) {
+            return const SizedBox(
+              height: 12,
+            );
+          },
+          itemBuilder:
+              (context, index) {
+            return _buildMovieCard(
+              context,
+              _movies[index],
+            );
+          },
+        ),
+        if (_totalPages > 1) _buildPaginationControls(),
+      ],
+    );
+  }
+
+  // ================================================================
+  // PAGINATION CONTROLS
+  // ================================================================
+
+  Widget _buildPaginationControls() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            // Nút chuyển về trang trước
+            InkWell(
+              borderRadius: BorderRadius.circular(10),
+              onTap: _currentPage > 1 && !_isLoadingMovies
+                  ? () => _loadMovies(
+                        categoryId: _selectedCategoryId,
+                        page: _currentPage - 1,
+                      )
+                  : null,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: _currentPage > 1
+                      ? AppTheme.darkGreen.withValues(alpha: 0.08)
+                      : Colors.grey.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.chevron_left_rounded,
+                      size: 20,
+                      color: _currentPage > 1 ? AppTheme.darkGreen : Colors.grey,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Trước',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: _currentPage > 1 ? AppTheme.darkGreen : Colors.grey,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            // Hiển thị danh sách số trang
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: List.generate(_totalPages, (index) {
+                final pageNumber = index + 1;
+                final isSelected = pageNumber == _currentPage;
+
+                // Giới hạn hiển thị nếu có quá nhiều trang
+                if (_totalPages > 5) {
+                  if (pageNumber != 1 &&
+                      pageNumber != _totalPages &&
+                      (pageNumber - _currentPage).abs() > 1) {
+                    if (pageNumber == 2 || pageNumber == _totalPages - 1) {
+                      return const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 2),
+                        child: Text(
+                          '..',
+                          style: TextStyle(
+                            color: Colors.grey,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 10,
+                          ),
+                        ),
+                      );
+                    }
+                    return const SizedBox.shrink();
+                  }
+                }
+
+                return InkWell(
+                  borderRadius: BorderRadius.circular(8),
+                  onTap: !isSelected && !_isLoadingMovies
+                      ? () => _loadMovies(
+                            categoryId: _selectedCategoryId,
+                            page: pageNumber,
+                          )
+                      : null,
+                  child: Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 3),
+                    width: 32,
+                    height: 32,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: isSelected ? AppTheme.darkGreen : Colors.transparent,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      '$pageNumber',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                        color: isSelected ? Colors.white : AppTheme.black,
+                      ),
+                    ),
+                  ),
+                );
+              }),
+            ),
+
+            // Nút chuyển sang trang kế tiếp
+            InkWell(
+              borderRadius: BorderRadius.circular(10),
+              onTap: _currentPage < _totalPages && !_isLoadingMovies
+                  ? () => _loadMovies(
+                        categoryId: _selectedCategoryId,
+                        page: _currentPage + 1,
+                      )
+                  : null,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: _currentPage < _totalPages
+                      ? AppTheme.darkGreen.withValues(alpha: 0.08)
+                      : Colors.grey.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Row(
+                  children: [
+                    Text(
+                      'Sau',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: _currentPage < _totalPages ? AppTheme.darkGreen : Colors.grey,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Icon(
+                      Icons.chevron_right_rounded,
+                      size: 20,
+                      color: _currentPage < _totalPages ? AppTheme.darkGreen : Colors.grey,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
-      shrinkWrap: true,
-      physics:
-          const NeverScrollableScrollPhysics(),
-      itemCount:
-          _movies.length,
-      separatorBuilder:
-          (context, index) {
-        return const SizedBox(
-          height: 12,
-        );
-      },
-      itemBuilder:
-          (context, index) {
-        return _buildMovieCard(
-          context,
-          _movies[index],
-        );
-      },
     );
   }
 

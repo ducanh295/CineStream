@@ -17,15 +17,18 @@ public class MoviesController : ControllerBase
         _movieService = movieService;
     }
 
-    // GET /api/movies?categoryId=X&search=Y&page=1&pageSize=10 - Lấy danh sách phim phân trang, hỗ trợ lọc và tìm kiếm
+    // GET /api/movies?categoryId=X&search=Y&page=1&pageSize=10&status=Z&includeDraft=true - Lấy danh sách phim phân trang, hỗ trợ lọc, tìm kiếm và trạng thái phát hành
     [HttpGet]
     public async Task<ActionResult<ApiResponse<PagedResult<MovieDto>>>> GetAll(
         [FromQuery] int? categoryId = null,
         [FromQuery] string? search = null,
         [FromQuery] int page = 1,
-        [FromQuery] int pageSize = 10)
+        [FromQuery] int pageSize = 10,
+        [FromQuery] int? status = null,
+        [FromQuery] bool includeDraft = false)
     {
-        var result = await _movieService.GetAllAsync(categoryId, search, page, pageSize);
+        var isAdmin = User.IsInRole("Admin");
+        var result = await _movieService.GetAllAsync(categoryId, search, page, pageSize, status, includeDraft && isAdmin);
         return Ok(result);
     }
 

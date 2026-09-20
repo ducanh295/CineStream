@@ -9,6 +9,7 @@ using CineStream.Models.Enums;
 using CineStream.Repositories.Interfaces;
 using CineStream.Services.Implementations;
 using CineStream.Services.Interfaces;
+using Microsoft.AspNetCore.Http;
 using Xunit;
 
 namespace Backend.Tests.Movies;
@@ -32,7 +33,7 @@ public class MoviePaginationTests
 
         var fakeMovieRepo = new FakeMovieRepository(_seedMovies);
         var fakeCategoryRepo = new FakeCategoryRepository();
-        _movieService = new MovieService(fakeMovieRepo, fakeCategoryRepo);
+        _movieService = new MovieService(fakeMovieRepo, fakeCategoryRepo, new HttpContextAccessor());
     }
 
     [Fact]

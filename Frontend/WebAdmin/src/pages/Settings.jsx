@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/useAuth';
-import { Bot, UserCog, KeyRound, Save, RotateCcw, Loader2, Eye, EyeOff, CheckCircle2 } from 'lucide-react';
+import { Bot, UserCog, Save, RotateCcw, Loader2, Eye, EyeOff, CheckCircle2 } from 'lucide-react';
 import aiApi from '../api/aiApi';
 import ConfirmDialog from '../components/ConfirmDialog';
 

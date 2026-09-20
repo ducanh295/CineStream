@@ -338,4 +338,8 @@ public class FakeUserRepositoryForPayment : IUserRepository
     public Task<IReadOnlyList<User>> GetPagedAsync(string? search, UserRole? role, bool? isLocked, int page, int pageSize) =>
         Task.FromResult<IReadOnlyList<User>>(_users.Skip((page - 1) * pageSize).Take(pageSize).ToList());
     public Task<int> CountAsync(string? search, UserRole? role, bool? isLocked) => Task.FromResult(_users.Count);
+    public Task<bool> ConfirmedEmailExistsAsync(string email) => Task.FromResult(false);
+    public Task<bool> ConfirmedUsernameExistsAsync(string username) => Task.FromResult(false);
+    public Task<List<User>> GetUnconfirmedUsersByEmailOrUsernameAsync(string email, string username) => Task.FromResult(new List<User>());
+    public Task HardDeleteAsync(User user) => Task.CompletedTask;
 }

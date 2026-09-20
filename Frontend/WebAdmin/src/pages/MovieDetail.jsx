@@ -1,10 +1,19 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Calendar, Clock3, Film, Loader2, Play, Tag, Video, X, Terminal, Trash2, Activity } from 'lucide-react';
+import { ArrowLeft, Calendar, Clock3, Film, Loader2, Play, Tag, Video, X, Terminal, Trash2, Edit2, Layers } from 'lucide-react';
 import Hls from 'hls.js';
 import movieApi from '../api/movieApi';
+import categoryApi from '../api/categoryApi';
+import Modal from '../components/Modal';
 
 const MOVIE_TYPE_LABEL = { 0: 'Phim lẻ', 1: 'Phim bộ' };
+
+// Cấu hình hiển thị nhãn và màu sắc cho 3 trạng thái phát hành
+const PUBLISH_STATUS_CONFIG = {
+  0: { label: 'Bản nháp', color: 'bg-slate-800 text-slate-400 border-slate-700' },
+  1: { label: 'Sắp chiếu', color: 'bg-blue-500/10 text-blue-400 border-blue-500/20' },
+  2: { label: 'Đã phát hành', color: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' },
+};
 
 const MovieDetail = () => {
   const { id } = useParams();
@@ -20,6 +29,15 @@ const MovieDetail = () => {
   const [statusTone, setStatusTone] = useState('idle');
   const videoRef = useRef(null);
 
+  // Quản trị Modal chỉnh sửa phim trực tiếp tại trang chi tiết
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editForm, setEditForm] = useState(null);
+  const [editErrors, setEditErrors] = useState({});
+  const [saving, setSaving] = useState(false);
+  const [categories, setCategories] = useState([]);
+  const [availableStreams, setAvailableStreams] = useState({ internalStreams: [], cdnPresets: [] });
+  const [showHlsPicker, setShowHlsPicker] = useState(false);
+
   const addLog = useCallback((message, type = 'info') => {
     const time = new Date().toLocaleTimeString();
     setLogs((prev) => [
@@ -28,35 +46,122 @@ const MovieDetail = () => {
     ]);
   }, []);
 
-  useEffect(() => {
-    let active = true;
-
-    const fetchMovie = async () => {
-      setLoading(true);
-      setErrorMsg('');
-      try {
-        const result = await movieApi.getById(id);
-        if (!result?.success || !result?.data) {
-          throw new Error(result?.message || 'Không tìm thấy phim.');
-        }
-        if (active) setMovie(result.data);
-      } catch (err) {
-        if (active) setErrorMsg(err.message || 'Không thể tải chi tiết phim.');
-      } finally {
-        if (active) setLoading(false);
+  const fetchMovie = useCallback(async () => {
+    setLoading(true);
+    setErrorMsg('');
+    try {
+      const result = await movieApi.getById(id);
+      if (!result?.success || !result?.data) {
+        throw new Error(result?.message || 'Không tìm thấy phim.');
       }
-    };
-
-    fetchMovie();
-    return () => { active = false; };
+      setMovie(result.data);
+    } catch (err) {
+      setErrorMsg(err.message || 'Không thể tải chi tiết phim.');
+    } finally {
+      setLoading(false);
+    }
   }, [id]);
+
+  useEffect(() => {
+    fetchMovie();
+  }, [fetchMovie]);
+
+  // Tải danh mục thể loại và luồng HLS cho form sửa phim
+  const loadFormData = async () => {
+    try {
+      const [catRes, streamRes] = await Promise.all([
+        categoryApi.getAll(),
+        movieApi.getAvailableStreams(),
+      ]);
+      if (catRes?.data) setCategories(Array.isArray(catRes.data) ? catRes.data : []);
+      if (streamRes?.data) setAvailableStreams(streamRes.data);
+    } catch {
+      // Bỏ qua lỗi nạp dữ liệu phụ trợ
+    }
+  };
+
+  const openEditModal = () => {
+    if (!movie) return;
+    setEditForm({
+      title: movie.title || '',
+      description: movie.description || '',
+      posterUrl: movie.posterUrl || '',
+      videoUrl: movie.videoUrl || '',
+      trailerUrl: movie.trailerUrl || '',
+      duration: movie.duration ?? '',
+      releaseYear: movie.releaseYear ?? '',
+      type: movie.type ?? 0,
+      videoStatus: movie.videoStatus ?? 1,
+      isFeatured: Boolean(movie.isFeatured),
+      publishStatus: movie.publishStatus ?? 2,
+      categoryIds: (movie.categories || []).map((c) => c.id),
+    });
+    setEditErrors({});
+    setShowHlsPicker(false);
+    setEditModalOpen(true);
+    loadFormData();
+  };
+
+  const closeEditModal = () => {
+    if (saving) return;
+    setShowHlsPicker(false);
+    setEditModalOpen(false);
+  };
+
+  const toggleCategory = (catId) => {
+    if (!editForm) return;
+    setEditForm((prev) => {
+      const exists = prev.categoryIds.includes(catId);
+      return {
+        ...prev,
+        categoryIds: exists
+          ? prev.categoryIds.filter((c) => c !== catId)
+          : [...prev.categoryIds, catId],
+      };
+    });
+  };
+
+  const handleSaveEdit = async (e) => {
+    e.preventDefault();
+    if (!editForm) return;
+
+    if (!editForm.title.trim()) {
+      setEditErrors({ title: 'Tiêu đề phim không được để trống!' });
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const payload = {
+        title: editForm.title.trim(),
+        description: editForm.description.trim() || null,
+        posterUrl: editForm.posterUrl.trim() || null,
+        videoUrl: editForm.videoUrl.trim() || null,
+        trailerUrl: editForm.trailerUrl.trim() || null,
+        duration: editForm.duration ? Number(editForm.duration) : null,
+        releaseYear: editForm.releaseYear ? Number(editForm.releaseYear) : null,
+        type: Number(editForm.type),
+        videoStatus: Number(editForm.videoStatus),
+        isFeatured: Boolean(editForm.isFeatured),
+        publishStatus: Number(editForm.publishStatus),
+        categoryIds: editForm.categoryIds,
+      };
+
+      await movieApi.update(id, payload);
+      setEditModalOpen(false);
+      await fetchMovie();
+    } catch (err) {
+      setEditErrors({ general: err.message || 'Không thể cập nhật phim!' });
+    } finally {
+      setSaving(false);
+    }
+  };
 
   useEffect(() => {
     const video = videoRef.current;
     const streamUrl = playback?.streamUrl;
     if (!video || !streamUrl) return undefined;
 
-    // Chuẩn hóa đường dẫn: nếu là đường dẫn tương đối thì ghép máy chủ Backend cổng 5182
     let finalUrl = streamUrl;
     if (finalUrl.startsWith('/')) {
       finalUrl = 'http://localhost:5182' + finalUrl;
@@ -80,7 +185,7 @@ const MovieDetail = () => {
       hls.on(Hls.Events.MANIFEST_PARSED, (event, data) => {
         setStreamStatus(`HLS Manifest nạp thành công (${data.levels.length} tầng chất lượng)`);
         setStatusTone('success');
-        addLog(`HLS Manifest nạp thành công. Tìm thấy ${data.levels.length} tầng chất lượng (tối đa: ${data.levels[0]?.height || 'HD'}p).`, 'success');
+        addLog(`HLS Manifest nạp thành công. Tìm thấy ${data.levels.length} tầng chất lượng.`, 'success');
         video.play().catch(() => {
           addLog('Bấm Play trên khung phát để bắt đầu xem video.', 'warning');
         });
@@ -93,66 +198,37 @@ const MovieDetail = () => {
         const sizeText = bytes > 0 ? `${(bytes / 1024).toFixed(1)} KB` : 'Chuẩn nén';
         setStreamStatus(`Đang phát phân đoạn ${data.frag.sn ?? ''}`);
         setStatusTone('playing');
-        addLog(`Tải phân đoạn [${data.frag.sn ?? 'ts'}]: ${fragUrl} (Thời lượng: ${duration}s | Dung lượng: ${sizeText})`, 'segment');
-      });
-
-      hls.on(Hls.Events.LEVEL_SWITCHED, (event, data) => {
-        addLog(`Tự động điều chỉnh bitrate phù hợp đường truyền: Tầng ${data.level}`, 'info');
+        addLog(`Tải phân đoạn [${data.frag.sn ?? 'ts'}]: ${fragUrl} (${duration}s | ${sizeText})`, 'segment');
       });
 
       hls.on(Hls.Events.ERROR, (event, data) => {
         if (data.fatal) {
-          setStreamStatus('Lỗi phát luồng HLS');
           setStatusTone('error');
-          setPlaybackError('Lỗi phát luồng HLS: ' + (data.details || 'Không thể giải mã manifest.'));
-          addLog(`Lỗi nghiêm trọng: ${data.details}`, 'error');
-        } else {
-          addLog(`Cảnh báo luồng: ${data.details}`, 'warning');
+          setStreamStatus(`Lỗi luồng: ${data.details}`);
+          addLog(`Lỗi luồng nghiêm trọng: ${data.details}`, 'error');
         }
       });
     } else {
       video.src = finalUrl;
-      const onLoadedMetadata = () => {
-        setStreamStatus('Tải video trực tiếp thành công');
+      video.onloadedmetadata = () => {
+        setStreamStatus('Video MP4 đã nạp metadata thành công');
         setStatusTone('success');
-        addLog(`Đã nạp metadata video: Thời lượng ${Math.round(video.duration)}s, độ phân giải ${video.videoWidth}x${video.videoHeight}.`, 'success');
+        addLog(`Video MP4 nạp thành công. Thời lượng: ${video.duration?.toFixed(0)}s`, 'success');
         video.play().catch(() => {
           addLog('Bấm Play trên khung phát để bắt đầu xem video.', 'warning');
         });
       };
-      const onError = () => {
-        setStreamStatus('Lỗi tải video trực tiếp');
+      video.onerror = () => {
         setStatusTone('error');
-        setPlaybackError('Không thể tải file video từ đường dẫn.');
-        addLog('Không thể tải file video từ đường dẫn đã cung cấp.', 'error');
-      };
-      const onWaiting = () => {
-        addLog('Đang chờ đệm dữ liệu video (Buffering)...', 'warning');
-      };
-      const onPlaying = () => {
-        setStreamStatus('Đang phát nội dung');
-        setStatusTone('playing');
-      };
-
-      video.addEventListener('loadedmetadata', onLoadedMetadata);
-      video.addEventListener('error', onError);
-      video.addEventListener('waiting', onWaiting);
-      video.addEventListener('playing', onPlaying);
-
-      return () => {
-        video.removeEventListener('loadedmetadata', onLoadedMetadata);
-        video.removeEventListener('error', onError);
-        video.removeEventListener('waiting', onWaiting);
-        video.removeEventListener('playing', onPlaying);
-        video.removeAttribute('src');
-        video.load();
+        setStreamStatus('Lỗi khi tải file video MP4');
+        addLog(`Không thể tải video từ URL: ${finalUrl}`, 'error');
       };
     }
 
     return () => {
-      hls?.destroy();
-      video.removeAttribute('src');
-      video.load();
+      if (hls) {
+        hls.destroy();
+      }
     };
   }, [playback, addLog]);
 
@@ -185,7 +261,7 @@ const MovieDetail = () => {
     );
   }
 
-  const categories = movie.categories || [];
+  const categoriesList = movie.categories || [];
 
   return (
     <div className="space-y-6">
@@ -200,23 +276,64 @@ const MovieDetail = () => {
             <div className="flex flex-wrap items-center gap-2 text-xs font-bold uppercase tracking-wide">
               <span className="px-2.5 py-1 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">{MOVIE_TYPE_LABEL[movie.type] || 'Nội dung'}</span>
               <span className={`px-2.5 py-1 rounded-full border ${movie.videoStatus ? 'bg-green-500/10 text-green-400 border-green-500/20' : 'bg-slate-800 text-slate-400 border-slate-700'}`}>{movie.videoStatus ? 'Có video' : 'Chưa có video'}</span>
+              
+              {/* Badge Trạng thái phát hành */}
+              <span className={`px-2.5 py-1 rounded-full border font-bold ${
+                PUBLISH_STATUS_CONFIG[movie.publishStatus]?.color || PUBLISH_STATUS_CONFIG[2].color
+              }`}>
+                {PUBLISH_STATUS_CONFIG[movie.publishStatus]?.label || 'Đã phát hành'}
+              </span>
+
+              {movie.isFeatured && (
+                <span className="px-2.5 py-1 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/30 font-bold">
+                  Phim nổi bật Banner
+                </span>
+              )}
             </div>
+
             <h1 className="text-3xl lg:text-4xl font-bold text-white mt-4">{movie.title}</h1>
+            
             <div className="mt-5 flex flex-wrap gap-x-5 gap-y-3 text-sm text-slate-400">
               <span className="flex items-center gap-2"><Calendar size={16} /> {movie.releaseYear || 'Chưa rõ năm'}</span>
               <span className="flex items-center gap-2"><Clock3 size={16} /> {movie.duration ? `${movie.duration} phút` : 'Chưa rõ thời lượng'}</span>
               <span className="flex items-center gap-2"><Video size={16} /> {movie.streamType || 'NONE'}</span>
             </div>
+            
             <div className="mt-5 flex flex-wrap gap-2">
-              {categories.length > 0 ? categories.map((category) => <span key={category.id} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-800 text-slate-300 text-sm"><Tag size={14} /> {category.name}</span>) : <span className="text-slate-500 text-sm">Chưa gán thể loại</span>}
+              {categoriesList.length > 0 ? categoriesList.map((category) => (
+                <span key={category.id} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-800 text-slate-300 text-sm">
+                  <Tag size={14} /> {category.name}
+                </span>
+              )) : <span className="text-slate-500 text-sm">Chưa gán thể loại</span>}
             </div>
+            
             <p className="mt-6 text-slate-300 leading-7 whitespace-pre-wrap">{movie.description || 'Phim chưa có mô tả.'}</p>
+            
             <div className="mt-auto pt-8 flex flex-wrap gap-3">
-              <button type="button" onClick={handlePlay} disabled={playbackLoading || !movie.videoUrl} className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-xl flex items-center gap-2 font-bold transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
+              <button
+                type="button"
+                onClick={openEditModal}
+                className="bg-amber-600 hover:bg-amber-500 text-white px-5 py-3 rounded-xl flex items-center gap-2 font-bold transition-colors shadow-lg shadow-amber-600/20"
+              >
+                <Edit2 size={18} /> Chỉnh sửa phim
+              </button>
+
+              <button
+                type="button"
+                onClick={handlePlay}
+                disabled={playbackLoading || !movie.videoUrl}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-xl flex items-center gap-2 font-bold transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              >
                 {playbackLoading ? <Loader2 className="animate-spin" size={18} /> : <Play size={18} />} Phát thử
               </button>
-              {movie.trailerUrl && <a href={movie.trailerUrl} target="_blank" rel="noreferrer" className="bg-slate-800 hover:bg-slate-700 text-slate-200 px-5 py-3 rounded-xl flex items-center gap-2 font-bold transition-colors">Mở trailer</a>}
+
+              {movie.trailerUrl && (
+                <a href={movie.trailerUrl} target="_blank" rel="noreferrer" className="bg-slate-800 hover:bg-slate-700 text-slate-200 px-5 py-3 rounded-xl flex items-center gap-2 font-bold transition-colors">
+                  Mở trailer
+                </a>
+              )}
             </div>
+
             {!movie.videoUrl && <p className="mt-3 text-amber-400 text-sm">Phim chưa có Video URL nên chưa thể phát thử.</p>}
           </div>
         </div>
@@ -272,7 +389,7 @@ const MovieDetail = () => {
             <p className="text-slate-400">Backend chưa trả về đường dẫn stream cho phim này.</p>
           )}
 
-          {/* Bảng điều khiển Console Log thời gian thực tương tự player.html */}
+          {/* Bảng điều khiển Console Log thời gian thực */}
           <div className="bg-slate-950 border border-slate-800/80 rounded-xl p-4 shadow-inner">
             <div className="flex items-center justify-between gap-2 mb-3 pb-2.5 border-b border-slate-800/70">
               <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-400">
@@ -316,6 +433,224 @@ const MovieDetail = () => {
           </div>
         </section>
       )}
+
+      {/* Modal Chỉnh sửa phim trực tiếp tại trang chi tiết */}
+      <Modal
+        open={editModalOpen}
+        title="Chỉnh sửa thông tin phim"
+        onClose={closeEditModal}
+      >
+        {editForm && (
+          <form onSubmit={handleSaveEdit} className="space-y-4">
+            {editErrors.general && (
+              <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-400 text-sm rounded-xl">
+                {editErrors.general}
+              </div>
+            )}
+
+            <div className="space-y-1">
+              <label className="text-slate-400 text-xs font-bold uppercase ml-1">Tiêu đề phim *</label>
+              <input
+                type="text"
+                value={editForm.title}
+                onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
+                className="w-full bg-slate-800/50 border border-slate-700 text-white rounded-xl py-3 px-4 outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+              />
+              {editErrors.title && <p className="text-red-400 text-xs ml-1">{editErrors.title}</p>}
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-slate-400 text-xs font-bold uppercase ml-1">Mô tả phim</label>
+              <textarea
+                rows={3}
+                value={editForm.description}
+                onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+                className="w-full bg-slate-800/50 border border-slate-700 text-white rounded-xl py-3 px-4 outline-none focus:ring-2 focus:ring-blue-500 transition-all resize-none"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <label className="text-slate-400 text-xs font-bold uppercase ml-1">Poster URL</label>
+                <input
+                  type="text"
+                  value={editForm.posterUrl}
+                  onChange={(e) => setEditForm({ ...editForm, posterUrl: e.target.value })}
+                  className="w-full bg-slate-800/50 border border-slate-700 text-white rounded-xl py-3 px-4 outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-slate-400 text-xs font-bold uppercase ml-1">Trailer URL (YouTube)</label>
+                <input
+                  type="text"
+                  value={editForm.trailerUrl}
+                  onChange={(e) => setEditForm({ ...editForm, trailerUrl: e.target.value })}
+                  className="w-full bg-slate-800/50 border border-slate-700 text-white rounded-xl py-3 px-4 outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm"
+                />
+              </div>
+            </div>
+
+            {/* Video Stream URL kèm bộ chọn HLS nội bộ */}
+            <div className="space-y-1">
+              <div className="flex items-center justify-between">
+                <label className="text-slate-400 text-xs font-bold uppercase ml-1">Đường dẫn Video Stream</label>
+                <button
+                  type="button"
+                  onClick={() => setShowHlsPicker(!showHlsPicker)}
+                  className="text-xs text-blue-400 hover:text-blue-300 flex items-center gap-1 font-semibold"
+                >
+                  <Layers size={13} />
+                  <span>{showHlsPicker ? 'Ẩn kho HLS' : 'Chọn từ kho HLS nội bộ'}</span>
+                </button>
+              </div>
+
+              {showHlsPicker && (
+                <div className="p-3 bg-slate-950/80 border border-slate-800 rounded-xl space-y-2 mb-2">
+                  <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">Kho HLS nội bộ đã cắt</p>
+                  <div className="space-y-1.5 max-h-40 overflow-y-auto pr-1">
+                    {availableStreams.internalStreams.map((s) => (
+                      <button
+                        key={s.streamKey}
+                        type="button"
+                        onClick={() => {
+                          setEditForm({ ...editForm, videoUrl: s.relativeUrl });
+                          setShowHlsPicker(false);
+                        }}
+                        className="w-full p-2 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-left text-xs text-slate-200 flex items-center justify-between"
+                      >
+                        <span className="font-mono text-blue-400">{s.relativeUrl}</span>
+                        <span className="text-[10px] text-slate-400">{s.totalSizeMb} MB</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <input
+                type="text"
+                value={editForm.videoUrl}
+                onChange={(e) => setEditForm({ ...editForm, videoUrl: e.target.value })}
+                className="w-full bg-slate-800/50 border border-slate-700 text-white rounded-xl py-3 px-4 outline-none focus:ring-2 focus:ring-blue-500 transition-all font-mono text-sm"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="space-y-1">
+                <label className="text-slate-400 text-xs font-bold uppercase ml-1">Thời lượng (phút)</label>
+                <input
+                  type="number"
+                  value={editForm.duration}
+                  onChange={(e) => setEditForm({ ...editForm, duration: e.target.value })}
+                  className="w-full bg-slate-800/50 border border-slate-700 text-white rounded-xl py-3 px-4 outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-slate-400 text-xs font-bold uppercase ml-1">Năm phát hành</label>
+                <input
+                  type="number"
+                  value={editForm.releaseYear}
+                  onChange={(e) => setEditForm({ ...editForm, releaseYear: e.target.value })}
+                  className="w-full bg-slate-800/50 border border-slate-700 text-white rounded-xl py-3 px-4 outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                />
+              </div>
+              <div className="space-y-1 col-span-2 md:col-span-1">
+                <label className="text-slate-400 text-xs font-bold uppercase ml-1">Loại phim</label>
+                <select
+                  value={editForm.type}
+                  onChange={(e) => setEditForm({ ...editForm, type: Number(e.target.value) })}
+                  className="w-full bg-slate-800/50 border border-slate-700 text-white rounded-xl py-3 px-4 outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                >
+                  <option value={0}>Phim lẻ</option>
+                  <option value={1}>Phim bộ</option>
+                </select>
+              </div>
+              <div className="space-y-1 col-span-2 md:col-span-1">
+                <label className="text-slate-400 text-xs font-bold uppercase ml-1">Trạng thái phát hành</label>
+                <select
+                  value={editForm.publishStatus}
+                  onChange={(e) => setEditForm({ ...editForm, publishStatus: Number(e.target.value) })}
+                  className="w-full bg-slate-800/50 border border-slate-700 text-white rounded-xl py-3 px-4 outline-none focus:ring-2 focus:ring-blue-500 transition-all font-medium"
+                >
+                  <option value={0}>Bản nháp (Ẩn)</option>
+                  <option value={1}>Sắp chiếu</option>
+                  <option value={2}>Đã phát hành</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-slate-400 text-xs font-bold uppercase ml-1">Thể loại</label>
+              <div className="flex flex-wrap gap-2">
+                {categories.map((cat) => {
+                  const selected = editForm.categoryIds.includes(cat.id);
+                  return (
+                    <button
+                      key={cat.id}
+                      type="button"
+                      onClick={() => toggleCategory(cat.id)}
+                      className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-all flex items-center gap-1 ${
+                        selected
+                          ? 'bg-blue-600 border-blue-600 text-white'
+                          : 'bg-slate-800 border-slate-700 text-slate-300 hover:border-blue-500/50'
+                      }`}
+                    >
+                      {cat.name}
+                      {selected && <X size={14} />}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="p-3.5 rounded-xl bg-slate-800/40 border border-slate-700/60 flex items-center justify-between gap-4">
+              <div>
+                <p className="text-sm font-bold text-white flex items-center gap-2">
+                  <span>Đánh dấu là Phim nổi bật</span>
+                  {editForm.isFeatured && (
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                      Banner ON
+                    </span>
+                  )}
+                </p>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  Hiển thị phim này trên Banner Carousel trang chủ của ứng dụng mobile.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setEditForm((prev) => ({ ...prev, isFeatured: !prev.isFeatured }))}
+                className={`w-12 h-6 rounded-full transition-colors relative p-0.5 shrink-0 outline-none ${
+                  editForm.isFeatured ? 'bg-amber-500' : 'bg-slate-700'
+                }`}
+              >
+                <div
+                  className={`w-5 h-5 rounded-full bg-white transition-transform ${
+                    editForm.isFeatured ? 'translate-x-6' : 'translate-x-0'
+                  }`}
+                />
+              </button>
+            </div>
+
+            <div className="flex gap-3 pt-2">
+              <button
+                type="button"
+                onClick={closeEditModal}
+                disabled={saving}
+                className="flex-1 py-3 rounded-xl border border-slate-700 text-slate-300 font-medium hover:bg-slate-800 transition-colors disabled:opacity-50"
+              >
+                Hủy
+              </button>
+              <button
+                type="submit"
+                disabled={saving}
+                className="flex-1 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {saving ? <Loader2 className="animate-spin" size={18} /> : 'Lưu thay đổi'}
+              </button>
+            </div>
+          </form>
+        )}
+      </Modal>
     </div>
   );
 };

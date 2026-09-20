@@ -11,6 +11,7 @@ using CineStream.DTOs.Categories;
 using CineStream.DTOs.Common;
 using CineStream.DTOs.Movies;
 using CineStream.Models;
+using CineStream.Models.Enums;
 using CineStream.Services.Interfaces;
 
 namespace CineStream.Services.Implementations;
@@ -38,6 +39,22 @@ public class AIService : IAIService
     // Xử lý tin nhắn của người dùng, truy vấn kho phim nội bộ và tạo phản hồi từ AI
     public async Task<ApiResponse<ChatResponseDto>> ChatAsync(int userId, ChatRequestDto request)
     {
+        // Kiểm tra quyền hạn hội viên Premium hoặc vai trò Quản trị viên
+        var user = await _context.Users.FindAsync(userId);
+        if (user == null)
+        {
+            return ApiResponse<ChatResponseDto>.Fail("Không tìm thấy thông tin tài khoản người dùng!");
+        }
+
+        var isPremiumActive = user.IsPremium && (!user.PremiumExpiresAt.HasValue || user.PremiumExpiresAt.Value > DateTime.UtcNow);
+        var hasAccess = isPremiumActive || user.Role == UserRole.Admin;
+
+        if (!hasAccess)
+        {
+            return ApiResponse<ChatResponseDto>.Fail(
+                "Tính năng Trợ lý AI CineBot chỉ dành riêng cho thành viên gói Premium. Vui lòng nâng cấp tài khoản để tiếp tục!");
+        }
+
         var userMessage = request.Message.Trim();
 
         // 1. Truy vấn danh sách phim đang hoạt động để làm ngữ cảnh RAG
@@ -147,6 +164,22 @@ public class AIService : IAIService
     // Lấy lịch sử trò chuyện gần nhất theo cơ chế cửa sổ trượt (Rolling Window)
     public async Task<ApiResponse<List<ChatLogDto>>> GetChatHistoryAsync(int userId, int limit = 30)
     {
+        // Kiểm tra quyền hạn hội viên Premium hoặc vai trò Quản trị viên
+        var user = await _context.Users.FindAsync(userId);
+        if (user == null)
+        {
+            return ApiResponse<List<ChatLogDto>>.Fail("Không tìm thấy thông tin tài khoản người dùng!");
+        }
+
+        var isPremiumActive = user.IsPremium && (!user.PremiumExpiresAt.HasValue || user.PremiumExpiresAt.Value > DateTime.UtcNow);
+        var hasAccess = isPremiumActive || user.Role == UserRole.Admin;
+
+        if (!hasAccess)
+        {
+            return ApiResponse<List<ChatLogDto>>.Fail(
+                "Tính năng Trợ lý AI CineBot chỉ dành riêng cho thành viên gói Premium. Vui lòng nâng cấp tài khoản để tiếp tục!");
+        }
+
         // Ràng buộc giới hạn an toàn để tránh tải quá tải bộ nhớ hệ thống
         if (limit <= 0) limit = 30;
         if (limit > 100) limit = 100;

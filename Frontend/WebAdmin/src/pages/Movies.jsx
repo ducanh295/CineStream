@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, Search, Edit2, Trash2, PlayCircle, Loader2, Film, X, Layers, Star } from 'lucide-react';
+import { Plus, Search, Edit2, Trash2, PlayCircle, Loader2, Film, X, Layers, Star, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import movieApi from '../api/movieApi';
 import categoryApi from '../api/categoryApi';
@@ -18,11 +18,19 @@ const EMPTY_FORM = {
   type: 0, // MovieType.Single = 0, Series = 1
   videoStatus: 1,
   isFeatured: false,
+  publishStatus: 2, // 0 = Draft, 1 = ComingSoon, 2 = Published
   categoryIds: [],
 };
 
 // MovieType: Single = 0, Series = 1 (khớp enum bên Backend)
 const MOVIE_TYPE_LABEL = { 0: 'Phim lẻ', 1: 'Phim bộ' };
+
+// Cấu hình nhãn và màu sắc cho 3 trạng thái phát hành
+const PUBLISH_STATUS_CONFIG = {
+  0: { label: 'Bản nháp', color: 'bg-slate-800 text-slate-400 border-slate-700' },
+  1: { label: 'Sắp chiếu', color: 'bg-blue-500/10 text-blue-400 border-blue-500/20' },
+  2: { label: 'Đã phát hành', color: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' },
+};
 
 const Movies = () => {
   const [movies, setMovies] = useState([]);
@@ -30,6 +38,12 @@ const Movies = () => {
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
   const [search, setSearch] = useState('');
+
+  // Trạng thái phân trang danh sách phim
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
@@ -44,17 +58,24 @@ const Movies = () => {
   const [availableStreams, setAvailableStreams] = useState({ internalStreams: [], cdnPresets: [] });
   const [showHlsPicker, setShowHlsPicker] = useState(false);
 
-  const fetchMovies = useCallback(async (searchTerm = '') => {
+  // Tải danh sách phim phân trang từ máy chủ Backend
+  const fetchMovies = useCallback(async (pageNumber = 1, searchTerm = '', size = 10) => {
     setLoading(true);
     setErrorMsg('');
     try {
-      const params = {};
+      const params = {
+        page: pageNumber,
+        pageSize: size,
+        includeDraft: true,
+      };
       if (searchTerm.trim()) params.search = searchTerm.trim();
-      params.page = 1;
-      params.pageSize = 100;
       const result = await movieApi.getAll(params);
       const movieData = result?.data;
-      setMovies(Array.isArray(movieData) ? movieData : movieData?.items || []);
+      const items = Array.isArray(movieData) ? movieData : movieData?.items || [];
+      setMovies(items);
+      setTotalPages(movieData?.totalPages || 1);
+      setTotalCount(movieData?.totalCount || items.length);
+      setPage(movieData?.pageNumber || pageNumber);
     } catch (err) {
       setErrorMsg(err.message || 'Không thể tải danh sách phim. Vui lòng thử lại!');
     } finally {
@@ -83,21 +104,17 @@ const Movies = () => {
   }, []);
 
   useEffect(() => {
-    Promise.resolve().then(() => {
-      fetchMovies();
-      fetchCategories();
-      fetchAvailableStreams();
-    });
-  }, [fetchMovies, fetchCategories, fetchAvailableStreams]);
+    fetchCategories();
+    fetchAvailableStreams();
+  }, [fetchCategories, fetchAvailableStreams]);
 
-  // Debounce tìm kiếm để không gọi API liên tục khi gõ
+  // Tự động tải lại danh sách phim theo trang, từ khóa tìm kiếm và kích thước trang
   useEffect(() => {
     const timer = setTimeout(() => {
-      fetchMovies(search);
-    }, 400);
+      fetchMovies(page, search, pageSize);
+    }, 300);
     return () => clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search]);
+  }, [page, search, pageSize, fetchMovies]);
 
   const openCreateModal = () => {
     setEditingId(null);
@@ -121,6 +138,7 @@ const Movies = () => {
       type: movie.type ?? 0,
       videoStatus: movie.videoStatus ?? 1,
       isFeatured: Boolean(movie.isFeatured),
+      publishStatus: movie.publishStatus ?? 2,
       categoryIds: (movie.categories || []).map((c) => c.id),
     });
     setFormErrors({});
@@ -143,6 +161,7 @@ const Movies = () => {
           type: detail.type ?? prev.type,
           videoStatus: detail.videoStatus ?? prev.videoStatus,
           isFeatured: detail.isFeatured ?? prev.isFeatured,
+          publishStatus: detail.publishStatus ?? prev.publishStatus,
           categoryIds: (detail.categories || []).map((c) => c.id),
         }));
       }
@@ -202,6 +221,7 @@ const Movies = () => {
         releaseYear: form.releaseYear ? Number(form.releaseYear) : null,
         type: Number(form.type),
         isFeatured: Boolean(form.isFeatured),
+        publishStatus: Number(form.publishStatus),
         categoryIds: form.categoryIds,
       };
 
@@ -213,7 +233,7 @@ const Movies = () => {
       }
 
       setModalOpen(false);
-      await fetchMovies(search);
+      await fetchMovies(page, search, pageSize);
     } catch (err) {
       if (err.errors && err.errors.length > 0) {
         setFormErrors({ general: err.errors.join(', ') });
@@ -231,7 +251,9 @@ const Movies = () => {
     try {
       await movieApi.delete(deleteTarget.id);
       setDeleteTarget(null);
-      await fetchMovies(search);
+      const targetPage = movies.length === 1 && page > 1 ? page - 1 : page;
+      setPage(targetPage);
+      await fetchMovies(targetPage, search, pageSize);
     } catch (err) {
       setErrorMsg(err.message || 'Xóa phim thất bại!');
       setDeleteTarget(null);
@@ -275,7 +297,10 @@ const Movies = () => {
             <input
               type="text"
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1);
+              }}
               placeholder="Tìm kiếm phim..."
               className="w-full bg-slate-800 border border-slate-700 text-white rounded-xl py-2 pl-10 pr-4 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
             />
@@ -305,6 +330,7 @@ const Movies = () => {
                 <tr>
                   <th className="px-6 py-4">Phim</th>
                   <th className="px-6 py-4">Thể loại</th>
+                  <th className="px-6 py-4">Trạng thái</th>
                   <th className="px-6 py-4">Loại</th>
                   <th className="px-6 py-4">Năm</th>
                   <th className="px-6 py-4 text-center">Thao tác</th>
@@ -355,6 +381,13 @@ const Movies = () => {
                         )}
                       </div>
                     </td>
+                    <td className="px-6 py-4 text-sm">
+                      <span className={`px-2.5 py-1 rounded-full text-xs font-bold border ${
+                        PUBLISH_STATUS_CONFIG[movie.publishStatus]?.color || PUBLISH_STATUS_CONFIG[2].color
+                      }`}>
+                        {PUBLISH_STATUS_CONFIG[movie.publishStatus]?.label || 'Đã phát hành'}
+                      </span>
+                    </td>
                     <td className="px-6 py-4 text-sm">{MOVIE_TYPE_LABEL[movie.type] || '—'}</td>
                     <td className="px-6 py-4 text-sm">{movie.releaseYear || '—'}</td>
                     <td className="px-6 py-4">
@@ -389,6 +422,83 @@ const Movies = () => {
                 ))}
               </tbody>
             </table>
+          </div>
+        )}
+
+        {/* Thanh điều khiển phân trang danh sách phim */}
+        {totalCount > 0 && (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-6 py-4 border-t border-slate-800 bg-slate-900/60 rounded-b-2xl">
+            <div className="flex items-center gap-3 text-sm text-slate-400">
+              <span>
+                Hiển thị <span className="font-semibold text-white">{(page - 1) * pageSize + 1}</span> - <span className="font-semibold text-white">{Math.min(page * pageSize, totalCount)}</span> trên tổng số <span className="font-semibold text-white">{totalCount}</span> phim
+              </span>
+              <span className="text-slate-600">|</span>
+              <label className="flex items-center gap-1.5 text-xs text-slate-400">
+                <span>Số hàng:</span>
+                <select
+                  value={pageSize}
+                  onChange={(e) => {
+                    const newSize = Number(e.target.value);
+                    setPageSize(newSize);
+                    setPage(1);
+                  }}
+                  className="bg-slate-800 border border-slate-700 text-white rounded-lg px-2 py-1 outline-none text-xs cursor-pointer focus:border-blue-500"
+                >
+                  <option value={8}>8 / trang</option>
+                  <option value={10}>10 / trang</option>
+                  <option value={20}>20 / trang</option>
+                  <option value={50}>50 / trang</option>
+                </select>
+              </label>
+            </div>
+
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                disabled={page <= 1 || loading}
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                className="flex items-center gap-1 px-3 py-1.5 rounded-xl border border-slate-700 bg-slate-800/80 text-slate-300 hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed text-xs font-medium transition-all"
+              >
+                <ChevronLeft size={16} />
+                <span>Trước</span>
+              </button>
+
+              <div className="flex items-center gap-1 px-1">
+                {Array.from({ length: totalPages }, (_, i) => i + 1)
+                  .filter((p) => p === 1 || p === totalPages || Math.abs(p - page) <= 1)
+                  .map((p, idx, arr) => {
+                    const prevP = arr[idx - 1];
+                    const showEllipsis = prevP && p - prevP > 1;
+                    return (
+                      <div key={p} className="flex items-center">
+                        {showEllipsis && <span className="px-1.5 text-slate-500 text-xs">...</span>}
+                        <button
+                          type="button"
+                          disabled={loading}
+                          onClick={() => setPage(p)}
+                          className={`min-w-[32px] h-8 px-2.5 rounded-xl text-xs font-semibold transition-all ${
+                            page === p
+                              ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20'
+                              : 'bg-slate-800/50 text-slate-400 hover:bg-slate-800 hover:text-white border border-slate-700/50'
+                          }`}
+                        >
+                          {p}
+                        </button>
+                      </div>
+                    );
+                  })}
+              </div>
+
+              <button
+                type="button"
+                disabled={page >= totalPages || loading}
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                className="flex items-center gap-1 px-3 py-1.5 rounded-xl border border-slate-700 bg-slate-800/80 text-slate-300 hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed text-xs font-medium transition-all"
+              >
+                <span>Sau</span>
+                <ChevronRight size={16} />
+              </button>
+            </div>
           </div>
         )}
       </div>
@@ -555,6 +665,18 @@ const Movies = () => {
               >
                 <option value={0}>Phim lẻ</option>
                 <option value={1}>Phim bộ</option>
+              </select>
+            </div>
+            <div className="space-y-1 col-span-2 md:col-span-1">
+              <label className="text-slate-400 text-xs font-bold uppercase ml-1">Trạng thái phát hành</label>
+              <select
+                value={form.publishStatus}
+                onChange={(e) => setForm({ ...form, publishStatus: Number(e.target.value) })}
+                className="w-full bg-slate-800/50 border border-slate-700 text-white rounded-xl py-3 px-4 outline-none focus:ring-2 focus:ring-blue-500 transition-all font-medium"
+              >
+                <option value={0}>Bản nháp (Ẩn)</option>
+                <option value={1}>Sắp chiếu</option>
+                <option value={2}>Đã phát hành</option>
               </select>
             </div>
             {editingId && (

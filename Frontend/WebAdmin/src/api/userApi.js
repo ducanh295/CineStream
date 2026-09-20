@@ -6,6 +6,7 @@ const userApi = {
   lockUser: (id, reason) => axiosInstance.post(`/admin/users/${id}/lock`, { reason }),
   unlockUser: (id) => axiosInstance.post(`/admin/users/${id}/unlock`),
   deleteUser: (id) => axiosInstance.delete(`/admin/users/${id}`),
+  setPremium: (id, data) => axiosInstance.put(`/admin/users/${id}/premium`, data),
 };
 
 export default userApi;

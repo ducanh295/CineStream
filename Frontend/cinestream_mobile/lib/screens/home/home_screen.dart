@@ -74,7 +74,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     try {
       final results = await Future.wait([
-        _movieService.getMovies(page: 1, pageSize: 10),
+        _movieService.getMovies(page: 1, pageSize: 30),
         _movieService.getFeaturedMovies(limit: 5),
       ]);
 
@@ -266,8 +266,8 @@ class _HomeScreenState extends State<HomeScreen> {
       );
     }
 
-    final firstSection = _movies.take(4).toList();
-    final secondSection = _movies.skip(4).take(4).toList();
+    final firstSection = _movies.take(8).toList();
+    final secondSection = _movies.skip(8).toList();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -276,16 +276,16 @@ class _HomeScreenState extends State<HomeScreen> {
 
         if (firstSection.isNotEmpty) ...[
           _buildSectionTitle(
-            title: 'Phim mới',
-            action: 'Xem thêm',
+            title: 'Phim mới phát hành',
+            action: 'Xem tất cả',
           ),
           _buildMovieCarousel(firstSection),
         ],
 
         if (secondSection.isNotEmpty) ...[
           _buildSectionTitle(
-            title: 'Khám phá thêm',
-            action: 'Xem thêm',
+            title: 'Kho phim chọn lọc',
+            action: 'Xem tất cả',
           ),
           _buildMovieCarousel(secondSection),
         ],
@@ -513,7 +513,7 @@ class _HomeScreenState extends State<HomeScreen> {
             onPressed: () {
               Navigator.pushReplacementNamed(
                 context,
-                AppRoutes.search,
+                AppRoutes.category,
               );
             },
             style: TextButton.styleFrom(
@@ -522,19 +522,19 @@ class _HomeScreenState extends State<HomeScreen> {
               minimumSize: const Size(0, 36),
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
-            child: const Row(
+            child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  'Xem thêm',
-                  style: TextStyle(
+                  action,
+                  style: const TextStyle(
                     color: AppTheme.darkGreen,
                     fontSize: 13,
                     fontWeight: FontWeight.w800,
                   ),
                 ),
-                SizedBox(width: 3),
-                Icon(
+                const SizedBox(width: 3),
+                const Icon(
                   Icons.chevron_right_rounded,
                   color: AppTheme.darkGreen,
                   size: 18,

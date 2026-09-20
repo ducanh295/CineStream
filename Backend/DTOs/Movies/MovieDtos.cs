@@ -19,6 +19,7 @@ public class MovieDto
     public MovieType Type { get; set; }
     public int VideoStatus { get; set; }
     public bool IsFeatured { get; set; } = false;
+    public MoviePublishStatus PublishStatus { get; set; } = MoviePublishStatus.Published;
 
     // Danh sách các thể loại của phim dạng tóm tắt để ngăn vòng lặp tuần hoàn
     public List<CategoryDto> Categories { get; set; } = new();
@@ -68,6 +69,7 @@ public class CreateMovieDto
 
     public MovieType Type { get; set; } = MovieType.Single;
     public bool IsFeatured { get; set; } = false;
+    public MoviePublishStatus PublishStatus { get; set; } = MoviePublishStatus.Published;
 
     // Danh sách ID thể loại được chọn khi tạo phim (ví dụ: [1, 2, 4])
     public List<int> CategoryIds { get; set; } = new();
@@ -102,6 +104,7 @@ public class UpdateMovieDto
 
     public MovieType Type { get; set; }
     public bool IsFeatured { get; set; } = false;
+    public MoviePublishStatus PublishStatus { get; set; } = MoviePublishStatus.Published;
 
     // Cập nhật lại danh sách ID thể loại
     public List<int> CategoryIds { get; set; } = new();

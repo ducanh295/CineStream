@@ -211,4 +211,8 @@ internal class FakeAdminUserRepository : IUserRepository
     public Task<User?> GetWithProfileAsync(int id) => Task.FromResult(_users.FirstOrDefault(u => u.Id == id));
     public Task<bool> EmailExistsAsync(string email) => Task.FromResult(_users.Any(u => u.Email.Equals(email, StringComparison.OrdinalIgnoreCase)));
     public Task<bool> UsernameExistsAsync(string username) => Task.FromResult(_users.Any(u => u.Username.Equals(username, StringComparison.OrdinalIgnoreCase)));
+    public Task<bool> ConfirmedEmailExistsAsync(string email) => Task.FromResult(false);
+    public Task<bool> ConfirmedUsernameExistsAsync(string username) => Task.FromResult(false);
+    public Task<List<User>> GetUnconfirmedUsersByEmailOrUsernameAsync(string email, string username) => Task.FromResult(new List<User>());
+    public Task HardDeleteAsync(User user) => Task.CompletedTask;
 }
