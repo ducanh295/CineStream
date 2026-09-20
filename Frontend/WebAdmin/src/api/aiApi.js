@@ -1,5 +1,7 @@
+// Nạp mô-đun phụ thuộc cần dùng trong tệp này.
 import axiosInstance from './axios';
 
+// Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
 const aiApi = {
   // POST /api/ai/chat -> { message }
   sendMessage: (message) => axiosInstance.post('/ai/chat', { message }),
@@ -20,4 +22,5 @@ const aiApi = {
   deleteConfig: () => axiosInstance.delete('/ai/config'),
 };
 
+// Xuất thành phần chính để các tệp khác có thể sử dụng.
 export default aiApi;

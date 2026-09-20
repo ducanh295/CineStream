@@ -1,3 +1,4 @@
+// Nạp mô-đun phụ thuộc cần dùng trong tệp này.
 import axiosInstance from './axios';
 
 // API module cho chuc nang thanh toan VietQR SePay va quan ly goi VIP
@@ -18,4 +19,5 @@ const paymentApi = {
   getAdminAllTransactions: (params) => axiosInstance.get('/payments/admin/all', { params }),
 };
 
+// Xuất thành phần chính để các tệp khác có thể sử dụng.
 export default paymentApi;

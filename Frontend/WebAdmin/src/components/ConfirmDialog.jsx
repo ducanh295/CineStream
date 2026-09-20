@@ -1,4 +1,6 @@
+// Nạp mô-đun phụ thuộc cần dùng trong tệp này.
 import { motion, AnimatePresence } from 'framer-motion';
+// Nạp mô-đun phụ thuộc cần dùng trong tệp này.
 import { AlertTriangle, Loader2 } from 'lucide-react';
 
 /**
@@ -12,6 +14,7 @@ import { AlertTriangle, Loader2 } from 'lucide-react';
  *  - onConfirm: () => void
  *  - onCancel: () => void
  */
+// Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
 const ConfirmDialog = ({
   open,
   title = 'Xác nhận hành động',
@@ -21,6 +24,7 @@ const ConfirmDialog = ({
   onConfirm,
   onCancel,
 }) => {
+  // Trả về kết quả hoặc giao diện từ nhánh xử lý hiện tại.
   return (
     <AnimatePresence>
       {open && (
@@ -31,6 +35,7 @@ const ConfirmDialog = ({
           className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
           onClick={onCancel}
         >
+          {/* Hiển thị phần tử giao diện giao diện và nội dung con của nó. */}
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -38,13 +43,18 @@ const ConfirmDialog = ({
             onClick={(e) => e.stopPropagation()}
             className="w-full max-w-sm bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl p-6"
           >
+            {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
             <div className="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center mb-4">
+              {/* Hiển thị phần tử giao diện AlertTriangle và nội dung con của nó. */}
               <AlertTriangle className="text-red-400" size={24} />
             </div>
+            {/* Hiển thị phần tử giao diện h3 và nội dung con của nó. */}
             <h3 className="text-lg font-bold text-white">{title}</h3>
             {description && <p className="text-slate-400 text-sm mt-2">{description}</p>}
 
+            {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
             <div className="flex gap-3 mt-6">
+              {/* Hiển thị phần tử giao diện button và nội dung con của nó. */}
               <button
                 type="button"
                 onClick={onCancel}
@@ -53,6 +63,7 @@ const ConfirmDialog = ({
               >
                 Hủy
               </button>
+              {/* Hiển thị phần tử giao diện button và nội dung con của nó. */}
               <button
                 type="button"
                 onClick={onConfirm}
@@ -69,4 +80,5 @@ const ConfirmDialog = ({
   );
 };
 
+// Xuất thành phần chính để các tệp khác có thể sử dụng.
 export default ConfirmDialog;

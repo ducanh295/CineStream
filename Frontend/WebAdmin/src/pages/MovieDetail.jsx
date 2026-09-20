@@ -1,11 +1,19 @@
+// Nạp mô-đun phụ thuộc cần dùng trong tệp này.
 import { useEffect, useRef, useState, useCallback } from 'react';
+// Nạp mô-đun phụ thuộc cần dùng trong tệp này.
 import { useNavigate, useParams } from 'react-router-dom';
+// Nạp mô-đun phụ thuộc cần dùng trong tệp này.
 import { ArrowLeft, Calendar, Clock3, Film, Loader2, Play, Tag, Video, X, Terminal, Trash2, Edit2, Layers } from 'lucide-react';
+// Nạp mô-đun phụ thuộc cần dùng trong tệp này.
 import Hls from 'hls.js';
+// Nạp mô-đun phụ thuộc cần dùng trong tệp này.
 import movieApi from '../api/movieApi';
+// Nạp mô-đun phụ thuộc cần dùng trong tệp này.
 import categoryApi from '../api/categoryApi';
+// Nạp mô-đun phụ thuộc cần dùng trong tệp này.
 import Modal from '../components/Modal';
 
+// Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
 const MOVIE_TYPE_LABEL = { 0: 'Phim lẻ', 1: 'Phim bộ' };
 
 // Cấu hình hiển thị nhãn và màu sắc cho 3 trạng thái phát hành
@@ -15,73 +23,114 @@ const PUBLISH_STATUS_CONFIG = {
   2: { label: 'Đã phát hành', color: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' },
 };
 
+// Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
 const MovieDetail = () => {
+  // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
   const { id } = useParams();
+  // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
   const navigate = useNavigate();
+  // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
   const [movie, setMovie] = useState(null);
+  // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
   const [playback, setPlayback] = useState(null);
+  // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
   const [loading, setLoading] = useState(true);
+  // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
   const [playbackLoading, setPlaybackLoading] = useState(false);
+  // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
   const [errorMsg, setErrorMsg] = useState('');
+  // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
   const [playbackError, setPlaybackError] = useState('');
+  // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
   const [logs, setLogs] = useState([]);
+  // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
   const [streamStatus, setStreamStatus] = useState('Sẵn sàng');
+  // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
   const [statusTone, setStatusTone] = useState('idle');
+  // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
   const videoRef = useRef(null);
 
   // Quản trị Modal chỉnh sửa phim trực tiếp tại trang chi tiết
   const [editModalOpen, setEditModalOpen] = useState(false);
+  // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
   const [editForm, setEditForm] = useState(null);
+  // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
   const [editErrors, setEditErrors] = useState({});
+  // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
   const [saving, setSaving] = useState(false);
+  // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
   const [categories, setCategories] = useState([]);
+  // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
   const [availableStreams, setAvailableStreams] = useState({ internalStreams: [], cdnPresets: [] });
+  // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
   const [showHlsPicker, setShowHlsPicker] = useState(false);
 
+  // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
   const addLog = useCallback((message, type = 'info') => {
+    // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
     const time = new Date().toLocaleTimeString();
+    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
     setLogs((prev) => [
       { id: Date.now() + Math.random(), time, message, type },
       ...prev.slice(0, 199),
     ]);
   }, []);
 
+  // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
   const fetchMovie = useCallback(async () => {
+    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
     setLoading(true);
+    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
     setErrorMsg('');
+    // Bao bọc thao tác có thể lỗi để xử lý an toàn.
     try {
+      // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
       const result = await movieApi.getById(id);
+      // Kiểm tra điều kiện để chọn nhánh xử lý phù hợp.
       if (!result?.success || !result?.data) {
+        // Phát sinh lỗi để thông báo trạng thái bất thường.
         throw new Error(result?.message || 'Không tìm thấy phim.');
       }
+      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
       setMovie(result.data);
     } catch (err) {
+      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
       setErrorMsg(err.message || 'Không thể tải chi tiết phim.');
     } finally {
+      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
       setLoading(false);
     }
   }, [id]);
 
+  // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
   useEffect(() => {
+    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
     fetchMovie();
   }, [fetchMovie]);
 
   // Tải danh mục thể loại và luồng HLS cho form sửa phim
   const loadFormData = async () => {
+    // Bao bọc thao tác có thể lỗi để xử lý an toàn.
     try {
+      // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
       const [catRes, streamRes] = await Promise.all([
         categoryApi.getAll(),
         movieApi.getAvailableStreams(),
       ]);
+      // Kiểm tra điều kiện để chọn nhánh xử lý phù hợp.
       if (catRes?.data) setCategories(Array.isArray(catRes.data) ? catRes.data : []);
+      // Kiểm tra điều kiện để chọn nhánh xử lý phù hợp.
       if (streamRes?.data) setAvailableStreams(streamRes.data);
     } catch {
       // Bỏ qua lỗi nạp dữ liệu phụ trợ
     }
   };
 
+  // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
   const openEditModal = () => {
+    // Kiểm tra điều kiện để chọn nhánh xử lý phù hợp.
     if (!movie) return;
+    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
     setEditForm({
       title: movie.title || '',
       description: movie.description || '',
@@ -96,22 +145,35 @@ const MovieDetail = () => {
       publishStatus: movie.publishStatus ?? 2,
       categoryIds: (movie.categories || []).map((c) => c.id),
     });
+    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
     setEditErrors({});
+    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
     setShowHlsPicker(false);
+    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
     setEditModalOpen(true);
+    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
     loadFormData();
   };
 
+  // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
   const closeEditModal = () => {
+    // Kiểm tra điều kiện để chọn nhánh xử lý phù hợp.
     if (saving) return;
+    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
     setShowHlsPicker(false);
+    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
     setEditModalOpen(false);
   };
 
+  // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
   const toggleCategory = (catId) => {
+    // Kiểm tra điều kiện để chọn nhánh xử lý phù hợp.
     if (!editForm) return;
+    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
     setEditForm((prev) => {
+      // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
       const exists = prev.categoryIds.includes(catId);
+      // Trả về kết quả hoặc giao diện từ nhánh xử lý hiện tại.
       return {
         ...prev,
         categoryIds: exists
@@ -121,17 +183,26 @@ const MovieDetail = () => {
     });
   };
 
+  // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
   const handleSaveEdit = async (e) => {
+    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
     e.preventDefault();
+    // Kiểm tra điều kiện để chọn nhánh xử lý phù hợp.
     if (!editForm) return;
 
+    // Kiểm tra điều kiện để chọn nhánh xử lý phù hợp.
     if (!editForm.title.trim()) {
+      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
       setEditErrors({ title: 'Tiêu đề phim không được để trống!' });
+      // Trả về kết quả hoặc giao diện từ nhánh xử lý hiện tại.
       return;
     }
 
+    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
     setSaving(true);
+    // Bao bọc thao tác có thể lỗi để xử lý an toàn.
     try {
+      // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
       const payload = {
         title: editForm.title.trim(),
         description: editForm.description.trim() || null,
@@ -147,134 +218,214 @@ const MovieDetail = () => {
         categoryIds: editForm.categoryIds,
       };
 
+      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
       await movieApi.update(id, payload);
+      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
       setEditModalOpen(false);
+      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
       await fetchMovie();
     } catch (err) {
+      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
       setEditErrors({ general: err.message || 'Không thể cập nhật phim!' });
     } finally {
+      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
       setSaving(false);
     }
   };
 
+  // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
   useEffect(() => {
+    // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
     const video = videoRef.current;
+    // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
     const streamUrl = playback?.streamUrl;
+    // Kiểm tra điều kiện để chọn nhánh xử lý phù hợp.
     if (!video || !streamUrl) return undefined;
 
+    // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
     let finalUrl = streamUrl;
+    // Kiểm tra điều kiện để chọn nhánh xử lý phù hợp.
     if (finalUrl.startsWith('/')) {
+      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
       finalUrl = 'http://localhost:5182' + finalUrl;
     }
 
+    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
     setLogs([]);
+    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
     setStreamStatus('Đang khởi tạo kết nối luồng...');
+    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
     setStatusTone('connecting');
+    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
     addLog(`Bắt đầu kết nối tới URL: ${finalUrl}`, 'info');
 
+    // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
     let hls;
+    // Kiểm tra điều kiện để chọn nhánh xử lý phù hợp.
     if (finalUrl.includes('.m3u8') && Hls.isSupported()) {
+      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
       hls = new Hls({
         enableWorker: true,
         lowLatencyMode: false,
       });
 
+      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
       hls.loadSource(finalUrl);
+      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
       hls.attachMedia(video);
 
+      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
       hls.on(Hls.Events.MANIFEST_PARSED, (event, data) => {
+        // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
         setStreamStatus(`HLS Manifest nạp thành công (${data.levels.length} tầng chất lượng)`);
+        // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
         setStatusTone('success');
+        // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
         addLog(`HLS Manifest nạp thành công. Tìm thấy ${data.levels.length} tầng chất lượng.`, 'success');
+        // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
         video.play().catch(() => {
+          // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
           addLog('Bấm Play trên khung phát để bắt đầu xem video.', 'warning');
         });
       });
 
+      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
       hls.on(Hls.Events.FRAG_LOADED, (event, data) => {
+        // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
         const fragUrl = data.frag.relurl || data.frag.url;
+        // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
         const duration = data.frag.duration?.toFixed(1) || '0.0';
+        // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
         const bytes = data.stats?.loaded || data.frag?.stats?.loaded || data.frag?.loaded || 0;
+        // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
         const sizeText = bytes > 0 ? `${(bytes / 1024).toFixed(1)} KB` : 'Chuẩn nén';
+        // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
         setStreamStatus(`Đang phát phân đoạn ${data.frag.sn ?? ''}`);
+        // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
         setStatusTone('playing');
+        // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
         addLog(`Tải phân đoạn [${data.frag.sn ?? 'ts'}]: ${fragUrl} (${duration}s | ${sizeText})`, 'segment');
       });
 
+      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
       hls.on(Hls.Events.ERROR, (event, data) => {
+        // Kiểm tra điều kiện để chọn nhánh xử lý phù hợp.
         if (data.fatal) {
+          // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
           setStatusTone('error');
+          // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
           setStreamStatus(`Lỗi luồng: ${data.details}`);
+          // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
           addLog(`Lỗi luồng nghiêm trọng: ${data.details}`, 'error');
         }
       });
     } else {
+      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
       video.src = finalUrl;
+      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
       video.onloadedmetadata = () => {
+        // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
         setStreamStatus('Video MP4 đã nạp metadata thành công');
+        // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
         setStatusTone('success');
+        // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
         addLog(`Video MP4 nạp thành công. Thời lượng: ${video.duration?.toFixed(0)}s`, 'success');
+        // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
         video.play().catch(() => {
+          // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
           addLog('Bấm Play trên khung phát để bắt đầu xem video.', 'warning');
         });
       };
+      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
       video.onerror = () => {
+        // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
         setStatusTone('error');
+        // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
         setStreamStatus('Lỗi khi tải file video MP4');
+        // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
         addLog(`Không thể tải video từ URL: ${finalUrl}`, 'error');
       };
     }
 
+    // Trả về kết quả hoặc giao diện từ nhánh xử lý hiện tại.
     return () => {
+      // Kiểm tra điều kiện để chọn nhánh xử lý phù hợp.
       if (hls) {
+        // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
         hls.destroy();
       }
     };
   }, [playback, addLog]);
 
+  // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
   const handlePlay = async () => {
+    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
     setPlaybackLoading(true);
+    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
     setPlaybackError('');
+    // Bao bọc thao tác có thể lỗi để xử lý an toàn.
     try {
+      // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
       const result = await movieApi.getPlayback(id);
+      // Kiểm tra điều kiện để chọn nhánh xử lý phù hợp.
       if (!result?.success || !result?.data) {
+        // Phát sinh lỗi để thông báo trạng thái bất thường.
         throw new Error(result?.message || 'Không thể lấy thông tin phát phim.');
       }
+      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
       setPlayback(result.data);
     } catch (err) {
+      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
       setPlaybackError(err.message || 'Không thể phát thử phim.');
     } finally {
+      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
       setPlaybackLoading(false);
     }
   };
 
+  // Kiểm tra điều kiện để chọn nhánh xử lý phù hợp.
   if (loading) {
+    // Trả về kết quả hoặc giao diện từ nhánh xử lý hiện tại.
     return <div className="flex min-h-[60vh] items-center justify-center text-slate-500"><Loader2 className="animate-spin" size={34} /></div>;
   }
 
+  // Kiểm tra điều kiện để chọn nhánh xử lý phù hợp.
   if (errorMsg || !movie) {
+    // Trả về kết quả hoặc giao diện từ nhánh xử lý hiện tại.
     return (
       <div className="space-y-5">
+        {/* Hiển thị phần tử giao diện button và nội dung con của nó. */}
         <button type="button" onClick={() => navigate(-1)} className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors"><ArrowLeft size={18} /> Quay lại</button>
+        {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
         <div className="bg-red-500/10 border border-red-500/20 text-red-400 rounded-2xl p-6">{errorMsg || 'Không tìm thấy phim.'}</div>
       </div>
     );
   }
 
+  // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
   const categoriesList = movie.categories || [];
 
+  // Trả về kết quả hoặc giao diện từ nhánh xử lý hiện tại.
   return (
     <div className="space-y-6">
+      {/* Hiển thị phần tử giao diện button và nội dung con của nó. */}
       <button type="button" onClick={() => navigate(-1)} className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors"><ArrowLeft size={18} /> Quay lại danh sách</button>
 
+      {/* Hiển thị phần tử giao diện section và nội dung con của nó. */}
       <section className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
+        {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
         <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr]">
+          {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
           <div className="aspect-2/3 lg:aspect-auto bg-slate-800">
             {movie.posterUrl ? <img src={movie.posterUrl} alt={movie.title} className="w-full h-full object-cover" /> : <div className="h-full min-h-80 flex items-center justify-center text-slate-600"><Film size={64} /></div>}
           </div>
+          {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
           <div className="p-6 lg:p-8 flex flex-col">
+            {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
             <div className="flex flex-wrap items-center gap-2 text-xs font-bold uppercase tracking-wide">
+              {/* Hiển thị phần tử giao diện span và nội dung con của nó. */}
               <span className="px-2.5 py-1 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">{MOVIE_TYPE_LABEL[movie.type] || 'Nội dung'}</span>
+              {/* Hiển thị phần tử giao diện span và nội dung con của nó. */}
               <span className={`px-2.5 py-1 rounded-full border ${movie.videoStatus ? 'bg-green-500/10 text-green-400 border-green-500/20' : 'bg-slate-800 text-slate-400 border-slate-700'}`}>{movie.videoStatus ? 'Có video' : 'Chưa có video'}</span>
               
               {/* Badge Trạng thái phát hành */}
@@ -291,33 +442,45 @@ const MovieDetail = () => {
               )}
             </div>
 
+            {/* Hiển thị phần tử giao diện h1 và nội dung con của nó. */}
             <h1 className="text-3xl lg:text-4xl font-bold text-white mt-4">{movie.title}</h1>
             
+            {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
             <div className="mt-5 flex flex-wrap gap-x-5 gap-y-3 text-sm text-slate-400">
+              {/* Hiển thị phần tử giao diện span và nội dung con của nó. */}
               <span className="flex items-center gap-2"><Calendar size={16} /> {movie.releaseYear || 'Chưa rõ năm'}</span>
+              {/* Hiển thị phần tử giao diện span và nội dung con của nó. */}
               <span className="flex items-center gap-2"><Clock3 size={16} /> {movie.duration ? `${movie.duration} phút` : 'Chưa rõ thời lượng'}</span>
+              {/* Hiển thị phần tử giao diện span và nội dung con của nó. */}
               <span className="flex items-center gap-2"><Video size={16} /> {movie.streamType || 'NONE'}</span>
             </div>
             
+            {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
             <div className="mt-5 flex flex-wrap gap-2">
               {categoriesList.length > 0 ? categoriesList.map((category) => (
                 <span key={category.id} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-800 text-slate-300 text-sm">
+                  {/* Hiển thị phần tử giao diện Tag và nội dung con của nó. */}
                   <Tag size={14} /> {category.name}
                 </span>
               )) : <span className="text-slate-500 text-sm">Chưa gán thể loại</span>}
             </div>
             
+            {/* Hiển thị phần tử giao diện p và nội dung con của nó. */}
             <p className="mt-6 text-slate-300 leading-7 whitespace-pre-wrap">{movie.description || 'Phim chưa có mô tả.'}</p>
             
+            {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
             <div className="mt-auto pt-8 flex flex-wrap gap-3">
+              {/* Hiển thị phần tử giao diện button và nội dung con của nó. */}
               <button
                 type="button"
                 onClick={openEditModal}
                 className="bg-amber-600 hover:bg-amber-500 text-white px-5 py-3 rounded-xl flex items-center gap-2 font-bold transition-colors shadow-lg shadow-amber-600/20"
               >
+                {/* Hiển thị phần tử giao diện Edit2 và nội dung con của nó. */}
                 <Edit2 size={18} /> Chỉnh sửa phim
               </button>
 
+              {/* Hiển thị phần tử giao diện button và nội dung con của nó. */}
               <button
                 type="button"
                 onClick={handlePlay}
@@ -343,13 +506,21 @@ const MovieDetail = () => {
 
       {playback && (
         <section className="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-6">
+          {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
           <div className="flex flex-wrap items-center justify-between gap-4">
+            {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
             <div>
+              {/* Hiển thị phần tử giao diện h2 và nội dung con của nó. */}
               <h2 className="text-xl font-bold text-white">Phát thử nội dung</h2>
+              {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
               <div className="flex items-center gap-3 mt-1 text-sm text-slate-400">
+                {/* Hiển thị phần tử giao diện span và nội dung con của nó. */}
                 <span>Loại stream: <strong className="text-blue-400">{playback.streamType}</strong></span>
+                {/* Hiển thị phần tử giao diện span và nội dung con của nó. */}
                 <span>•</span>
+                {/* Hiển thị phần tử giao diện span và nội dung con của nó. */}
                 <span className="flex items-center gap-1.5">
+                  {/* Hiển thị phần tử giao diện span và nội dung con của nó. */}
                   <span className={`w-2 h-2 rounded-full ${
                     statusTone === 'playing' || statusTone === 'success'
                       ? 'bg-emerald-400 animate-pulse'
@@ -359,6 +530,7 @@ const MovieDetail = () => {
                       ? 'bg-rose-400'
                       : 'bg-slate-500'
                   }`} />
+                  {/* Hiển thị phần tử giao diện span và nội dung con của nó. */}
                   <span className={
                     statusTone === 'playing' || statusTone === 'success'
                       ? 'text-emerald-400'
@@ -371,12 +543,14 @@ const MovieDetail = () => {
                 </span>
               </div>
             </div>
+            {/* Hiển thị phần tử giao diện button và nội dung con của nó. */}
             <button
               type="button"
               onClick={() => setPlayback(null)}
               className="p-2 rounded-lg text-slate-500 hover:text-white hover:bg-slate-800 transition-colors"
               title="Đóng khung phát"
             >
+              {/* Hiển thị phần tử giao diện X và nội dung con của nó. */}
               <X size={18} />
             </button>
           </div>
@@ -391,32 +565,44 @@ const MovieDetail = () => {
 
           {/* Bảng điều khiển Console Log thời gian thực */}
           <div className="bg-slate-950 border border-slate-800/80 rounded-xl p-4 shadow-inner">
+            {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
             <div className="flex items-center justify-between gap-2 mb-3 pb-2.5 border-b border-slate-800/70">
+              {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
               <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-400">
+                {/* Hiển thị phần tử giao diện Terminal và nội dung con của nó. */}
                 <Terminal size={15} className="text-blue-400" />
+                {/* Hiển thị phần tử giao diện span và nội dung con của nó. */}
                 <span>Nhật ký phân đoạn & render thời gian thực (Real-time Segment Log)</span>
               </div>
+              {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
               <div className="flex items-center gap-2">
+                {/* Hiển thị phần tử giao diện span và nội dung con của nó. */}
                 <span className="text-[11px] text-slate-500 font-mono">{logs.length} bản ghi</span>
+                {/* Hiển thị phần tử giao diện button và nội dung con của nó. */}
                 <button
                   type="button"
                   onClick={() => setLogs([])}
                   className="flex items-center gap-1 px-2.5 py-1 text-xs text-slate-400 hover:text-white hover:bg-slate-800 rounded-md transition-colors"
                   title="Xóa log"
                 >
+                  {/* Hiển thị phần tử giao diện Trash2 và nội dung con của nó. */}
                   <Trash2 size={13} />
+                  {/* Hiển thị phần tử giao diện span và nội dung con của nó. */}
                   <span>Xóa</span>
                 </button>
               </div>
             </div>
 
+            {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
             <div className="font-mono text-xs text-slate-300 max-h-56 overflow-y-auto space-y-1 pr-1 select-text">
               {logs.length === 0 ? (
                 <p className="text-slate-600 italic">Đang chờ sự kiện luồng phát...</p>
               ) : (
                 logs.map((item) => (
                   <div key={item.id} className="leading-relaxed border-b border-slate-900/80 pb-1 flex items-start gap-2">
+                    {/* Hiển thị phần tử giao diện span và nội dung con của nó. */}
                     <span className="text-slate-500 shrink-0">[{item.time}]</span>
+                    {/* Hiển thị phần tử giao diện span và nội dung con của nó. */}
                     <span className={
                       item.type === 'segment' ? 'text-cyan-300' :
                       item.type === 'success' ? 'text-emerald-400 font-semibold' :
@@ -448,8 +634,11 @@ const MovieDetail = () => {
               </div>
             )}
 
+            {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
             <div className="space-y-1">
+              {/* Hiển thị phần tử giao diện label và nội dung con của nó. */}
               <label className="text-slate-400 text-xs font-bold uppercase ml-1">Tiêu đề phim *</label>
+              {/* Hiển thị phần tử giao diện input và nội dung con của nó. */}
               <input
                 type="text"
                 value={editForm.title}
@@ -459,8 +648,11 @@ const MovieDetail = () => {
               {editErrors.title && <p className="text-red-400 text-xs ml-1">{editErrors.title}</p>}
             </div>
 
+            {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
             <div className="space-y-1">
+              {/* Hiển thị phần tử giao diện label và nội dung con của nó. */}
               <label className="text-slate-400 text-xs font-bold uppercase ml-1">Mô tả phim</label>
+              {/* Hiển thị phần tử giao diện textarea và nội dung con của nó. */}
               <textarea
                 rows={3}
                 value={editForm.description}
@@ -469,9 +661,13 @@ const MovieDetail = () => {
               />
             </div>
 
+            {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
               <div className="space-y-1">
+                {/* Hiển thị phần tử giao diện label và nội dung con của nó. */}
                 <label className="text-slate-400 text-xs font-bold uppercase ml-1">Poster URL</label>
+                {/* Hiển thị phần tử giao diện input và nội dung con của nó. */}
                 <input
                   type="text"
                   value={editForm.posterUrl}
@@ -479,8 +675,11 @@ const MovieDetail = () => {
                   className="w-full bg-slate-800/50 border border-slate-700 text-white rounded-xl py-3 px-4 outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm"
                 />
               </div>
+              {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
               <div className="space-y-1">
+                {/* Hiển thị phần tử giao diện label và nội dung con của nó. */}
                 <label className="text-slate-400 text-xs font-bold uppercase ml-1">Trailer URL (YouTube)</label>
+                {/* Hiển thị phần tử giao diện input và nội dung con của nó. */}
                 <input
                   type="text"
                   value={editForm.trailerUrl}
@@ -492,33 +691,44 @@ const MovieDetail = () => {
 
             {/* Video Stream URL kèm bộ chọn HLS nội bộ */}
             <div className="space-y-1">
+              {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
               <div className="flex items-center justify-between">
+                {/* Hiển thị phần tử giao diện label và nội dung con của nó. */}
                 <label className="text-slate-400 text-xs font-bold uppercase ml-1">Đường dẫn Video Stream</label>
+                {/* Hiển thị phần tử giao diện button và nội dung con của nó. */}
                 <button
                   type="button"
                   onClick={() => setShowHlsPicker(!showHlsPicker)}
                   className="text-xs text-blue-400 hover:text-blue-300 flex items-center gap-1 font-semibold"
                 >
+                  {/* Hiển thị phần tử giao diện Layers và nội dung con của nó. */}
                   <Layers size={13} />
+                  {/* Hiển thị phần tử giao diện span và nội dung con của nó. */}
                   <span>{showHlsPicker ? 'Ẩn kho HLS' : 'Chọn từ kho HLS nội bộ'}</span>
                 </button>
               </div>
 
               {showHlsPicker && (
                 <div className="p-3 bg-slate-950/80 border border-slate-800 rounded-xl space-y-2 mb-2">
+                  {/* Hiển thị phần tử giao diện p và nội dung con của nó. */}
                   <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">Kho HLS nội bộ đã cắt</p>
+                  {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
                   <div className="space-y-1.5 max-h-40 overflow-y-auto pr-1">
                     {availableStreams.internalStreams.map((s) => (
                       <button
                         key={s.streamKey}
                         type="button"
                         onClick={() => {
+                          // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
                           setEditForm({ ...editForm, videoUrl: s.relativeUrl });
+                          // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
                           setShowHlsPicker(false);
                         }}
                         className="w-full p-2 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-left text-xs text-slate-200 flex items-center justify-between"
                       >
+                        {/* Hiển thị phần tử giao diện span và nội dung con của nó. */}
                         <span className="font-mono text-blue-400">{s.relativeUrl}</span>
+                        {/* Hiển thị phần tử giao diện span và nội dung con của nó. */}
                         <span className="text-[10px] text-slate-400">{s.totalSizeMb} MB</span>
                       </button>
                     ))}
@@ -526,6 +736,7 @@ const MovieDetail = () => {
                 </div>
               )}
 
+              {/* Hiển thị phần tử giao diện input và nội dung con của nó. */}
               <input
                 type="text"
                 value={editForm.videoUrl}
@@ -534,9 +745,13 @@ const MovieDetail = () => {
               />
             </div>
 
+            {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
               <div className="space-y-1">
+                {/* Hiển thị phần tử giao diện label và nội dung con của nó. */}
                 <label className="text-slate-400 text-xs font-bold uppercase ml-1">Thời lượng (phút)</label>
+                {/* Hiển thị phần tử giao diện input và nội dung con của nó. */}
                 <input
                   type="number"
                   value={editForm.duration}
@@ -544,8 +759,11 @@ const MovieDetail = () => {
                   className="w-full bg-slate-800/50 border border-slate-700 text-white rounded-xl py-3 px-4 outline-none focus:ring-2 focus:ring-blue-500 transition-all"
                 />
               </div>
+              {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
               <div className="space-y-1">
+                {/* Hiển thị phần tử giao diện label và nội dung con của nó. */}
                 <label className="text-slate-400 text-xs font-bold uppercase ml-1">Năm phát hành</label>
+                {/* Hiển thị phần tử giao diện input và nội dung con của nó. */}
                 <input
                   type="number"
                   value={editForm.releaseYear}
@@ -553,36 +771,52 @@ const MovieDetail = () => {
                   className="w-full bg-slate-800/50 border border-slate-700 text-white rounded-xl py-3 px-4 outline-none focus:ring-2 focus:ring-blue-500 transition-all"
                 />
               </div>
+              {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
               <div className="space-y-1 col-span-2 md:col-span-1">
+                {/* Hiển thị phần tử giao diện label và nội dung con của nó. */}
                 <label className="text-slate-400 text-xs font-bold uppercase ml-1">Loại phim</label>
+                {/* Hiển thị phần tử giao diện select và nội dung con của nó. */}
                 <select
                   value={editForm.type}
                   onChange={(e) => setEditForm({ ...editForm, type: Number(e.target.value) })}
                   className="w-full bg-slate-800/50 border border-slate-700 text-white rounded-xl py-3 px-4 outline-none focus:ring-2 focus:ring-blue-500 transition-all"
                 >
+                  {/* Hiển thị phần tử giao diện option và nội dung con của nó. */}
                   <option value={0}>Phim lẻ</option>
+                  {/* Hiển thị phần tử giao diện option và nội dung con của nó. */}
                   <option value={1}>Phim bộ</option>
                 </select>
               </div>
+              {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
               <div className="space-y-1 col-span-2 md:col-span-1">
+                {/* Hiển thị phần tử giao diện label và nội dung con của nó. */}
                 <label className="text-slate-400 text-xs font-bold uppercase ml-1">Trạng thái phát hành</label>
+                {/* Hiển thị phần tử giao diện select và nội dung con của nó. */}
                 <select
                   value={editForm.publishStatus}
                   onChange={(e) => setEditForm({ ...editForm, publishStatus: Number(e.target.value) })}
                   className="w-full bg-slate-800/50 border border-slate-700 text-white rounded-xl py-3 px-4 outline-none focus:ring-2 focus:ring-blue-500 transition-all font-medium"
                 >
+                  {/* Hiển thị phần tử giao diện option và nội dung con của nó. */}
                   <option value={0}>Bản nháp (Ẩn)</option>
+                  {/* Hiển thị phần tử giao diện option và nội dung con của nó. */}
                   <option value={1}>Sắp chiếu</option>
+                  {/* Hiển thị phần tử giao diện option và nội dung con của nó. */}
                   <option value={2}>Đã phát hành</option>
                 </select>
               </div>
             </div>
 
+            {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
             <div className="space-y-2">
+              {/* Hiển thị phần tử giao diện label và nội dung con của nó. */}
               <label className="text-slate-400 text-xs font-bold uppercase ml-1">Thể loại</label>
+              {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
               <div className="flex flex-wrap gap-2">
                 {categories.map((cat) => {
+                  // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
                   const selected = editForm.categoryIds.includes(cat.id);
+                  // Trả về kết quả hoặc giao diện từ nhánh xử lý hiện tại.
                   return (
                     <button
                       key={cat.id}
@@ -602,9 +836,13 @@ const MovieDetail = () => {
               </div>
             </div>
 
+            {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
             <div className="p-3.5 rounded-xl bg-slate-800/40 border border-slate-700/60 flex items-center justify-between gap-4">
+              {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
               <div>
+                {/* Hiển thị phần tử giao diện p và nội dung con của nó. */}
                 <p className="text-sm font-bold text-white flex items-center gap-2">
+                  {/* Hiển thị phần tử giao diện span và nội dung con của nó. */}
                   <span>Đánh dấu là Phim nổi bật</span>
                   {editForm.isFeatured && (
                     <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">
@@ -612,10 +850,12 @@ const MovieDetail = () => {
                     </span>
                   )}
                 </p>
+                {/* Hiển thị phần tử giao diện p và nội dung con của nó. */}
                 <p className="text-xs text-slate-400 mt-0.5">
                   Hiển thị phim này trên Banner Carousel trang chủ của ứng dụng mobile.
                 </p>
               </div>
+              {/* Hiển thị phần tử giao diện button và nội dung con của nó. */}
               <button
                 type="button"
                 onClick={() => setEditForm((prev) => ({ ...prev, isFeatured: !prev.isFeatured }))}
@@ -623,6 +863,7 @@ const MovieDetail = () => {
                   editForm.isFeatured ? 'bg-amber-500' : 'bg-slate-700'
                 }`}
               >
+                {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
                 <div
                   className={`w-5 h-5 rounded-full bg-white transition-transform ${
                     editForm.isFeatured ? 'translate-x-6' : 'translate-x-0'
@@ -631,7 +872,9 @@ const MovieDetail = () => {
               </button>
             </div>
 
+            {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
             <div className="flex gap-3 pt-2">
+              {/* Hiển thị phần tử giao diện button và nội dung con của nó. */}
               <button
                 type="button"
                 onClick={closeEditModal}
@@ -640,6 +883,7 @@ const MovieDetail = () => {
               >
                 Hủy
               </button>
+              {/* Hiển thị phần tử giao diện button và nội dung con của nó. */}
               <button
                 type="submit"
                 disabled={saving}
@@ -655,4 +899,5 @@ const MovieDetail = () => {
   );
 };
 
+// Xuất thành phần chính để các tệp khác có thể sử dụng.
 export default MovieDetail;

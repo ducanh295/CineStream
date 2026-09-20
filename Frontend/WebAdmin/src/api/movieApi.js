@@ -1,5 +1,7 @@
+// Nạp mô-đun phụ thuộc cần dùng trong tệp này.
 import axiosInstance from './axios';
 
+// Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
 const movieApi = {
    // GET /api/movies?categoryId=&search=
   getAll: (params) => axiosInstance.get('/movies', { params }),
@@ -37,4 +39,5 @@ const movieApi = {
   getRecommendations: () => axiosInstance.get('/movies/recommendations'),
 };
 
+// Xuất thành phần chính để các tệp khác có thể sử dụng.
 export default movieApi;

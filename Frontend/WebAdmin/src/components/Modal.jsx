@@ -1,4 +1,6 @@
+// Nạp mô-đun phụ thuộc cần dùng trong tệp này.
 import { motion, AnimatePresence } from 'framer-motion';
+// Nạp mô-đun phụ thuộc cần dùng trong tệp này.
 import { X } from 'lucide-react';
 
 /**
@@ -10,7 +12,9 @@ import { X } from 'lucide-react';
  *  - children: nội dung modal (thường là 1 <form>)
  *  - maxWidth: class Tailwind cho chiều rộng tối đa (mặc định 'max-w-lg')
  */
+// Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
 const Modal = ({ open, title, onClose, children, maxWidth = 'max-w-lg' }) => {
+  // Trả về kết quả hoặc giao diện từ nhánh xử lý hiện tại.
   return (
     <AnimatePresence>
       {open && (
@@ -21,6 +25,7 @@ const Modal = ({ open, title, onClose, children, maxWidth = 'max-w-lg' }) => {
           className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
           onClick={onClose}
         >
+          {/* Hiển thị phần tử giao diện giao diện và nội dung con của nó. */}
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -29,16 +34,21 @@ const Modal = ({ open, title, onClose, children, maxWidth = 'max-w-lg' }) => {
             onClick={(e) => e.stopPropagation()}
             className={`w-full ${maxWidth} bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl max-h-[90vh] overflow-y-auto`}
           >
+            {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
             <div className="flex items-center justify-between px-6 py-5 border-b border-slate-800 sticky top-0 bg-slate-900 z-10">
+              {/* Hiển thị phần tử giao diện h3 và nội dung con của nó. */}
               <h3 className="text-lg font-bold text-white">{title}</h3>
+              {/* Hiển thị phần tử giao diện button và nội dung con của nó. */}
               <button
                 type="button"
                 onClick={onClose}
                 className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
               >
+                {/* Hiển thị phần tử giao diện X và nội dung con của nó. */}
                 <X size={20} />
               </button>
             </div>
+            {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
             <div className="p-6">{children}</div>
           </motion.div>
         </motion.div>
@@ -47,4 +57,5 @@ const Modal = ({ open, title, onClose, children, maxWidth = 'max-w-lg' }) => {
   );
 };
 
+// Xuất thành phần chính để các tệp khác có thể sử dụng.
 export default Modal;

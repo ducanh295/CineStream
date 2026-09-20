@@ -1,5 +1,7 @@
+// Nạp mô-đun phụ thuộc cần dùng trong tệp này.
 import axiosInstance from './axios';
 
+// Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
 const categoryApi = {
   // GET /api/categories
   getAll: () => axiosInstance.get('/categories'),
@@ -17,4 +19,5 @@ const categoryApi = {
   delete: (id) => axiosInstance.delete(`/categories/${id}`),
 };
 
+// Xuất thành phần chính để các tệp khác có thể sử dụng.
 export default categoryApi;
