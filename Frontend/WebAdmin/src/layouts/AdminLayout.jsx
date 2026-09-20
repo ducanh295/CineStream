@@ -19,11 +19,11 @@ const AdminLayout = () => {
 
   // Trả về kết quả hoặc giao diện từ nhánh xử lý hiện tại.
   return (
-    <div className="flex bg-[#020617] min-h-screen">
+    <div className="flex min-h-screen overflow-x-hidden bg-[#020617]">
       {/* Hiển thị phần tử giao diện Sidebar và nội dung con của nó. */}
       <Sidebar />
       {/* Hiển thị phần tử giao diện main và nội dung con của nó. */}
-      <main className="flex-1 ml-64 min-h-screen">
+      <main className="ml-64 min-h-screen min-w-0 w-[calc(100%-16rem)]">
         {/* Hiển thị phần tử giao diện header và nội dung con của nó. */}
         <header className="h-16 border-b border-slate-800 flex items-center justify-end px-8 bg-[#020617]/50 backdrop-blur-md sticky top-0 z-40">
           {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}

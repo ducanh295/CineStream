@@ -129,6 +129,43 @@ public class AdminUserService : IAdminUserService
         return ApiResponse<bool>.Ok(true, "Mở khóa tài khoản người dùng thành công!");
     }
 
+    public async Task<ApiResponse<bool>> UpdatePremiumAsync(int targetUserId, UpdatePremiumRequestDto request)
+    {
+        var user = await _userRepo.GetByIdAsync(targetUserId);
+        if (user == null)
+        {
+            return ApiResponse<bool>.Fail("Không tìm thấy người dùng!");
+        }
+
+        if (!request.IsPremium)
+        {
+            user.IsPremium = false;
+            user.PremiumExpiresAt = null;
+        }
+        else if (!request.DurationDays.HasValue)
+        {
+            // Thời hạn null biểu thị gói Premium vĩnh viễn.
+            user.IsPremium = true;
+            user.PremiumExpiresAt = null;
+        }
+        else
+        {
+            // Gia hạn từ ngày hết hạn hiện tại nếu gói cũ vẫn còn hiệu lực.
+            var baseDate = user.IsPremium && user.PremiumExpiresAt > DateTime.UtcNow
+                ? user.PremiumExpiresAt.Value
+                : DateTime.UtcNow;
+            user.IsPremium = true;
+            user.PremiumExpiresAt = baseDate.AddDays(request.DurationDays.Value);
+        }
+
+        _userRepo.Update(user);
+        await _userRepo.SaveChangesAsync();
+
+        return ApiResponse<bool>.Ok(true, request.IsPremium
+            ? "Cập nhật Premium thành công!"
+            : "Đã thu hồi Premium của tài khoản.");
+    }
+
     public async Task<ApiResponse<bool>> DeleteUserAsync(int targetUserId, int currentAdminId)
     {
         // Phong ve nghiep vu: Khong cho phep Quan tri vien tu xoa chinh minh
@@ -158,6 +195,8 @@ public class AdminUserService : IAdminUserService
             IsEmailConfirmed = user.IsEmailConfirmed,
             IsLocked = user.IsLocked,
             LockReason = user.LockReason,
+            IsPremium = user.IsPremium,
+            PremiumExpiresAt = user.PremiumExpiresAt,
             CreatedAt = user.CreatedAt,
             Profile = user.Profile != null ? new ProfileDto
             {

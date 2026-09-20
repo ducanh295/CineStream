@@ -15,6 +15,8 @@ public class AdminUserDto
     public bool IsEmailConfirmed { get; set; }
     public bool IsLocked { get; set; }
     public string? LockReason { get; set; }
+    public bool IsPremium { get; set; }
+    public DateTime? PremiumExpiresAt { get; set; }
     public DateTime CreatedAt { get; set; }
     public ProfileDto? Profile { get; set; }
 }
@@ -38,4 +40,16 @@ public class LockUserRequestDto
     [Required(ErrorMessage = "Ly do khoa tai khoan khong duoc de trong!")]
     [StringLength(500, ErrorMessage = "Ly do khoa khong duoc vuot qua 500 ky tu!")]
     public string Reason { get; set; } = string.Empty;
+}
+
+// DTO cho thao tác cấp, gia hạn hoặc thu hồi Premium bởi quản trị viên.
+public class UpdatePremiumRequestDto
+{
+    public bool IsPremium { get; set; }
+
+    [Range(1, 3650, ErrorMessage = "Thời hạn Premium phải từ 1 đến 3650 ngày.")]
+    public int? DurationDays { get; set; }
+
+    [StringLength(500, ErrorMessage = "Ghi chú không được vượt quá 500 ký tự.")]
+    public string? Reason { get; set; }
 }

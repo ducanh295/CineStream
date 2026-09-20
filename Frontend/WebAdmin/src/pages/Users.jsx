@@ -367,7 +367,7 @@ const Users = () => {
                       {/* Hiển thị phần tử giao diện Crown và nội dung con của nó. */}
                       <Crown size={16} />
                     </button>
-                    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+                    {/* Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan. */}
                     {/* Hiển thị phần tử giao diện button và nội dung con của nó. */}
                     <button type="button" onClick={() => { setLockReason('Vi phạm quy định sử dụng hệ thống'); setToggleTarget(user); }} title={user.isLocked ? 'Mở khóa tài khoản' : 'Khóa tài khoản'} className={`p-1.5 rounded-lg transition-all ${user.isLocked ? 'hover:bg-green-500/10 hover:text-green-400 text-slate-500' : 'hover:bg-amber-500/10 hover:text-amber-400 text-slate-500'}`}>{user.isLocked ? <CheckCircle2 size={16} /> : <Ban size={16} />}</button>
                     {/* Hiển thị phần tử giao diện button và nội dung con của nó. */}

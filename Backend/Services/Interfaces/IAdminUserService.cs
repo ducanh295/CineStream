@@ -20,6 +20,9 @@ public interface IAdminUserService
     // Mo khoa tai khoan nguoi dung da bi khoa truoc do
     Task<ApiResponse<bool>> UnlockUserAsync(int targetUserId);
 
+    // Cấp, gia hạn hoặc thu hồi trạng thái Premium của một tài khoản.
+    Task<ApiResponse<bool>> UpdatePremiumAsync(int targetUserId, UpdatePremiumRequestDto request);
+
     // Xoa mem tai khoan nguoi dung khoi he thong (ngan chan tu xoa chinh minh)
     Task<ApiResponse<bool>> DeleteUserAsync(int targetUserId, int currentAdminId);
 }

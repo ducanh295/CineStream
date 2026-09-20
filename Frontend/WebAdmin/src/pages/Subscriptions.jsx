@@ -211,8 +211,8 @@ const Subscriptions = () => {
           orderCode: data.orderCode,
           qrCodeUrl: data.qrCodeUrl,
           amount: data.amount,
-          planType: data.planType,
-          accountNo: data.accountNo || '0385941522',
+          planType,
+          accountNumber: data.accountNumber || '0385941522',
           accountName: data.accountName || 'NGUYEN KHAC DUC ANH',
           bankName: data.bankName || 'MBBank',
         });
@@ -247,7 +247,7 @@ const Subscriptions = () => {
         // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
         setPollingStatus(statusData.status);
         // Kiểm tra điều kiện để chọn nhánh xử lý phù hợp.
-        if (statusData.isPaid) {
+        if (statusData.isCompleted) {
           // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
           setActionNotice({ type: 'success', text: `Đơn ${qrModalData.orderCode} đã thanh toán thành công!` });
           // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
@@ -698,7 +698,7 @@ const Subscriptions = () => {
                                   qrCodeUrl: tx.qrCodeUrl,
                                   amount: tx.amount,
                                   planType: getPlanBadge(tx),
-                                  accountNo: '0385941522',
+                                  accountNumber: '0385941522',
                                   accountName: 'NGUYEN KHAC DUC ANH',
                                   bankName: 'MBBank',
                                 });
@@ -828,11 +828,11 @@ const Subscriptions = () => {
                 {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
                 <div className="flex items-center gap-1.5">
                   {/* Hiển thị phần tử giao diện span và nội dung con của nó. */}
-                  <span className="text-amber-400 font-mono font-bold">{qrModalData.accountNo}</span>
+                  <span className="text-amber-400 font-mono font-bold">{qrModalData.accountNumber}</span>
                   {/* Hiển thị phần tử giao diện button và nội dung con của nó. */}
                   <button
                     type="button"
-                    onClick={() => handleCopy(qrModalData.accountNo, 'accNo')}
+                    onClick={() => handleCopy(qrModalData.accountNumber, 'accNo')}
                     className="text-slate-500 hover:text-slate-300"
                   >
                     {copiedField === 'accNo' ? <Check size={13} /> : <Copy size={13} />}
