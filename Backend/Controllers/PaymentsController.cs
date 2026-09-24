@@ -74,6 +74,33 @@ public class PaymentsController : ControllerBase
         return Ok(ApiResponse<PaymentStatusResponseDto>.Ok(status));
     }
 
+    // GET /api/payments/plans - Lay danh sach bang gia cac goi VIP CineStream
+    [HttpGet("plans")]
+    [AllowAnonymous]
+    public async Task<ActionResult<ApiResponse<IReadOnlyList<SubscriptionPlanDto>>>> GetPlans()
+    {
+        var plans = await _paymentService.GetSubscriptionPlansAsync();
+        return Ok(ApiResponse<IReadOnlyList<SubscriptionPlanDto>>.Ok(plans));
+    }
+
+    // PUT /api/payments/plans/{planType} - Quan tri vien cap nhat gia cho goi VIP
+    [HttpPut("plans/{planType}")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<ApiResponse<SubscriptionPlanDto>>> UpdatePlanPrice(
+        [FromRoute] string planType,
+        [FromBody] UpdatePlanPriceDto dto)
+    {
+        try
+        {
+            var updated = await _paymentService.UpdatePlanPriceAsync(planType, dto.Price);
+            return Ok(ApiResponse<SubscriptionPlanDto>.Ok(updated, $"Cap nhat gia goi {updated.Name} thanh cong!"));
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(ApiResponse<SubscriptionPlanDto>.Fail(ex.Message));
+        }
+    }
+
     // POST /api/payments/simulate/{orderCode} - Gia lap thanh toan thanh cong phuc vu demo do an
     [HttpPost("simulate/{orderCode}")]
     [Authorize(Roles = "Admin")]

@@ -80,9 +80,7 @@
             return Ok(result);
         }
 
-        // ============================================================
-        // CẤU HÌNH GEMINI API KEY (DÀNH CHO QUẢN TRỊ VIÊN)
-        // ============================================================
+
 
         // GET /api/ai/config - Lấy thông tin cấu hình API Key và Model Chatbot hiện tại
         [HttpGet("config")]

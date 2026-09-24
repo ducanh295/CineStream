@@ -17,6 +17,12 @@ const paymentApi = {
 
   // Quan tri vien lay toan bo giao dich he thong phan trang
   getAdminAllTransactions: (params) => axiosInstance.get('/payments/admin/all', { params }),
+
+  // Lay bang gia niem yet cac goi VIP CineStream
+  getPlans: () => axiosInstance.get('/payments/plans'),
+
+  // Quan tri vien cap nhat gia cho mot goi VIP
+  updatePlanPrice: (planType, price) => axiosInstance.put(`/payments/plans/${planType}`, { price }),
 };
 
 // Xuất thành phần chính để các tệp khác có thể sử dụng.

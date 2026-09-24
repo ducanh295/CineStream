@@ -17,6 +17,8 @@ import {
   Copy,
   Loader2,
   Sparkles,
+  Edit2,
+  X,
 } from 'lucide-react';
 // Nạp mô-đun phụ thuộc cần dùng trong tệp này.
 import paymentApi from '../api/paymentApi';
@@ -26,7 +28,7 @@ import Modal from '../components/Modal';
 import ConfirmDialog from '../components/ConfirmDialog';
 
 // Danh sach cac goi VIP CineStream mac dinh
-const PLANS = [
+const DEFAULT_PLANS = [
   {
     id: '1M',
     name: 'Gói VIP 1 Tháng',
@@ -128,6 +130,12 @@ const Subscriptions = () => {
   // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
   const [statusFilter, setStatusFilter] = useState('all');
 
+  // State quan ly bang gia dong cac goi VIP
+  const [plans, setPlans] = useState(DEFAULT_PLANS);
+  const [editingPlanId, setEditingPlanId] = useState(null);
+  const [editPriceValue, setEditPriceValue] = useState('');
+  const [updatingPrice, setUpdatingPrice] = useState(false);
+
   // State phuc vu mo phong giao dich thanh cong
   const [simulateTarget, setSimulateTarget] = useState(null);
   // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
@@ -143,6 +151,19 @@ const Subscriptions = () => {
   const [copiedField, setCopiedField] = useState('');
   // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
   const [pollingStatus, setPollingStatus] = useState(null);
+
+  // Tai bang gia niem yet tu Backend
+  const fetchPlans = useCallback(async () => {
+    try {
+      const res = await paymentApi.getPlans();
+      const items = res?.data;
+      if (Array.isArray(items) && items.length > 0) {
+        setPlans(items);
+      }
+    } catch (err) {
+      console.error('Loi khi tai bang gia cac goi:', err);
+    }
+  }, []);
 
   // Tai danh sach tat ca giao dich tu Backend
   const fetchTransactions = useCallback(async () => {
@@ -175,10 +196,47 @@ const Subscriptions = () => {
   useEffect(() => {
     // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
     Promise.resolve().then(() => {
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+      fetchPlans();
       fetchTransactions();
     });
-  }, [fetchTransactions]);
+  }, [fetchPlans, fetchTransactions]);
+
+  // Xu ly bat dau sua gia nhanh Inline
+  const handleStartEditPrice = (plan) => {
+    setEditingPlanId(plan.id);
+    setEditPriceValue(String(plan.price));
+  };
+
+  // Huy bo thao tac sua gia
+  const handleCancelEditPrice = () => {
+    setEditingPlanId(null);
+    setEditPriceValue('');
+  };
+
+  // Luu gia moi cho goi VIP
+  const handleSavePrice = async (planId) => {
+    const numPrice = Number(editPriceValue);
+    if (!numPrice || numPrice < 1000) {
+      setActionNotice({ type: 'error', text: 'Giá gói cước tối thiểu phải từ 1.000đ trở lên!' });
+      return;
+    }
+    setUpdatingPrice(true);
+    setActionNotice(null);
+    try {
+      const res = await paymentApi.updatePlanPrice(planId, numPrice);
+      setActionNotice({
+        type: 'success',
+        text: res?.message || `Đã cập nhật giá gói ${planId} thành ${formatCurrency(numPrice)} thành công!`,
+      });
+      setEditingPlanId(null);
+      await fetchPlans();
+    } catch (err) {
+      const msg = err.response?.data?.message || err.message || 'Cập nhật giá gói thất bại.';
+      setActionNotice({ type: 'error', text: msg });
+    } finally {
+      setUpdatingPrice(false);
+    }
+  };
 
   // Xu ly sao chep noi dung vao clipboard
   const handleCopy = (text, fieldName) => {
@@ -454,7 +512,7 @@ const Subscriptions = () => {
 
         {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {PLANS.map((plan) => (
+          {plans.map((plan) => (
             <div
               key={plan.id}
               className={`relative bg-slate-900 rounded-2xl border p-6 flex flex-col justify-between transition-all ${
@@ -481,11 +539,64 @@ const Subscriptions = () => {
                   </span>
                 </div>
 
-                {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
-                <div className="mt-4 mb-3">
-                  {/* Hiển thị phần tử giao diện span và nội dung con của nó. */}
-                  <span className="text-3xl font-extrabold text-white">{formatCurrency(plan.price)}</span>
-                </div>
+                {editingPlanId === plan.id ? (
+                  <div className="mt-4 mb-3">
+                    <div className="flex items-center gap-2">
+                      <div className="relative flex-1">
+                        <input
+                          type="number"
+                          min="1000"
+                          step="1000"
+                          value={editPriceValue}
+                          onChange={(e) => setEditPriceValue(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') handleSavePrice(plan.id);
+                            if (e.key === 'Escape') handleCancelEditPrice();
+                          }}
+                          autoFocus
+                          disabled={updatingPrice}
+                          className="w-full bg-slate-950 border border-amber-500/60 rounded-xl px-3 py-1.5 text-lg font-bold text-white focus:outline-none focus:ring-2 focus:ring-amber-500/40"
+                          placeholder="Nhập giá mới..."
+                        />
+                        <span className="absolute right-3 top-2 text-xs font-semibold text-slate-400">đ</span>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => handleSavePrice(plan.id)}
+                        disabled={updatingPrice}
+                        title="Lưu giá mới"
+                        className="p-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold disabled:opacity-50 transition-colors"
+                      >
+                        {updatingPrice ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={handleCancelEditPrice}
+                        disabled={updatingPrice}
+                        title="Hủy bỏ"
+                        className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition-colors"
+                      >
+                        <X size={16} />
+                      </button>
+                    </div>
+                    <span className="text-[11px] text-slate-500 block mt-1">Nhấn Enter để lưu, Esc để hủy</span>
+                  </div>
+                ) : (
+                  <div className="mt-4 mb-3 flex items-center justify-between">
+                    <span className="text-3xl font-extrabold text-white">{formatCurrency(plan.price)}</span>
+                    <button
+                      type="button"
+                      onClick={() => handleStartEditPrice(plan)}
+                      className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-medium border border-slate-700 transition-colors"
+                      title="Chỉnh sửa giá gói này"
+                    >
+                      <Edit2 size={13} />
+                      <span>Sửa giá</span>
+                    </button>
+                  </div>
+                )}
 
                 {/* Hiển thị phần tử giao diện p và nội dung con của nó. */}
                 <p className="text-slate-400 text-xs leading-relaxed min-h-[36px]">{plan.description}</p>

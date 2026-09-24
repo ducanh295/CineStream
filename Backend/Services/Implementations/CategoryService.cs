@@ -17,10 +17,16 @@ public class CategoryService : ICategoryService
 
     public async Task<ApiResponse<IReadOnlyList<CategoryDto>>> GetAllAsync()
     {
-        // Truy vấn toàn bộ thể loại từ tầng dữ liệu và ánh xạ sang DTO
+        // Truy vấn toàn bộ thể loại từ tầng dữ liệu và ánh xạ sang DTO kèm số lượng phim liên kết
         var categories = await _categoryRepo.GetAllAsync();
-        var result = categories.Select(MapToDto).ToList().AsReadOnly();
-        return ApiResponse<IReadOnlyList<CategoryDto>>.Ok(result);
+        var dtoList = new List<CategoryDto>();
+        foreach (var c in categories)
+        {
+            var dto = MapToDto(c);
+            dto.MovieCount = await _categoryRepo.CountMoviesAsync(c.Id);
+            dtoList.Add(dto);
+        }
+        return ApiResponse<IReadOnlyList<CategoryDto>>.Ok(dtoList.AsReadOnly());
     }
 
     public async Task<ApiResponse<CategoryDto>> GetByIdAsync(int id)
@@ -32,7 +38,9 @@ public class CategoryService : ICategoryService
             return ApiResponse<CategoryDto>.Fail("Khong tim thay the loai!");
         }
 
-        return ApiResponse<CategoryDto>.Ok(MapToDto(category));
+        var dto = MapToDto(category);
+        dto.MovieCount = await _categoryRepo.CountMoviesAsync(id);
+        return ApiResponse<CategoryDto>.Ok(dto);
     }
 
     public async Task<ApiResponse<CategoryDto>> CreateAsync(CreateCategoryDto dto)
@@ -101,7 +109,21 @@ public class CategoryService : ICategoryService
 
     public async Task<ApiResponse<bool>> DeleteAsync(int id)
     {
-        // Thực hiện xóa mềm thể loại theo định danh
+        // 1. Kiem tra the loai co ton tai trong he thong hay khong
+        var category = await _categoryRepo.GetByIdAsync(id);
+        if (category == null)
+        {
+            return ApiResponse<bool>.Fail("Khong tim thay the loai!");
+        }
+
+        // 2. Chuan nghiep vu doanh nghiep: Kiem tra rang buoc toan ven du lieu voi phim
+        int movieCount = await _categoryRepo.CountMoviesAsync(id);
+        if (movieCount > 0)
+        {
+            return ApiResponse<bool>.Fail($"Khong the xoa the loai dang co {movieCount} bo phim lien ket! Vui long go the loai khoi cac phim lien quan truoc.");
+        }
+
+        // 3. Thuc hien xoa mem the loai theo dinh danh
         bool deleted = await _categoryRepo.DeleteAsync(id);
         if (!deleted)
         {

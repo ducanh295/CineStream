@@ -24,4 +24,10 @@ public interface IPaymentService
 
     // Lay toan bo lich su giao dich phan trang cho quan tri vien
     Task<(IReadOnlyList<PaymentTransactionDto> Items, int TotalCount)> GetAdminAllTransactionsAsync(int pageNumber, int pageSize);
+
+    // Lay danh sach bang gia cac goi VIP (gia dong hoac mac dinh)
+    Task<IReadOnlyList<SubscriptionPlanDto>> GetSubscriptionPlansAsync();
+
+    // Quan tri vien cap nhat gia cho mot goi VIP
+    Task<SubscriptionPlanDto> UpdatePlanPriceAsync(string planType, decimal newPrice);
 }

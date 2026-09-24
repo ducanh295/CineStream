@@ -1,4 +1,4 @@
-﻿using CineStream.Models;
+using CineStream.Models;
 
 namespace CineStream.Repositories.Interfaces;
 
@@ -10,4 +10,7 @@ public interface ICategoryRepository : IBaseRepository<Category>
 
     // Kiểm tra trùng lặp tên thể loại (loại trừ chính nó khi cập nhật)
     Task<bool> ExistsByNameAsync(string name, int? excludeId = null);
+
+    // Đếm số lượng phim đang liên kết với thể loại này (phim chưa bị xóa)
+    Task<int> CountMoviesAsync(int categoryId);
 }

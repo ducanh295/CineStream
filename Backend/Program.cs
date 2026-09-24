@@ -46,6 +46,7 @@ builder.Services.AddScoped<ISeriesRepository, SeriesRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IFavoriteRepository, FavoriteRepository>();
 builder.Services.AddScoped<IPaymentTransactionRepository, PaymentTransactionRepository>();
+builder.Services.AddScoped<ISystemSettingRepository, SystemSettingRepository>();
 
 // 4. Đăng ký Services (DI)
 builder.Services.AddScoped<IJwtService, JwtService>();
@@ -59,6 +60,9 @@ builder.Services.AddScoped<IPaymentService, PaymentService>();
 
 // Đăng ký HttpContextAccessor để hỗ trợ phân giải đường dẫn URL tuyệt đối cho luồng phát video
 builder.Services.AddHttpContextAccessor();
+
+// Đăng ký IHttpClientFactory dùng cho đồng bộ giao dịch SePay và các dịch vụ HTTP bên ngoài
+builder.Services.AddHttpClient();
 
 // Đăng ký GeminiOptions và dịch vụ trợ lý AI Điện ảnh (IAIService) với HttpClient
 builder.Services.Configure<CineStream.DTOs.AI.GeminiOptions>(builder.Configuration.GetSection("Gemini"));

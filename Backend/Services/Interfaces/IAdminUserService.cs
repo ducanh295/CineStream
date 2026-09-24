@@ -25,4 +25,7 @@ public interface IAdminUserService
 
     // Xoa mem tai khoan nguoi dung khoi he thong (ngan chan tu xoa chinh minh)
     Task<ApiResponse<bool>> DeleteUserAsync(int targetUserId, int currentAdminId);
+
+    // Cap quyen, gia han hoac thu hoi goi Premium thu cong cho nguoi dung
+    Task<ApiResponse<AdminUserDto>> SetPremiumStatusAsync(int targetUserId, SetPremiumRequestDto dto);
 }

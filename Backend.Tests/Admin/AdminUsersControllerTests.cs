@@ -223,4 +223,14 @@ internal class FakeAdminUserService : IAdminUserService
         if (targetUserId == currentAdminId) return Task.FromResult(ApiResponse<bool>.Fail("Quản trị viên không thể tự xóa chính mình!"));
         return Task.FromResult(ApiResponse<bool>.Ok(true, "Xóa thành công"));
     }
+
+    public Task<ApiResponse<AdminUserDto>> SetPremiumStatusAsync(int targetUserId, SetPremiumRequestDto request)
+    {
+        return Task.FromResult(ApiResponse<AdminUserDto>.Ok(new AdminUserDto { Id = targetUserId, Username = "test" }, "Cập nhật thành công"));
+    }
+
+    public Task<ApiResponse<bool>> UpdatePremiumAsync(int targetUserId, UpdatePremiumRequestDto request)
+    {
+        return Task.FromResult(ApiResponse<bool>.Ok(true, "Cập nhật thành công"));
+    }
 }

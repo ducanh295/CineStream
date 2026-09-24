@@ -147,4 +147,5 @@ internal class FakeCategoryRepository : ICategoryRepository
     public Task<bool> DeleteAsync(int id) => Task.FromResult(true);
     public Task<int> SaveChangesAsync() => Task.FromResult(1);
     public Task<bool> ExistsByNameAsync(string name, int? excludeId = null) => Task.FromResult(false);
+    public Task<int> CountMoviesAsync(int categoryId) => Task.FromResult(0);
 }

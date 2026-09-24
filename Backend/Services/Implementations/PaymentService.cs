@@ -1,7 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Text.Json;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using CineStream.DTOs.Payments;
@@ -18,40 +23,153 @@ public class PaymentService : IPaymentService
     private readonly IPaymentTransactionRepository _paymentRepo;
     private readonly IUserRepository _userRepo;
     private readonly IConfiguration _configuration;
+    private readonly ISystemSettingRepository? _systemSettingRepo;
+    private readonly IHttpClientFactory? _httpClientFactory;
+
+    // Danh sach cac goi VIP CineStream mac dinh cua he thong
+    private static readonly IReadOnlyList<SubscriptionPlanDto> BasePlans = new List<SubscriptionPlanDto>
+    {
+        new SubscriptionPlanDto
+        {
+            Id = "1M",
+            Name = "Gói VIP 1 Tháng",
+            Price = 2000m,
+            Days = 30,
+            Discount = null,
+            Highlight = false,
+            Description = "Trải nghiệm không giới hạn phim chất lượng Full HD, không quảng cáo trong 30 ngày."
+        },
+        new SubscriptionPlanDto
+        {
+            Id = "3M",
+            Name = "Gói VIP 3 Tháng",
+            Price = 5000m,
+            Days = 90,
+            Discount = "Tiết kiệm",
+            Highlight = true,
+            Description = "Lựa chọn phổ biến nhất. Xem phim mượt mà chuẩn 4K, hỗ trợ đa thiết bị trong 90 ngày."
+        },
+        new SubscriptionPlanDto
+        {
+            Id = "1Y",
+            Name = "Gói VIP 1 Năm",
+            Price = 10000m,
+            Days = 365,
+            Discount = "Tiết kiệm 20%",
+            Highlight = false,
+            Description = "Gói ưu đãi cao nhất cho tín đồ điện ảnh CineStream. Tiết kiệm tối đa chi phí hàng tháng."
+        }
+    };
 
     public PaymentService(
         IPaymentTransactionRepository paymentRepo,
         IUserRepository userRepo,
         IConfiguration configuration)
+        : this(paymentRepo, userRepo, configuration, null, null)
+    {
+    }
+
+    public PaymentService(
+        IPaymentTransactionRepository paymentRepo,
+        IUserRepository userRepo,
+        IConfiguration configuration,
+        ISystemSettingRepository? systemSettingRepo)
+        : this(paymentRepo, userRepo, configuration, systemSettingRepo, null)
+    {
+    }
+
+    public PaymentService(
+        IPaymentTransactionRepository paymentRepo,
+        IUserRepository userRepo,
+        IConfiguration configuration,
+        ISystemSettingRepository? systemSettingRepo,
+        IHttpClientFactory? httpClientFactory)
     {
         _paymentRepo = paymentRepo;
         _userRepo = userRepo;
         _configuration = configuration;
+        _systemSettingRepo = systemSettingRepo;
+        _httpClientFactory = httpClientFactory;
+    }
+
+    // Lay danh sach bang gia cac goi VIP (gia dong tu CSDL hoac mac dinh)
+    public async Task<IReadOnlyList<SubscriptionPlanDto>> GetSubscriptionPlansAsync()
+    {
+        var result = new List<SubscriptionPlanDto>();
+        foreach (var basePlan in BasePlans)
+        {
+            var plan = new SubscriptionPlanDto
+            {
+                Id = basePlan.Id,
+                Name = basePlan.Name,
+                Price = await GetPlanPriceAsync(basePlan.Id, basePlan.Price),
+                Days = basePlan.Days,
+                Discount = basePlan.Discount,
+                Highlight = basePlan.Highlight,
+                Description = basePlan.Description
+            };
+            result.Add(plan);
+        }
+        return result.AsReadOnly();
+    }
+
+    // Quan tri vien cap nhat gia cho mot goi VIP
+    public async Task<SubscriptionPlanDto> UpdatePlanPriceAsync(string planType, decimal newPrice)
+    {
+        var normalizedType = planType?.Trim().ToUpperInvariant() ?? string.Empty;
+        var basePlan = BasePlans.FirstOrDefault(p => p.Id == normalizedType);
+        if (basePlan == null)
+        {
+            throw new ArgumentException($"Goi dang ky '{planType}' khong hop le. Chi chap nhan '1M', '3M', hoac '1Y'.");
+        }
+
+        if (newPrice < 1000m)
+        {
+            throw new ArgumentException("Gia goi cuoc toi thieu phai tu 1.000d tro len.");
+        }
+
+        if (_systemSettingRepo != null)
+        {
+            var key = $"PlanPrice_{normalizedType}";
+            await _systemSettingRepo.SetValueAsync(key, newPrice.ToString("0.##"), $"Gia niem yet cho {basePlan.Name}");
+        }
+
+        return new SubscriptionPlanDto
+        {
+            Id = basePlan.Id,
+            Name = basePlan.Name,
+            Price = newPrice,
+            Days = basePlan.Days,
+            Discount = basePlan.Discount,
+            Highlight = basePlan.Highlight,
+            Description = basePlan.Description
+        };
+    }
+
+    private async Task<decimal> GetPlanPriceAsync(string planType, decimal defaultPrice)
+    {
+        if (_systemSettingRepo == null) return defaultPrice;
+        var key = $"PlanPrice_{planType}";
+        var val = await _systemSettingRepo.GetValueAsync(key);
+        if (decimal.TryParse(val, out var parsed) && parsed >= 1000m)
+        {
+            return parsed;
+        }
+        return defaultPrice;
     }
 
     // Tao yeu cau thanh toan don hang moi va tra ve thong tin VietQR Napas
     public async Task<PaymentResponseDto> CreatePaymentAsync(int userId, CreatePaymentRequestDto dto)
     {
-        decimal amount;
-        int planDurationDays;
-
-        switch (dto.PlanType?.Trim().ToUpperInvariant())
+        var normalizedType = dto.PlanType?.Trim().ToUpperInvariant() ?? string.Empty;
+        var basePlan = BasePlans.FirstOrDefault(p => p.Id == normalizedType);
+        if (basePlan == null)
         {
-            case "1M":
-                amount = 2000m;
-                planDurationDays = 30;
-                break;
-            case "3M":
-                amount = 5000m;
-                planDurationDays = 90;
-                break;
-            case "1Y":
-                amount = 10000m;
-                planDurationDays = 365;
-                break;
-            default:
-                throw new ArgumentException("Goi dang ky khong hop le. Chi chap nhan '1M', '3M', hoac '1Y'.");
+            throw new ArgumentException("Goi dang ky khong hop le. Chi chap nhan '1M', '3M', hoac '1Y'.");
         }
+
+        decimal amount = await GetPlanPriceAsync(basePlan.Id, basePlan.Price);
+        int planDurationDays = basePlan.Days;
 
         // Sinh ma don hang duy nhat bat dau bang CINE kem timestamp va so ngau nhien
         var orderCode = $"CINE{DateTime.UtcNow:yyMMddHHmmss}{Random.Shared.Next(10, 99)}";
@@ -147,24 +265,143 @@ public class PaymentService : IPaymentService
             return false;
         }
 
-        // 6. Cap nhat trang thai don hang thanh cong
+        // 6. Cap nhat trang thai va kich hoat VIP cho nguoi dung
+        var gatewayId = webhookDto.ReferenceCode ?? webhookDto.Id.ToString();
+        return await FulfillPaymentSuccessAsync(transaction, gatewayId);
+    }
+
+    // Tra cuu trang thai don hang cho Client polling va tu dong dong bo SePay neu don hang con Pending
+    public async Task<PaymentStatusResponseDto?> GetPaymentStatusAsync(string orderCode)
+    {
+        var transaction = await _paymentRepo.GetByOrderCodeAsync(orderCode);
+        if (transaction == null) return null;
+
+        // Neu don hang da hoan tat thanh cong, tra ve ket qua ngay
+        if (transaction.Status == PaymentStatus.Success)
+        {
+            return new PaymentStatusResponseDto
+            {
+                OrderCode = transaction.OrderCode,
+                Status = transaction.Status.ToString(),
+                IsCompleted = true,
+                CompletedAt = transaction.CompletedAt
+            };
+        }
+
+        // Neu don hang dang Pending, thuc hien co che Polling Fallback goi SePay Open API de dong bo
+        if (transaction.Status == PaymentStatus.Pending)
+        {
+            var isSynced = await SyncWithSePayApiAsync(transaction);
+            if (isSynced)
+            {
+                return new PaymentStatusResponseDto
+                {
+                    OrderCode = transaction.OrderCode,
+                    Status = PaymentStatus.Success.ToString(),
+                    IsCompleted = true,
+                    CompletedAt = transaction.CompletedAt
+                };
+            }
+        }
+
+        return new PaymentStatusResponseDto
+        {
+            OrderCode = transaction.OrderCode,
+            Status = transaction.Status.ToString(),
+            IsCompleted = false,
+            CompletedAt = transaction.CompletedAt
+        };
+    }
+
+    // Co che Polling Fallback: Truy van danh sach giao dich tu SePay Open API khi Webhook chua toi
+    private async Task<bool> SyncWithSePayApiAsync(PaymentTransaction transaction)
+    {
+        var apiKey = _configuration["SePay:ApiKey"];
+        if (string.IsNullOrWhiteSpace(apiKey)) return false;
+
+        try
+        {
+            var client = _httpClientFactory != null
+                ? _httpClientFactory.CreateClient("SePayClient")
+                : new HttpClient();
+
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+            var request = new HttpRequestMessage(HttpMethod.Get, "https://my.sepay.vn/userapi/transactions/list?limit=20");
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
+
+            var response = await client.SendAsync(request, cts.Token);
+            if (!response.IsSuccessStatusCode)
+            {
+                return false;
+            }
+
+            var json = await response.Content.ReadAsStringAsync(cts.Token);
+            using var doc = JsonDocument.Parse(json);
+
+            if (!doc.RootElement.TryGetProperty("transactions", out var txArray) || txArray.ValueKind != JsonValueKind.Array)
+            {
+                return false;
+            }
+
+            foreach (var item in txArray.EnumerateArray())
+            {
+                var content = item.TryGetProperty("transaction_content", out var cProp) ? cProp.GetString() : null;
+                if (string.IsNullOrEmpty(content) || !content.Contains(transaction.OrderCode, StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                decimal amountIn = 0;
+                if (item.TryGetProperty("amount_in", out var aProp))
+                {
+                    if (aProp.ValueKind == JsonValueKind.Number)
+                    {
+                        amountIn = aProp.GetDecimal();
+                    }
+                    else if (aProp.ValueKind == JsonValueKind.String)
+                    {
+                        decimal.TryParse(aProp.GetString(), NumberStyles.Any, CultureInfo.InvariantCulture, out amountIn);
+                    }
+                }
+
+                if (amountIn >= transaction.Amount)
+                {
+                    var refNumber = item.TryGetProperty("reference_number", out var rProp) ? rProp.GetString() : null;
+                    var txId = item.TryGetProperty("id", out var idProp) ? idProp.ToString() : null;
+                    var gatewayId = !string.IsNullOrWhiteSpace(refNumber) ? refNumber : (txId ?? "SEPAY_SYNC");
+
+                    return await FulfillPaymentSuccessAsync(transaction, gatewayId);
+                }
+            }
+        }
+        catch
+        {
+            // Xu ly an toan khi mang bi ngat hoac SePay khong phan hoi kip
+            return false;
+        }
+
+        return false;
+    }
+
+    // Kich hoat VIP va danh dau don hang thanh cong dung chung cho Webhook, Mo phong va Polling Sync
+    private async Task<bool> FulfillPaymentSuccessAsync(PaymentTransaction transaction, string gatewayTransactionId)
+    {
+        if (transaction.Status == PaymentStatus.Success) return true;
+
         transaction.Status = PaymentStatus.Success;
-        transaction.GatewayTransactionId = webhookDto.ReferenceCode ?? webhookDto.Id.ToString();
+        transaction.GatewayTransactionId = gatewayTransactionId;
         transaction.CompletedAt = DateTime.UtcNow;
         _paymentRepo.Update(transaction);
 
-        // 7. Kich hoat hoac gia han goi Premium cho nguoi dung
         var user = await _userRepo.GetByIdAsync(transaction.UserId);
         if (user != null)
         {
             if (user.IsPremium && user.PremiumExpiresAt.HasValue && user.PremiumExpiresAt.Value > DateTime.UtcNow)
             {
-                // Nguoi dung dang co VIP con han: Cong don them so ngay tu moc het han cu
                 user.PremiumExpiresAt = user.PremiumExpiresAt.Value.AddDays(transaction.PlanDurationDays);
             }
             else
             {
-                // Nguoi dung moi mua hoac goi cu da het han: Cong tu ngay hien tai
                 user.IsPremium = true;
                 user.PremiumExpiresAt = DateTime.UtcNow.AddDays(transaction.PlanDurationDays);
             }
@@ -175,21 +412,6 @@ public class PaymentService : IPaymentService
 
         await _paymentRepo.SaveChangesAsync();
         return true;
-    }
-
-    // Tra cuu trang thai don hang cho Client polling
-    public async Task<PaymentStatusResponseDto?> GetPaymentStatusAsync(string orderCode)
-    {
-        var transaction = await _paymentRepo.GetByOrderCodeAsync(orderCode);
-        if (transaction == null) return null;
-
-        return new PaymentStatusResponseDto
-        {
-            OrderCode = transaction.OrderCode,
-            Status = transaction.Status.ToString(),
-            IsCompleted = transaction.Status == PaymentStatus.Success,
-            CompletedAt = transaction.CompletedAt
-        };
     }
 
     // Gia lap thanh toan thanh cong danh rieng cho kiem thu va bao ve do an
@@ -198,32 +420,8 @@ public class PaymentService : IPaymentService
         var transaction = await _paymentRepo.GetByOrderCodeAsync(orderCode);
         if (transaction == null) return false;
 
-        if (transaction.Status == PaymentStatus.Success) return true;
-
-        transaction.Status = PaymentStatus.Success;
-        transaction.GatewayTransactionId = $"SIMULATED_{Guid.NewGuid():N}"[..18];
-        transaction.CompletedAt = DateTime.UtcNow;
-        _paymentRepo.Update(transaction);
-
-        var user = await _userRepo.GetByIdAsync(transaction.UserId);
-        if (user != null)
-        {
-            if (user.IsPremium && user.PremiumExpiresAt.HasValue && user.PremiumExpiresAt.Value > DateTime.UtcNow)
-            {
-                user.PremiumExpiresAt = user.PremiumExpiresAt.Value.AddDays(transaction.PlanDurationDays);
-            }
-            else
-            {
-                user.IsPremium = true;
-                user.PremiumExpiresAt = DateTime.UtcNow.AddDays(transaction.PlanDurationDays);
-            }
-
-            _userRepo.Update(user);
-            await _userRepo.SaveChangesAsync();
-        }
-
-        await _paymentRepo.SaveChangesAsync();
-        return true;
+        var gatewayId = $"SIMULATED_{Guid.NewGuid():N}"[..18];
+        return await FulfillPaymentSuccessAsync(transaction, gatewayId);
     }
 
     // Lay lich su giao dich cua nguoi dung

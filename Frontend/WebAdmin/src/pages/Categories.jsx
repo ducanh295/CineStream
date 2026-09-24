@@ -183,7 +183,7 @@ const Categories = () => {
     if (!deleteTarget) return;
     // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
     setDeleting(true);
-    // Bao bọc thao tác có thể lỗi để xử lý an toàn.
+    setErrorMsg('');
     try {
       // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
       await categoryApi.delete(deleteTarget.id);
@@ -287,7 +287,7 @@ const Categories = () => {
                   <th className="px-6 py-4">Tên thể loại</th>
                   {/* Hiển thị phần tử giao diện th và nội dung con của nó. */}
                   <th className="px-6 py-4">Mô tả</th>
-                  {/* Hiển thị phần tử giao diện th và nội dung con của nó. */}
+                  <th className="px-6 py-4 text-center">Số lượng phim</th>
                   <th className="px-6 py-4 text-center">Thao tác</th>
                 </tr>
               </thead>
@@ -315,7 +315,15 @@ const Categories = () => {
                     <td className="px-6 py-4 text-sm text-slate-400 max-w-md">
                       {category.description || <span className="italic text-slate-600">Không có mô tả</span>}
                     </td>
-                    {/* Hiển thị phần tử giao diện td và nội dung con của nó. */}
+                    <td className="px-6 py-4 text-center">
+                      <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${
+                        (category.movieCount || 0) > 0
+                          ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
+                          : 'bg-slate-800 text-slate-500'
+                      }`}>
+                        {category.movieCount || 0} phim
+                      </span>
+                    </td>
                     <td className="px-6 py-4">
                       {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
                       <div className="flex items-center justify-center gap-2">
@@ -416,7 +424,13 @@ const Categories = () => {
       <ConfirmDialog
         open={Boolean(deleteTarget)}
         title="Xóa thể loại?"
-        description={deleteTarget ? `Bạn có chắc muốn xóa thể loại "${deleteTarget.name}"? Hành động này không thể hoàn tác.` : ''}
+        description={
+          deleteTarget
+            ? (deleteTarget.movieCount || 0) > 0
+              ? `Cảnh báo: Thể loại "${deleteTarget.name}" đang có ${deleteTarget.movieCount} bộ phim liên kết. Hệ thống sẽ chặn xóa để bảo đảm toàn vẹn dữ liệu.`
+              : `Bạn có chắc muốn xóa thể loại "${deleteTarget.name}"? Hành động này có thể hoàn tác bởi Quản trị viên.`
+            : ''
+        }
         confirmLabel="Xóa thể loại"
         loading={deleting}
         onConfirm={handleDelete}

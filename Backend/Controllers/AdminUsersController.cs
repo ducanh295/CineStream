@@ -79,20 +79,6 @@ public class AdminUsersController : ControllerBase
         return Ok(result);
     }
 
-    // PUT /api/admin/users/{id}/premium - Cap, gia han hoac thu hoi Premium thu cong
-    [HttpPut("{id:int}/premium")]
-    public async Task<ActionResult<ApiResponse<bool>>> UpdatePremium(
-        [FromRoute] int id,
-        [FromBody] UpdatePremiumRequestDto request)
-    {
-        var result = await _adminUserService.UpdatePremiumAsync(id, request);
-        if (!result.Success)
-        {
-            return BadRequest(result);
-        }
-        return Ok(result);
-    }
-
     // DELETE /api/admin/users/{id} - Xoa mem tai khoan nguoi dung khoi he thong
     [HttpDelete("{id:int}")]
     public async Task<ActionResult<ApiResponse<bool>>> DeleteUser([FromRoute] int id)
@@ -104,6 +90,20 @@ public class AdminUsersController : ControllerBase
         }
 
         var result = await _adminUserService.DeleteUserAsync(id, currentAdminId);
+        if (!result.Success)
+        {
+            return BadRequest(result);
+        }
+        return Ok(result);
+    }
+
+    // PUT /api/admin/users/{id}/premium - Cap quyen, gia han hoac thu hoi dac quyen Premium thu cong boi Quan tri vien
+    [HttpPut("{id:int}/premium")]
+    public async Task<ActionResult<ApiResponse<AdminUserDto>>> SetPremium(
+        [FromRoute] int id,
+        [FromBody] SetPremiumRequestDto request)
+    {
+        var result = await _adminUserService.SetPremiumStatusAsync(id, request);
         if (!result.Success)
         {
             return BadRequest(result);

@@ -42,14 +42,28 @@ public class LockUserRequestDto
     public string Reason { get; set; } = string.Empty;
 }
 
-// DTO cho thao tác cấp, gia hạn hoặc thu hồi Premium bởi quản trị viên.
+// DTO cho thao tac cap, gia han hoac thu hoi Premium boi quan tri vien
 public class UpdatePremiumRequestDto
 {
     public bool IsPremium { get; set; }
 
-    [Range(1, 3650, ErrorMessage = "Thời hạn Premium phải từ 1 đến 3650 ngày.")]
+    [Range(1, 3650, ErrorMessage = "Thoi han Premium phai tu 1 den 3650 ngay.")]
     public int? DurationDays { get; set; }
 
-    [StringLength(500, ErrorMessage = "Ghi chú không được vượt quá 500 ký tự.")]
+    [StringLength(500, ErrorMessage = "Ghi chu khong duoc vuot qua 500 ky tu.")]
+    public string? Reason { get; set; }
+}
+
+// DTO tiep nhan yeu cau dieu chinh goi Premium thu cong tu Quan tri vien
+public class SetPremiumRequestDto
+{
+    // Bat hoac tat dac quyen Premium cho nguoi dung
+    public bool IsPremium { get; set; }
+
+    // So ngay cap moi hoac cong don them vao thoi han hien tai (vi du: 7, 30, 90, 365).
+    public int? DurationDays { get; set; }
+
+    // Ghi chu hoac ly do dieu chinh tu Quan tri vien
+    [StringLength(500, ErrorMessage = "Ghi chu khong duoc vuot qua 500 ky tu!")]
     public string? Reason { get; set; }
 }

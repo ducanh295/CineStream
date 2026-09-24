@@ -174,4 +174,24 @@ public class FakePaymentService : IPaymentService
     {
         return Task.FromResult<(IReadOnlyList<PaymentTransactionDto>, int)>((new List<PaymentTransactionDto>(), 0));
     }
+
+    public Task<IReadOnlyList<SubscriptionPlanDto>> GetSubscriptionPlansAsync()
+    {
+        IReadOnlyList<SubscriptionPlanDto> list = new List<SubscriptionPlanDto>
+        {
+            new SubscriptionPlanDto { Id = "1M", Name = "Gói VIP 1 Tháng", Price = 2000m, Days = 30 }
+        };
+        return Task.FromResult(list);
+    }
+
+    public Task<SubscriptionPlanDto> UpdatePlanPriceAsync(string planType, decimal newPrice)
+    {
+        return Task.FromResult(new SubscriptionPlanDto
+        {
+            Id = planType,
+            Name = "Gói VIP",
+            Price = newPrice,
+            Days = 30
+        });
+    }
 }

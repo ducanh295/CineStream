@@ -27,4 +27,11 @@ public class CategoryRepository : BaseRepository<Category>, ICategoryRepository
         }
         return await query.AnyAsync(c => c.Name.ToLower() == name.Trim().ToLower());
     }
+
+    public async Task<int> CountMoviesAsync(int categoryId)
+    {
+        // Đếm số lượng phim chưa bị xóa đang liên kết với thể loại này thông qua bảng trung gian MovieCategory
+        return await _context.Set<MovieCategory>()
+            .CountAsync(mc => mc.CategoryId == categoryId && !mc.Movie.IsDeleted);
+    }
 }

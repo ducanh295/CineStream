@@ -66,3 +66,22 @@ public class PaymentStatusResponseDto
     public bool IsCompleted { get; set; }
     public DateTime? CompletedAt { get; set; }
 }
+
+// Thong tin goi cuoc VIP CineStream
+public class SubscriptionPlanDto
+{
+    public string Id { get; set; } = string.Empty; // "1M", "3M", "1Y"
+    public string Name { get; set; } = string.Empty;
+    public decimal Price { get; set; }
+    public int Days { get; set; }
+    public string? Description { get; set; }
+    public string? Discount { get; set; }
+    public bool Highlight { get; set; }
+}
+
+// Yeu cau cap nhat gia goi cuoc tu quan tri vien
+public class UpdatePlanPriceDto
+{
+    [Range(1000, 100000000, ErrorMessage = "Gia goi phai tu 1.000d den 100.000.000d!")]
+    public decimal Price { get; set; }
+}

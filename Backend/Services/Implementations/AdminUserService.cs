@@ -184,6 +184,57 @@ public class AdminUserService : IAdminUserService
         return ApiResponse<bool>.Ok(true, "Xóa tài khoản người dùng thành công!");
     }
 
+    // Cap quyen, gia han hoac thu hoi dac quyen Premium thu cong boi Quan tri vien
+    public async Task<ApiResponse<AdminUserDto>> SetPremiumStatusAsync(int targetUserId, SetPremiumRequestDto dto)
+    {
+        var user = await _userRepo.GetByIdAsync(targetUserId);
+        if (user == null)
+        {
+            return ApiResponse<AdminUserDto>.Fail("Không tìm thấy người dùng!");
+        }
+
+        if (!dto.IsPremium)
+        {
+            // Thu hoi dac quyen Premium
+            user.IsPremium = false;
+            user.PremiumExpiresAt = null;
+        }
+        else
+        {
+            // Kich hoat hoac gia han goi Premium
+            user.IsPremium = true;
+
+            if (dto.DurationDays.HasValue && dto.DurationDays.Value > 0)
+            {
+                // Neu dang co Premium con han, cong don them ngay vao han cu
+                if (user.PremiumExpiresAt.HasValue && user.PremiumExpiresAt.Value > DateTime.UtcNow)
+                {
+                    user.PremiumExpiresAt = user.PremiumExpiresAt.Value.AddDays(dto.DurationDays.Value);
+                }
+                else
+                {
+                    user.PremiumExpiresAt = DateTime.UtcNow.AddDays(dto.DurationDays.Value);
+                }
+            }
+            else
+            {
+                // Khong gioi han thoi gian: Goi Premium vinh vien
+                user.PremiumExpiresAt = null;
+            }
+        }
+
+        _userRepo.Update(user);
+        await _userRepo.SaveChangesAsync();
+
+        var message = dto.IsPremium
+            ? (dto.DurationDays.HasValue && dto.DurationDays.Value > 0
+                ? $"Kích hoạt gói Premium ({dto.DurationDays.Value} ngày) thành công!"
+                : "Kích hoạt gói Premium vĩnh viễn thành công!")
+            : "Thu hồi gói Premium thành công!";
+
+        return ApiResponse<AdminUserDto>.Ok(MapToAdminUserDto(user), message);
+    }
+
     private static AdminUserDto MapToAdminUserDto(User user)
     {
         return new AdminUserDto

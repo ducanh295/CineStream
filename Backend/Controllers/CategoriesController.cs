@@ -76,7 +76,11 @@ public class CategoriesController : ControllerBase
         var result = await _categoryService.DeleteAsync(id);
         if (!result.Success)
         {
-            return NotFound(result);
+            if (result.Message == "Khong tim thay the loai!")
+            {
+                return NotFound(result);
+            }
+            return BadRequest(result);
         }
         return Ok(result);
     }
