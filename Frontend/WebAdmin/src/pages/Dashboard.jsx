@@ -44,9 +44,9 @@ const getRecentTransactionStats = (transactions) => {
   return Array.from({ length: 7 }, (_, index) => {
     // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
     const date = new Date(today);
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     date.setHours(0, 0, 0, 0);
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     date.setDate(today.getDate() - (6 - index));
     // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
     const dateKey = getLocalDateKey(date);
@@ -150,9 +150,9 @@ const Dashboard = () => {
 
   // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
   const fetchDashboardData = useCallback(async () => {
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     setLoading(true);
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     setErrorMsg('');
     // Bao bọc thao tác có thể lỗi để xử lý an toàn.
     try {
@@ -165,32 +165,32 @@ const Dashboard = () => {
       ]);
       // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
       const movieData = movieRes?.data;
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       setMovies(Array.isArray(movieData) ? movieData : movieData?.items || []);
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       setTotalMovieCount(Array.isArray(movieData) ? movieData.length : movieData?.totalCount || 0);
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       setCategories(Array.isArray(categoryRes?.data) ? categoryRes.data : []);
       // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
       const userData = userRes?.data;
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       setTotalUserCount(Array.isArray(userData) ? userData.length : userData?.totalCount || 0);
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       setTransactions(Array.isArray(transactionRes) ? transactionRes : []);
     } catch (err) {
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       setErrorMsg(err.message || 'Không thể tải dữ liệu tổng quan. Vui lòng thử lại!');
     } finally {
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       setLoading(false);
     }
   }, []);
 
-  // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+   
   useEffect(() => {
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     Promise.resolve().then(() => {
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       fetchDashboardData();
     });
   }, [fetchDashboardData]);

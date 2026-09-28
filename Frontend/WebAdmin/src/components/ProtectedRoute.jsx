@@ -28,7 +28,7 @@ const ProtectedRoute = () => {
 
   // Đã đăng nhập nhưng KHÔNG phải Admin -> hủy phiên và đuổi về Login kèm thông báo
   if (!isAdmin) {
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     logout();
     // Trả về kết quả hoặc giao diện từ nhánh xử lý hiện tại.
     return (

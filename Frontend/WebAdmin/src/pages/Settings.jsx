@@ -45,7 +45,7 @@ const Settings = () => {
 
   // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
   const fetchAiConfig = useCallback(async () => {
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     setLoadingConfig(true);
     // Bao bọc thao tác có thể lỗi để xử lý an toàn.
     try {
@@ -55,46 +55,46 @@ const Settings = () => {
       const data = res?.data;
       // Kiểm tra điều kiện để chọn nhánh xử lý phù hợp.
       if (data) {
-        // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+         
         setAiConfig(data);
-        // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+         
         setApiKeyInput(data.apiKey || '');
-        // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+         
         setModelInput(data.model || 'gemini-3.5-flash-lite');
       }
     } catch (err) {
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       setNotice({
         type: 'error',
         text: err.response?.data?.message || err.message || 'Không thể tải cấu hình AI.',
       });
     } finally {
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       setLoadingConfig(false);
     }
   }, []);
 
-  // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+   
   useEffect(() => {
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     fetchAiConfig();
   }, [fetchAiConfig]);
 
   // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
   const handleSaveAiConfig = async (e) => {
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     e.preventDefault();
     // Kiểm tra điều kiện để chọn nhánh xử lý phù hợp.
     if (!apiKeyInput.trim()) {
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       setNotice({ type: 'error', text: 'API Key không được để trống!' });
       // Trả về kết quả hoặc giao diện từ nhánh xử lý hiện tại.
       return;
     }
 
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     setSaving(true);
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     setNotice(null);
     // Bao bọc thao tác có thể lỗi để xử lý an toàn.
     try {
@@ -103,53 +103,53 @@ const Settings = () => {
         apiKey: apiKeyInput.trim(),
         model: modelInput.trim() || 'gemini-3.5-flash-lite',
       });
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       setAiConfig(res?.data);
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       setNotice({ type: 'success', text: 'Lưu cấu hình Gemini API Key thành công!' });
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       setShowKey(false);
     } catch (err) {
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       setNotice({
         type: 'error',
         text: err.response?.data?.message || err.message || 'Lưu cấu hình AI thất bại.',
       });
     } finally {
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       setSaving(false);
     }
   };
 
   // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
   const handleConfirmReset = async () => {
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     setResetting(true);
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     setNotice(null);
     // Bao bọc thao tác có thể lỗi để xử lý an toàn.
     try {
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       await aiApi.deleteConfig();
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       setNotice({
         type: 'success',
         text: 'Đã xóa cấu hình tùy chỉnh, khôi phục về API Key mặc định của hệ thống.',
       });
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       setConfirmResetOpen(false);
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       await fetchAiConfig();
     } catch (err) {
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       setNotice({
         type: 'error',
         text: err.response?.data?.message || err.message || 'Khôi phục cấu hình thất bại.',
       });
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       setConfirmResetOpen(false);
     } finally {
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       setResetting(false);
     }
   };

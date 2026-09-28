@@ -16,7 +16,7 @@ axiosInstance.interceptors.request.use(
     const token = localStorage.getItem('token');
     // Kiểm tra điều kiện để chọn nhánh xử lý phù hợp.
     if (token) {
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       config.headers.Authorization = `Bearer ${token}`;
     }
     // Trả về kết quả hoặc giao diện từ nhánh xử lý hiện tại.
@@ -38,36 +38,36 @@ axiosInstance.interceptors.response.use(
       // Phân nhánh xử lý theo giá trị trạng thái hiện tại.
       switch (status) {
         case 401:
-          // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+           
           console.error('Phiên đăng nhập đã hết hạn hoặc không hợp lệ.');
-          // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+           
           localStorage.removeItem('token');
-          // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+           
           localStorage.removeItem('user');
           // Kiểm tra điều kiện để chọn nhánh xử lý phù hợp.
           if (window.location.pathname !== '/login') {
-            // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+             
             window.location.href = '/login';
           }
           // Kết thúc nhánh hoặc vòng lặp đang xử lý.
           break;
         case 403:
-          // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+           
           console.error('Bạn không có quyền thực hiện hành động này.');
           // Kết thúc nhánh hoặc vòng lặp đang xử lý.
           break;
         case 404:
-          // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+           
           console.error('Không tìm thấy tài nguyên.');
           // Kết thúc nhánh hoặc vòng lặp đang xử lý.
           break;
         case 500:
-          // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+           
           console.error('Lỗi máy chủ nội bộ.');
           // Kết thúc nhánh hoặc vòng lặp đang xử lý.
           break;
         default:
-          // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+           
           console.error('Đã xảy ra lỗi:', status);
       }
 
@@ -83,7 +83,7 @@ axiosInstance.interceptors.response.use(
 
     // Gửi request đi nhưng không nhận được phản hồi (backend chưa chạy, sai URL, mất mạng...)
     if (error.request) {
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       console.error('Không thể kết nối tới máy chủ. Kiểm tra Backend đã chạy chưa (https://localhost:7145).');
       // Trả về kết quả hoặc giao diện từ nhánh xử lý hiện tại.
       return Promise.reject({

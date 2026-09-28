@@ -29,9 +29,9 @@ const Sidebar = () => {
 
   // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
   const handleLogout = () => {
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     logout();
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     navigate('/login', { replace: true });
   };
 

@@ -43,30 +43,30 @@ const Categories = () => {
 
   // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
   const fetchCategories = useCallback(async () => {
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     setLoading(true);
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     setErrorMsg('');
     // Bao bọc thao tác có thể lỗi để xử lý an toàn.
     try {
       // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
       const result = await categoryApi.getAll();
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       setCategories(Array.isArray(result?.data) ? result.data : []);
     } catch (err) {
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       setErrorMsg(err.message || 'Không thể tải danh sách thể loại. Vui lòng thử lại!');
     } finally {
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       setLoading(false);
     }
   }, []);
 
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     useEffect(() => {
     // Đẩy sang microtask để tránh cảnh báo "setState đồng bộ trong effect"
     Promise.resolve().then(() => {
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       fetchCategories();
     });
   }, [fetchCategories]);
@@ -78,25 +78,25 @@ const Categories = () => {
 
   // ----- Mở modal thêm mới -----
   const openCreateModal = () => {
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     setEditingId(null);
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     setForm(EMPTY_FORM);
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     setFormErrors({});
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     setModalOpen(true);
   };
 
   // ----- Mở modal sửa -----
   const openEditModal = (category) => {
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     setEditingId(category.id);
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     setForm({ name: category.name, description: category.description || '' });
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     setFormErrors({});
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     setModalOpen(true);
   };
 
@@ -104,7 +104,7 @@ const Categories = () => {
   const closeModal = () => {
     // Kiểm tra điều kiện để chọn nhánh xử lý phù hợp.
     if (saving) return; // không cho đóng khi đang gửi request
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     setModalOpen(false);
   };
 
@@ -114,19 +114,19 @@ const Categories = () => {
     const errors = {};
     // Kiểm tra điều kiện để chọn nhánh xử lý phù hợp.
     if (!form.name.trim()) {
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       errors.name = 'Tên thể loại không được để trống!';
     // Kiểm tra điều kiện để chọn nhánh xử lý phù hợp.
     } else if (form.name.trim().length > 100) {
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       errors.name = 'Tên thể loại tối đa 100 ký tự!';
     }
     // Kiểm tra điều kiện để chọn nhánh xử lý phù hợp.
     if (form.description && form.description.length > 500) {
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       errors.description = 'Mô tả tối đa 500 ký tự!';
     }
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     setFormErrors(errors);
     // Trả về kết quả hoặc giao diện từ nhánh xử lý hiện tại.
     return Object.keys(errors).length === 0;
@@ -134,12 +134,12 @@ const Categories = () => {
 
   // ----- Submit form thêm/sửa -----
   const handleSubmit = async (e) => {
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     e.preventDefault();
     // Kiểm tra điều kiện để chọn nhánh xử lý phù hợp.
     if (!validateForm()) return;
 
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     setSaving(true);
     // Bao bọc thao tác có thể lỗi để xử lý an toàn.
     try {
@@ -151,28 +151,28 @@ const Categories = () => {
 
       // Kiểm tra điều kiện để chọn nhánh xử lý phù hợp.
       if (editingId) {
-        // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+         
         await categoryApi.update(editingId, payload);
       } else {
-        // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+         
         await categoryApi.create(payload);
       }
 
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       setModalOpen(false);
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       await fetchCategories();
     } catch (err) {
       // Backend trả về { success:false, message, errors: [...] }
       if (err.errors && err.errors.length > 0) {
-        // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+         
         setFormErrors({ general: err.errors.join(', ') });
       } else {
-        // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+         
         setFormErrors({ general: err.message || 'Có lỗi xảy ra, vui lòng thử lại!' });
       }
     } finally {
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       setSaving(false);
     }
   };
@@ -181,23 +181,23 @@ const Categories = () => {
   const handleDelete = async () => {
     // Kiểm tra điều kiện để chọn nhánh xử lý phù hợp.
     if (!deleteTarget) return;
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     setDeleting(true);
     setErrorMsg('');
     try {
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       await categoryApi.delete(deleteTarget.id);
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       setDeleteTarget(null);
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       await fetchCategories();
     } catch (err) {
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       setErrorMsg(err.message || 'Xóa thể loại thất bại!');
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       setDeleteTarget(null);
     } finally {
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       setDeleting(false);
     }
   };
