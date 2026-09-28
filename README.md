@@ -181,40 +181,61 @@ cd CineStream
 
 ### Bước 2: Cài đặt và cấu hình Cơ sở dữ liệu
 
-1. **Tạo cơ sở dữ liệu PostgreSQL**:
-   Mở công cụ pgAdmin hoặc terminal `psql` và tạo một cơ sở dữ liệu mới có tên `CineStreamDb`:
-   ```sql
-   CREATE DATABASE "CineStreamDb";
-   ```
+#### 2.1. Tạo cơ sở dữ liệu PostgreSQL
+Mở công cụ pgAdmin 4 hoặc terminal `psql` và tạo một cơ sở dữ liệu mới có tên `CineStreamDb`:
+```sql
+CREATE DATABASE "CineStreamDb";
+```
 
-2. **Cập nhật chuỗi kết nối trong Backend**:
-   Mở tệp `Backend/appsettings.json` và cập nhật thông tin tài khoản PostgreSQL của bạn tại mục `ConnectionStrings`:
-   ```json
-   {
-     "ConnectionStrings": {
-       "DefaultConnection": "Host=localhost;Port=5432;Database=CineStreamDb;Username=postgres;Password=mat_khau_cua_ban"
-     },
-     "JWT": {
-       "Key": "your-super-secret-key-at-least-32-characters-long",
-       "Issuer": "CineStream",
-       "Audience": "CineStreamApp",
-       "ExpireMinutes": 60
-     },
-     "Gemini": {
-       "ApiKey": "YOUR_GEMINI_API_KEY",
-       "Model": "gemini-3.5-flash-lite",
-       "BaseUrl": "https://generativelanguage.googleapis.com/v1beta"
-     },
-     "SePay": {
-       "BankName": "MB",
-       "AccountNumber": "0385941522",
-       "AccountName": "NGUYEN KHAC DUC ANH",
-       "ApiKey": "YOUR_SEPAY_API_KEY"
-     }
-   }
-   ```
+#### 2.2. Cập nhật chuỗi kết nối trong Backend
+Mở tệp `Backend/appsettings.json` và cập nhật thông tin tài khoản PostgreSQL của bạn tại mục `ConnectionStrings`:
+```json
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "Host=localhost;Port=5432;Database=CineStreamDb;Username=postgres;Password=mat_khau_cua_ban"
+  }
+}
+```
 
-> Lưu ý: Hệ thống đã tích hợp cơ chế tự động khởi tạo bảng (`Database.EnsureCreated()`) và nạp dữ liệu mẫu (`DataSeeder`) ngay khi khởi động, bạn không cần phải chạy lệnh Migration thủ công.
+#### 2.3. Khởi tạo dữ liệu (2 Phương án linh hoạt)
+
+Bạn có thể lựa chọn 1 trong 2 phương án sau để nạp dữ liệu vào hệ thống:
+
+- **Phương án A: Tự động khởi tạo qua Code-First (Khuyên dùng - Nhanh nhất)**:
+  Hệ thống đã tích hợp sẵn cơ chế tự động tạo cấu trúc bảng (`Database.EnsureCreated()`) và nạp sẵn toàn bộ danh mục thể loại, phim mẫu, tài khoản Admin/User, bảng giá VIP (`DataSeeder.cs`). Bạn không cần chạy lệnh Migration hay SQL nào, chỉ cần tiến hành chạy Backend ở **Bước 3**.
+
+- **Phương án B: Nhập trực tiếp từ tệp SQL (`cinestream_backup.sql`)**:
+  Dành cho trường hợp giảng viên chấm bài hoặc triển khai độc lập yêu cầu nạp cơ sở dữ liệu từ tệp kịch bản SQL có sẵn trong thư mục `Backend/`:
+  - *Cách 1 (Nhanh nhất trên Windows)*: Nhấp đúp chuột vào tệp `Backend/import_db.bat`.
+  - *Cách 2 (Dòng lệnh Terminal)*:
+    ```bash
+    # Trên Windows Command Prompt:
+    "C:\Program Files\PostgreSQL\18\bin\psql.exe" -U postgres -d CineStreamDb -f Backend\cinestream_backup.sql
+
+    # Trên macOS / Linux hoặc hệ thống đã cấu hình biến môi trường PATH:
+    psql -U postgres -d CineStreamDb -f Backend/cinestream_backup.sql
+    ```
+  - *Cách 3 (Giao diện pgAdmin 4)*:
+    1. Nhấp chuột phải vào cơ sở dữ liệu `CineStreamDb` -> Chọn **Restore...**
+    2. Tại mục **Filename**, duyệt chọn tệp `Backend/cinestream_backup.sql`.
+    3. Nhấn **Restore** để hoàn tất nạp dữ liệu.
+
+#### 2.4. Hướng dẫn Sao lưu / Xuất dữ liệu (Database Export / Backup)
+
+Khi bạn đã quản trị, thêm mới các bộ phim hoặc cập nhật thông tin và muốn sao lưu CSDL ra tệp `.sql` mới phục vụ báo cáo:
+- *Cách 1 (Nhanh nhất trên Windows)*: Nhấp đúp chuột vào tệp `Backend/export_db.bat`. Tệp sao lưu sẽ tự động được ghi đè vào `Backend/cinestream_backup.sql`.
+- *Cách 2 (Dòng lệnh Terminal)*:
+  ```bash
+  # Trên Windows Command Prompt:
+  "C:\Program Files\PostgreSQL\18\bin\pg_dump.exe" -U postgres -d CineStreamDb -F p -b -v -f "Backend\cinestream_backup.sql"
+
+  # Trên macOS / Linux hoặc hệ thống đã có sẵn pg_dump trong PATH:
+  pg_dump -U postgres -d CineStreamDb -F p -b -v -f "Backend/cinestream_backup.sql"
+  ```
+- *Cách 3 (Giao diện pgAdmin 4)*:
+  1. Nhấp chuột phải vào `CineStreamDb` -> Chọn **Backup...**
+  2. Đặt tên tệp lưu trữ (ví dụ: `cinestream_backup.sql`), chọn định dạng **Plain**.
+  3. Nhấn **Backup** để xuất tệp.
 
 ---
 
