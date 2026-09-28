@@ -69,7 +69,7 @@ const MovieDetail = () => {
   const addLog = useCallback((message, type = 'info') => {
     // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
     const time = new Date().toLocaleTimeString();
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     setLogs((prev) => [
       { id: Date.now() + Math.random(), time, message, type },
       ...prev.slice(0, 199),
@@ -78,9 +78,9 @@ const MovieDetail = () => {
 
   // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
   const fetchMovie = useCallback(async () => {
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     setLoading(true);
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     setErrorMsg('');
     // Bao bọc thao tác có thể lỗi để xử lý an toàn.
     try {
@@ -91,20 +91,20 @@ const MovieDetail = () => {
         // Phát sinh lỗi để thông báo trạng thái bất thường.
         throw new Error(result?.message || 'Không tìm thấy phim.');
       }
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       setMovie(result.data);
     } catch (err) {
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       setErrorMsg(err.message || 'Không thể tải chi tiết phim.');
     } finally {
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       setLoading(false);
     }
   }, [id]);
 
-  // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+   
   useEffect(() => {
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     fetchMovie();
   }, [fetchMovie]);
 
@@ -130,7 +130,7 @@ const MovieDetail = () => {
   const openEditModal = () => {
     // Kiểm tra điều kiện để chọn nhánh xử lý phù hợp.
     if (!movie) return;
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     setEditForm({
       title: movie.title || '',
       description: movie.description || '',
@@ -145,13 +145,13 @@ const MovieDetail = () => {
       publishStatus: movie.publishStatus ?? 2,
       categoryIds: (movie.categories || []).map((c) => c.id),
     });
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     setEditErrors({});
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     setShowHlsPicker(false);
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     setEditModalOpen(true);
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     loadFormData();
   };
 
@@ -159,9 +159,9 @@ const MovieDetail = () => {
   const closeEditModal = () => {
     // Kiểm tra điều kiện để chọn nhánh xử lý phù hợp.
     if (saving) return;
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     setShowHlsPicker(false);
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     setEditModalOpen(false);
   };
 
@@ -169,7 +169,7 @@ const MovieDetail = () => {
   const toggleCategory = (catId) => {
     // Kiểm tra điều kiện để chọn nhánh xử lý phù hợp.
     if (!editForm) return;
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     setEditForm((prev) => {
       // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
       const exists = prev.categoryIds.includes(catId);
@@ -185,20 +185,20 @@ const MovieDetail = () => {
 
   // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
   const handleSaveEdit = async (e) => {
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     e.preventDefault();
     // Kiểm tra điều kiện để chọn nhánh xử lý phù hợp.
     if (!editForm) return;
 
     // Kiểm tra điều kiện để chọn nhánh xử lý phù hợp.
     if (!editForm.title.trim()) {
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       setEditErrors({ title: 'Tiêu đề phim không được để trống!' });
       // Trả về kết quả hoặc giao diện từ nhánh xử lý hiện tại.
       return;
     }
 
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     setSaving(true);
     // Bao bọc thao tác có thể lỗi để xử lý an toàn.
     try {
@@ -218,22 +218,22 @@ const MovieDetail = () => {
         categoryIds: editForm.categoryIds,
       };
 
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       await movieApi.update(id, payload);
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       setEditModalOpen(false);
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       await fetchMovie();
     } catch (err) {
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       setEditErrors({ general: err.message || 'Không thể cập nhật phim!' });
     } finally {
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       setSaving(false);
     }
   };
 
-  // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+   
   useEffect(() => {
     // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
     const video = videoRef.current;
@@ -246,50 +246,50 @@ const MovieDetail = () => {
     let finalUrl = streamUrl;
     // Kiểm tra điều kiện để chọn nhánh xử lý phù hợp.
     if (finalUrl.startsWith('/')) {
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       finalUrl = 'http://localhost:5182' + finalUrl;
     }
 
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     setLogs([]);
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     setStreamStatus('Đang khởi tạo kết nối luồng...');
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     setStatusTone('connecting');
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     addLog(`Bắt đầu kết nối tới URL: ${finalUrl}`, 'info');
 
     // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
     let hls;
     // Kiểm tra điều kiện để chọn nhánh xử lý phù hợp.
     if (finalUrl.includes('.m3u8') && Hls.isSupported()) {
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       hls = new Hls({
         enableWorker: true,
         lowLatencyMode: false,
       });
 
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       hls.loadSource(finalUrl);
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       hls.attachMedia(video);
 
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       hls.on(Hls.Events.MANIFEST_PARSED, (event, data) => {
-        // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+         
         setStreamStatus(`HLS Manifest nạp thành công (${data.levels.length} tầng chất lượng)`);
-        // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+         
         setStatusTone('success');
-        // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+         
         addLog(`HLS Manifest nạp thành công. Tìm thấy ${data.levels.length} tầng chất lượng.`, 'success');
-        // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+         
         video.play().catch(() => {
-          // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+           
           addLog('Bấm Play trên khung phát để bắt đầu xem video.', 'warning');
         });
       });
 
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       hls.on(Hls.Events.FRAG_LOADED, (event, data) => {
         // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
         const fragUrl = data.frag.relurl || data.frag.url;
@@ -299,50 +299,50 @@ const MovieDetail = () => {
         const bytes = data.stats?.loaded || data.frag?.stats?.loaded || data.frag?.loaded || 0;
         // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
         const sizeText = bytes > 0 ? `${(bytes / 1024).toFixed(1)} KB` : 'Chuẩn nén';
-        // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+         
         setStreamStatus(`Đang phát phân đoạn ${data.frag.sn ?? ''}`);
-        // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+         
         setStatusTone('playing');
-        // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+         
         addLog(`Tải phân đoạn [${data.frag.sn ?? 'ts'}]: ${fragUrl} (${duration}s | ${sizeText})`, 'segment');
       });
 
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       hls.on(Hls.Events.ERROR, (event, data) => {
         // Kiểm tra điều kiện để chọn nhánh xử lý phù hợp.
         if (data.fatal) {
-          // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+           
           setStatusTone('error');
-          // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+           
           setStreamStatus(`Lỗi luồng: ${data.details}`);
-          // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+           
           addLog(`Lỗi luồng nghiêm trọng: ${data.details}`, 'error');
         }
       });
     } else {
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       video.src = finalUrl;
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       video.onloadedmetadata = () => {
-        // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+         
         setStreamStatus('Video MP4 đã nạp metadata thành công');
-        // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+         
         setStatusTone('success');
-        // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+         
         addLog(`Video MP4 nạp thành công. Thời lượng: ${video.duration?.toFixed(0)}s`, 'success');
-        // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+         
         video.play().catch(() => {
-          // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+           
           addLog('Bấm Play trên khung phát để bắt đầu xem video.', 'warning');
         });
       };
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       video.onerror = () => {
-        // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+         
         setStatusTone('error');
-        // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+         
         setStreamStatus('Lỗi khi tải file video MP4');
-        // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+         
         addLog(`Không thể tải video từ URL: ${finalUrl}`, 'error');
       };
     }
@@ -351,7 +351,7 @@ const MovieDetail = () => {
     return () => {
       // Kiểm tra điều kiện để chọn nhánh xử lý phù hợp.
       if (hls) {
-        // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+         
         hls.destroy();
       }
     };
@@ -359,9 +359,9 @@ const MovieDetail = () => {
 
   // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
   const handlePlay = async () => {
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     setPlaybackLoading(true);
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     setPlaybackError('');
     // Bao bọc thao tác có thể lỗi để xử lý an toàn.
     try {
@@ -372,13 +372,13 @@ const MovieDetail = () => {
         // Phát sinh lỗi để thông báo trạng thái bất thường.
         throw new Error(result?.message || 'Không thể lấy thông tin phát phim.');
       }
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       setPlayback(result.data);
     } catch (err) {
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       setPlaybackError(err.message || 'Không thể phát thử phim.');
     } finally {
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       setPlaybackLoading(false);
     }
   };
@@ -719,9 +719,9 @@ const MovieDetail = () => {
                         key={s.streamKey}
                         type="button"
                         onClick={() => {
-                          // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+                           
                           setEditForm({ ...editForm, videoUrl: s.relativeUrl });
-                          // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+                           
                           setShowHlsPicker(false);
                         }}
                         className="w-full p-2 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-left text-xs text-slate-200 flex items-center justify-between"

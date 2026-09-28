@@ -31,9 +31,9 @@ const AiChat = () => {
 
   // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
   const fetchHistory = useCallback(async () => {
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     setLoadingHistory(true);
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     setErrorMsg('');
     // Bao bọc thao tác có thể lỗi để xử lý an toàn.
     try {
@@ -45,42 +45,42 @@ const AiChat = () => {
       const sorted = [...history].sort(
         (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
       );
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       setMessages(sorted);
     } catch (err) {
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       setErrorMsg(err.message || 'Không thể tải lịch sử trò chuyện.');
     } finally {
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       setLoadingHistory(false);
     }
   }, []);
 
-  // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+   
   useEffect(() => {
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     Promise.resolve().then(() => {
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       fetchHistory();
     });
   }, [fetchHistory]);
 
-  // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+   
   useEffect(() => {
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, sending]);
 
   // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
   const handleSend = async (e) => {
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     e.preventDefault();
     // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
     const text = input.trim();
     // Kiểm tra điều kiện để chọn nhánh xử lý phù hợp.
     if (!text || sending) return;
 
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     setErrorMsg('');
     // Hiện tin nhắn của Admin ngay lập tức (optimistic UI)
     const tempUserMsg = {
@@ -89,11 +89,11 @@ const AiChat = () => {
       isFromAI: false,
       createdAt: new Date().toISOString(),
     };
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     setMessages((prev) => [...prev, tempUserMsg]);
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     setInput('');
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     setSending(true);
 
     // Bao bọc thao tác có thể lỗi để xử lý an toàn.
@@ -115,36 +115,36 @@ const AiChat = () => {
         createdAt: createdAt || new Date().toISOString(),
         recommendedMovies: recommendedMovies || [],
       };
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       setMessages((prev) => [...prev, aiMsg]);
     } catch (err) {
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       setErrorMsg(err.message || 'Có lỗi xảy ra khi gửi tin nhắn!');
     } finally {
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       setSending(false);
     }
   };
 
   // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
   const handleClearHistory = async () => {
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     setClearing(true);
     // Bao bọc thao tác có thể lỗi để xử lý an toàn.
     try {
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       await aiApi.clearHistory();
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       setMessages([]);
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       setConfirmClearOpen(false);
     } catch (err) {
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       setErrorMsg(err.message || 'Xóa lịch sử thất bại!');
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       setConfirmClearOpen(false);
     } finally {
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       setClearing(false);
     }
   };

@@ -37,25 +37,25 @@ export const AuthProvider = ({ children }) => {
 
   // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
   const persistSession = (newToken, newUser) => {
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     localStorage.setItem(STORAGE_TOKEN_KEY, newToken);
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     localStorage.setItem(STORAGE_USER_KEY, JSON.stringify(newUser));
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     setToken(newToken);
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     setUser(newUser);
   };
 
   // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
   const clearSession = () => {
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     localStorage.removeItem(STORAGE_TOKEN_KEY);
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     localStorage.removeItem(STORAGE_USER_KEY);
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     setToken(null);
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     setUser(null);
   };
 
@@ -79,7 +79,7 @@ export const AuthProvider = ({ children }) => {
       throw new Error('Tài khoản này không có quyền truy cập trang quản trị!');
     }
 
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     persistSession(newToken, newUser);
     // Trả về kết quả hoặc giao diện từ nhánh xử lý hiện tại.
     return newUser;
@@ -87,7 +87,7 @@ export const AuthProvider = ({ children }) => {
 
   // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
   const logout = useCallback(() => {
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     clearSession();
   }, []);
 
@@ -97,9 +97,9 @@ export const AuthProvider = ({ children }) => {
     const result = await authApi.getMe();
     // Kiểm tra điều kiện để chọn nhánh xử lý phù hợp.
     if (result?.success && result?.data) {
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       localStorage.setItem(STORAGE_USER_KEY, JSON.stringify(result.data));
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       setUser(result.data);
       // Trả về kết quả hoặc giao diện từ nhánh xử lý hiện tại.
       return result.data;

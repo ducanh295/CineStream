@@ -85,9 +85,9 @@ const Users = () => {
 
   // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
   const fetchUsers = useCallback(async () => {
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     setLoading(true);
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     setErrorMsg('');
     // Bao bọc thao tác có thể lỗi để xử lý an toàn.
     try {
@@ -95,24 +95,24 @@ const Users = () => {
       const result = await userApi.getAllUsers({ search: search.trim() || undefined, page, pageSize: 12 });
       // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
       const paged = result?.data;
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       setUsers(Array.isArray(paged) ? paged : paged?.items || []);
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       setTotalPages(paged?.totalPages || 1);
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       setTotalCount(paged?.totalCount || 0);
     } catch (err) {
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       setErrorMsg(err.message || 'Không thể tải danh sách người dùng.');
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       setUsers([]);
     } finally {
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       setLoading(false);
     }
   }, [page, search]);
 
-  // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+   
   useEffect(() => {
     // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
     const timer = setTimeout(fetchUsers, 350);
@@ -122,9 +122,9 @@ const Users = () => {
 
   // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
   const handleSearch = (event) => {
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     setSearch(event.target.value);
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     setPage(1);
   };
 
@@ -132,7 +132,7 @@ const Users = () => {
   const handleToggleStatus = async () => {
     // Kiểm tra điều kiện để chọn nhánh xử lý phù hợp.
     if (!toggleTarget) return;
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     setActionLoading(true);
     // Bao bọc thao tác có thể lỗi để xử lý an toàn.
     try {
@@ -141,18 +141,18 @@ const Users = () => {
       else {
         // Kiểm tra điều kiện để chọn nhánh xử lý phù hợp.
         if (!lockReason.trim()) return;
-        // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+         
         await userApi.lockUser(toggleTarget.id, lockReason.trim());
       }
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       setToggleTarget(null);
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       await fetchUsers();
     } catch (err) {
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       setErrorMsg(err.message || 'Không thể cập nhật trạng thái tài khoản.');
     } finally {
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       setActionLoading(false);
     }
   };
@@ -161,32 +161,32 @@ const Users = () => {
   const handleDelete = async () => {
     // Kiểm tra điều kiện để chọn nhánh xử lý phù hợp.
     if (!deleteTarget) return;
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     setActionLoading(true);
     // Bao bọc thao tác có thể lỗi để xử lý an toàn.
     try {
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       await userApi.deleteUser(deleteTarget.id);
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       setDeleteTarget(null);
       // Kiểm tra điều kiện để chọn nhánh xử lý phù hợp.
       if (users.length === 1 && page > 1) setPage((current) => current - 1);
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       else await fetchUsers();
     } catch (err) {
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       setErrorMsg(err.message || 'Xóa tài khoản thất bại.');
     } finally {
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       setActionLoading(false);
     }
   };
 
   // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
   const openPremiumModal = (user) => {
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     setPremiumTarget(user);
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     setPremiumForm({
       isPremium: true,
       durationDays: 30,
@@ -196,40 +196,40 @@ const Users = () => {
 
   // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
   const handleSavePremium = async (e) => {
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     e.preventDefault();
     // Kiểm tra điều kiện để chọn nhánh xử lý phù hợp.
     if (!premiumTarget) return;
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     setPremiumLoading(true);
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     setErrorMsg('');
     // Bao bọc thao tác có thể lỗi để xử lý an toàn.
     try {
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       await userApi.setPremium(premiumTarget.id, {
         isPremium: premiumForm.isPremium,
         durationDays: premiumForm.isPremium ? (premiumForm.durationDays === 0 ? null : premiumForm.durationDays) : null,
         reason: premiumForm.reason.trim() || undefined,
       });
 
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       setSuccessMsg(
         premiumForm.isPremium
           ? `Đã cập nhật gói Premium cho tài khoản "${premiumTarget.username}" thành công!`
           : `Đã thu hồi gói Premium của tài khoản "${premiumTarget.username}" thành công!`
       );
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       setPremiumTarget(null);
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       await fetchUsers();
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       setTimeout(() => setSuccessMsg(''), 4000);
     } catch (err) {
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       setErrorMsg(err.message || 'Cập nhật gói Premium thất bại.');
     } finally {
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       setPremiumLoading(false);
     }
   };
@@ -250,7 +250,7 @@ const Users = () => {
       const existingDate = new Date(premiumTarget.premiumExpiresAt);
       // Kiểm tra điều kiện để chọn nhánh xử lý phù hợp.
       if (existingDate > baseDate) {
-        // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+         
         baseDate = existingDate;
       }
     }

@@ -86,9 +86,9 @@ const Movies = () => {
 
   // Tải danh sách phim phân trang từ máy chủ Backend
   const fetchMovies = useCallback(async (pageNumber = 1, searchTerm = '', size = 10) => {
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     setLoading(true);
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     setErrorMsg('');
     // Bao bọc thao tác có thể lỗi để xử lý an toàn.
     try {
@@ -106,19 +106,19 @@ const Movies = () => {
       const movieData = result?.data;
       // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
       const items = Array.isArray(movieData) ? movieData : movieData?.items || [];
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       setMovies(items);
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       setTotalPages(movieData?.totalPages || 1);
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       setTotalCount(movieData?.totalCount || items.length);
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       setPage(movieData?.pageNumber || pageNumber);
     } catch (err) {
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       setErrorMsg(err.message || 'Không thể tải danh sách phim. Vui lòng thử lại!');
     } finally {
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       setLoading(false);
     }
   }, []);
@@ -129,7 +129,7 @@ const Movies = () => {
     try {
       // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
       const result = await categoryApi.getAll();
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       setCategories(Array.isArray(result?.data) ? result.data : []);
     } catch {
       // Không chặn trang nếu lỗi lấy category, chỉ ảnh hưởng form thêm/sửa
@@ -144,7 +144,7 @@ const Movies = () => {
       const result = await movieApi.getAvailableStreams();
       // Kiểm tra điều kiện để chọn nhánh xử lý phù hợp.
       if (result?.data) {
-        // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+         
         setAvailableStreams(result.data);
       }
     } catch {
@@ -152,11 +152,11 @@ const Movies = () => {
     }
   }, []);
 
-  // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+   
   useEffect(() => {
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     fetchCategories();
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     fetchAvailableStreams();
   }, [fetchCategories, fetchAvailableStreams]);
 
@@ -164,7 +164,7 @@ const Movies = () => {
   useEffect(() => {
     // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
     const timer = setTimeout(() => {
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       fetchMovies(page, search, pageSize);
     }, 300);
     // Trả về kết quả hoặc giao diện từ nhánh xử lý hiện tại.
@@ -173,25 +173,25 @@ const Movies = () => {
 
   // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
   const openCreateModal = () => {
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     setEditingId(null);
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     setForm(EMPTY_FORM);
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     setFormErrors({});
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     setShowHlsPicker(false);
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     setModalOpen(true);
   };
 
   // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
   const openEditModal = async (movie) => {
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     setEditingId(movie.id);
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     setShowHlsPicker(false);
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     setForm({
       title: movie.title || '',
       description: movie.description || '',
@@ -206,9 +206,9 @@ const Movies = () => {
       publishStatus: movie.publishStatus ?? 2,
       categoryIds: (movie.categories || []).map((c) => c.id),
     });
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     setFormErrors({});
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     setModalOpen(true);
 
     // Nạp thêm chi tiết từ API getById để đảm bảo dữ liệu luôn đầy đủ và mới nhất
@@ -219,7 +219,7 @@ const Movies = () => {
       if (res?.data) {
         // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
         const detail = res.data;
-        // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+         
         setForm((prev) => ({
           ...prev,
           title: detail.title ?? prev.title,
@@ -245,15 +245,15 @@ const Movies = () => {
   const closeModal = () => {
     // Kiểm tra điều kiện để chọn nhánh xử lý phù hợp.
     if (saving) return;
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     setShowHlsPicker(false);
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     setModalOpen(false);
   };
 
   // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
   const toggleCategory = (id) => {
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     setForm((prev) => {
       // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
       const exists = prev.categoryIds.includes(id);
@@ -273,24 +273,24 @@ const Movies = () => {
     const errors = {};
     // Kiểm tra điều kiện để chọn nhánh xử lý phù hợp.
     if (!form.title.trim()) {
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       errors.title = 'Tiêu đề phim không được để trống!';
     // Kiểm tra điều kiện để chọn nhánh xử lý phù hợp.
     } else if (form.title.trim().length > 255) {
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       errors.title = 'Tiêu đề tối đa 255 ký tự!';
     }
     // Kiểm tra điều kiện để chọn nhánh xử lý phù hợp.
     if (form.duration && (Number(form.duration) < 1 || Number(form.duration) > 1000)) {
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       errors.duration = 'Thời lượng phải từ 1 đến 1000 phút!';
     }
     // Kiểm tra điều kiện để chọn nhánh xử lý phù hợp.
     if (form.releaseYear && (Number(form.releaseYear) < 1888 || Number(form.releaseYear) > 2100)) {
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       errors.releaseYear = 'Năm phát hành phải từ 1888 đến 2100!';
     }
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     setFormErrors(errors);
     // Trả về kết quả hoặc giao diện từ nhánh xử lý hiện tại.
     return Object.keys(errors).length === 0;
@@ -298,12 +298,12 @@ const Movies = () => {
 
   // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
   const handleSubmit = async (e) => {
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     e.preventDefault();
     // Kiểm tra điều kiện để chọn nhánh xử lý phù hợp.
     if (!validateForm()) return;
 
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     setSaving(true);
     // Bao bọc thao tác có thể lỗi để xử lý an toàn.
     try {
@@ -324,30 +324,30 @@ const Movies = () => {
 
       // Kiểm tra điều kiện để chọn nhánh xử lý phù hợp.
       if (editingId) {
-        // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+         
         payload.videoStatus = Number(form.videoStatus);
-        // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+         
         await movieApi.update(editingId, payload);
       } else {
-        // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+         
         await movieApi.create(payload);
       }
 
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       setModalOpen(false);
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       await fetchMovies(page, search, pageSize);
     } catch (err) {
       // Kiểm tra điều kiện để chọn nhánh xử lý phù hợp.
       if (err.errors && err.errors.length > 0) {
-        // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+         
         setFormErrors({ general: err.errors.join(', ') });
       } else {
-        // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+         
         setFormErrors({ general: err.message || 'Có lỗi xảy ra, vui lòng thử lại!' });
       }
     } finally {
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       setSaving(false);
     }
   };
@@ -356,27 +356,27 @@ const Movies = () => {
   const handleDelete = async () => {
     // Kiểm tra điều kiện để chọn nhánh xử lý phù hợp.
     if (!deleteTarget) return;
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     setDeleting(true);
     // Bao bọc thao tác có thể lỗi để xử lý an toàn.
     try {
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       await movieApi.delete(deleteTarget.id);
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       setDeleteTarget(null);
       // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
       const targetPage = movies.length === 1 && page > 1 ? page - 1 : page;
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       setPage(targetPage);
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       await fetchMovies(targetPage, search, pageSize);
     } catch (err) {
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       setErrorMsg(err.message || 'Xóa phim thất bại!');
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       setDeleteTarget(null);
     } finally {
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       setDeleting(false);
     }
   };
@@ -385,14 +385,14 @@ const Movies = () => {
   const handleToggleFeatured = async (movie) => {
     // Bao bọc thao tác có thể lỗi để xử lý an toàn.
     try {
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       await movieApi.toggleFeatured(movie.id);
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       setMovies((prev) =>
         prev.map((m) => (m.id === movie.id ? { ...m, isFeatured: !m.isFeatured } : m))
       );
     } catch (err) {
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       setErrorMsg(err.message || 'Không thể thay đổi trạng thái phim nổi bật!');
     }
   };
@@ -433,9 +433,9 @@ const Movies = () => {
               type="text"
               value={search}
               onChange={(e) => {
-                // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+                 
                 setSearch(e.target.value);
-                // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+                 
                 setPage(1);
               }}
               placeholder="Tìm kiếm phim..."
@@ -618,9 +618,9 @@ const Movies = () => {
                   onChange={(e) => {
                     // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
                     const newSize = Number(e.target.value);
-                    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+                     
                     setPageSize(newSize);
-                    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+                     
                     setPage(1);
                   }}
                   className="bg-slate-800 border border-slate-700 text-white rounded-lg px-2 py-1 outline-none text-xs cursor-pointer focus:border-blue-500"
@@ -817,9 +817,9 @@ const Movies = () => {
                         key={s.streamKey}
                         type="button"
                         onClick={() => {
-                          // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+                           
                           setForm((prev) => ({ ...prev, videoUrl: s.relativeUrl, videoStatus: 1 }));
-                          // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+                           
                           setShowHlsPicker(false);
                         }}
                         className="w-full text-left p-2 rounded-lg bg-slate-800/60 hover:bg-blue-600/20 border border-slate-700/60 hover:border-blue-500/40 transition-all flex items-center justify-between gap-3 group"

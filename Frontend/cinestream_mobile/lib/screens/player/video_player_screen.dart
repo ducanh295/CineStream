@@ -1,8 +1,11 @@
 import 'package:chewie/chewie.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:video_player/video_player.dart';
 
+import '../../core/constants/api_constants.dart';
+import '../../core/storage/storage_service.dart';
 import '../../models/movie.dart';
 import '../../services/movie_service.dart';
 import '../../widgets/app_drawer.dart';
@@ -115,25 +118,82 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
     }
 
     try {
-      // Chuẩn hóa đường dẫn: nếu là đường dẫn tương đối thì ghép địa chỉ máy chủ Backend
-      var resolvedUrl = streamUrl.trim();
-      if (resolvedUrl.startsWith('/')) {
-        resolvedUrl = 'http://localhost:5182$resolvedUrl';
+      final token = await StorageService.getToken();
+      final headers = <String, String>{};
+      if (token != null && token.isNotEmpty) {
+        headers['Authorization'] = 'Bearer $token';
       }
 
-      final uri = Uri.tryParse(resolvedUrl);
+      var primaryUrl = streamUrl.trim();
 
-      if (uri == null ||
-          !uri.hasScheme ||
-          (uri.scheme != 'http' && uri.scheme != 'https')) {
-        throw Exception('URL video không hợp lệ.');
+      String apiBaseHost = ApiConstants.baseUrl;
+      if (apiBaseHost.endsWith('/api')) {
+        apiBaseHost = apiBaseHost.substring(0, apiBaseHost.length - 4);
       }
 
-      final controller = VideoPlayerController.networkUrl(uri);
+      if (primaryUrl.startsWith('/')) {
+        primaryUrl = '$apiBaseHost$primaryUrl';
+      }
+
+      final candidateUrls = <String>[];
+
+      candidateUrls.add(primaryUrl);
+
+      if (!kIsWeb) {
+        if (primaryUrl.contains('7145')) {
+          candidateUrls.add(
+            primaryUrl
+                .replaceAll('https://10.0.2.2:7145', 'http://10.0.2.2:5182')
+                .replaceAll('http://10.0.2.2:7145', 'http://10.0.2.2:5182'),
+          );
+        } else if (primaryUrl.contains('5182')) {
+          candidateUrls.add(
+            primaryUrl
+                .replaceAll('http://10.0.2.2:5182', 'https://10.0.2.2:7145'),
+          );
+        }
+      }
+
+      final uniqueUrls = candidateUrls.toSet().toList();
+
+      VideoPlayerController? successController;
+      Object? lastException;
+
+      for (final urlString in uniqueUrls) {
+        final uri = Uri.tryParse(urlString);
+
+        if (uri == null ||
+            !uri.hasScheme ||
+            (uri.scheme != 'http' && uri.scheme != 'https')) {
+          continue;
+        }
+
+        final testController = VideoPlayerController.networkUrl(
+          uri,
+          httpHeaders: headers,
+        );
+
+        try {
+          await testController.initialize();
+          successController = testController;
+          break;
+        } catch (e) {
+          lastException = e;
+          await testController.dispose();
+        }
+      }
+
+      if (successController == null) {
+        throw Exception(
+          _cleanErrorMessage(
+            lastException ?? 'Không thể kết nối luồng phát video.',
+          ),
+        );
+      }
+
+      final controller = successController;
 
       _videoPlayerController = controller;
-
-      await controller.initialize();
 
       if (!mounted) {
         await controller.dispose();
@@ -337,22 +397,29 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
   }) {
     return Container(
       color: const Color(0xFF0D100E),
+      padding: const EdgeInsets.symmetric(
+        horizontal: 16,
+        vertical: 12,
+      ),
       child: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const CircularProgressIndicator(
-              color: Colors.white,
-            ),
-            const SizedBox(height: 14),
-            Text(
-              message,
-              style: const TextStyle(
-                color: Colors.white70,
-                fontSize: 12,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const CircularProgressIndicator(
+                color: Colors.white,
               ),
-            ),
-          ],
+              const SizedBox(height: 12),
+              Text(
+                message,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: Colors.white70,
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -399,37 +466,55 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
   Widget _buildVideoError(String message) {
     return Container(
       color: const Color(0xFF0D100E),
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.symmetric(
+        horizontal: 16,
+        vertical: 12,
+      ),
       child: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(
-              Icons.error_outline_rounded,
-              color: Colors.white70,
-              size: 52,
-            ),
-            const SizedBox(height: 12),
-            Text(
-              message,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 13,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.error_outline_rounded,
+                color: Colors.white70,
+                size: 38,
               ),
-            ),
-            const SizedBox(height: 14),
-            OutlinedButton(
-              onPressed: _loadPlayback,
-              style: OutlinedButton.styleFrom(
-                foregroundColor: Colors.white,
-                side: const BorderSide(
-                  color: Colors.white54,
+              const SizedBox(height: 8),
+              Text(
+                message,
+                textAlign: TextAlign.center,
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 12,
                 ),
               ),
-              child: const Text('Thử lại'),
-            ),
-          ],
+              const SizedBox(height: 10),
+              SizedBox(
+                height: 32,
+                child: OutlinedButton(
+                  onPressed: _loadPlayback,
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    side: const BorderSide(
+                      color: Colors.white54,
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                    ),
+                  ),
+                  child: const Text(
+                    'Thử lại',
+                    style: TextStyle(
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -438,25 +523,31 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
   Widget _buildVideoNotReady() {
     return Container(
       color: const Color(0xFF0D100E),
-      child: const Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.videocam_off_rounded,
-              color: Colors.white70,
-              size: 52,
-            ),
-            SizedBox(height: 12),
-            Text(
-              'Video chưa sẵn sàng phát.',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 14,
-                fontWeight: FontWeight.w700,
+      padding: const EdgeInsets.symmetric(
+        horizontal: 16,
+        vertical: 12,
+      ),
+      child: Center(
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.videocam_off_rounded,
+                color: Colors.white70,
+                size: 40,
               ),
-            ),
-          ],
+              const SizedBox(height: 8),
+              const Text(
+                'Video chưa sẵn sàng phát.',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

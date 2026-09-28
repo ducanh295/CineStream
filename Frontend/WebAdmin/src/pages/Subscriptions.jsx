@@ -167,9 +167,9 @@ const Subscriptions = () => {
 
   // Tai danh sach tat ca giao dich tu Backend
   const fetchTransactions = useCallback(async () => {
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     setLoading(true);
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     setErrorMsg('');
     // Bao bọc thao tác có thể lỗi để xử lý an toàn.
     try {
@@ -177,24 +177,24 @@ const Subscriptions = () => {
       const res = await paymentApi.getAdminAllTransactions({ page, pageSize });
       // Cau truc tra ve tu Controller: { success: true, data: items, total: totalCount, page, pageSize }
       const items = res?.data || [];
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       setTransactions(Array.isArray(items) ? items : []);
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       setTotalCount(res?.total || 0);
     } catch (err) {
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       setErrorMsg(err.response?.data?.message || err.message || 'Không thể tải danh sách giao dịch.');
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       setTransactions([]);
     } finally {
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       setLoading(false);
     }
   }, [page, pageSize]);
 
-  // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+   
   useEffect(() => {
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     Promise.resolve().then(() => {
       fetchPlans();
       fetchTransactions();
@@ -242,19 +242,19 @@ const Subscriptions = () => {
   const handleCopy = (text, fieldName) => {
     // Kiểm tra điều kiện để chọn nhánh xử lý phù hợp.
     if (!text) return;
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     navigator.clipboard.writeText(text);
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     setCopiedField(fieldName);
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     setTimeout(() => setCopiedField(''), 2000);
   };
 
   // Tao don thanh toan thu nghiem truc tiep tu WebAdmin
   const handleCreateTestPayment = async (planType) => {
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     setCreatingPlan(planType);
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     setActionNotice(null);
     // Bao bọc thao tác có thể lỗi để xử lý an toàn.
     try {
@@ -264,7 +264,7 @@ const Subscriptions = () => {
       const data = res?.data;
       // Kiểm tra điều kiện để chọn nhánh xử lý phù hợp.
       if (data) {
-        // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+         
         setQrModalData({
           orderCode: data.orderCode,
           qrCodeUrl: data.qrCodeUrl,
@@ -274,18 +274,18 @@ const Subscriptions = () => {
           accountName: data.accountName || 'NGUYEN KHAC DUC ANH',
           bankName: data.bankName || 'MBBank',
         });
-        // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+         
         setPollingStatus('Pending');
-        // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+         
         fetchTransactions();
       }
     } catch (err) {
       // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
       const msg = err.response?.data?.message || err.message || 'Không thể khởi tạo đơn thanh toán.';
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       setActionNotice({ type: 'error', text: msg });
     } finally {
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       setCreatingPlan(null);
     }
   };
@@ -302,18 +302,18 @@ const Subscriptions = () => {
       const statusData = res?.data;
       // Kiểm tra điều kiện để chọn nhánh xử lý phù hợp.
       if (statusData) {
-        // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+         
         setPollingStatus(statusData.status);
         // Kiểm tra điều kiện để chọn nhánh xử lý phù hợp.
         if (statusData.isCompleted) {
-          // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+           
           setActionNotice({ type: 'success', text: `Đơn ${qrModalData.orderCode} đã thanh toán thành công!` });
-          // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+           
           fetchTransactions();
         }
       }
     } catch (err) {
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       console.error('Loi kiem tra trang thai don:', err);
     }
   };
@@ -322,34 +322,34 @@ const Subscriptions = () => {
   const handleConfirmSimulate = async () => {
     // Kiểm tra điều kiện để chọn nhánh xử lý phù hợp.
     if (!simulateTarget) return;
-    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+     
     setActionLoading(true);
     // Bao bọc thao tác có thể lỗi để xử lý an toàn.
     try {
       // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
       const res = await paymentApi.simulatePayment(simulateTarget.orderCode);
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       setActionNotice({
         type: 'success',
         text: res?.message || `Mô phỏng thanh toán đơn ${simulateTarget.orderCode} thành công! VIP đã được kích hoạt.`,
       });
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       setSimulateTarget(null);
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       await fetchTransactions();
 
       // Neu modal QR dang mo trung don hang vua mo phong thi dong bo luon
       if (qrModalData?.orderCode === simulateTarget.orderCode) {
-        // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+         
         setPollingStatus('Success');
       }
     } catch (err) {
       // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
       const msg = err.response?.data?.message || err.message || 'Mô phỏng thanh toán thất bại.';
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       setActionNotice({ type: 'error', text: msg });
     } finally {
-      // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+       
       setActionLoading(false);
     }
   };
@@ -803,7 +803,7 @@ const Subscriptions = () => {
                             <button
                               type="button"
                               onClick={() => {
-                                // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+                                 
                                 setQrModalData({
                                   orderCode: tx.orderCode,
                                   qrCodeUrl: tx.qrCodeUrl,
@@ -813,7 +813,7 @@ const Subscriptions = () => {
                                   accountName: 'NGUYEN KHAC DUC ANH',
                                   bankName: 'MBBank',
                                 });
-                                // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+                                 
                                 setPollingStatus(tx.status === 1 || tx.status === 'Success' ? 'Success' : 'Pending');
                               }}
                               className="px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition-colors flex items-center gap-1"
@@ -1006,7 +1006,7 @@ const Subscriptions = () => {
                   onClick={() => {
                     // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
                     const tx = transactions.find((t) => t.orderCode === qrModalData.orderCode);
-                    // Thực thi thao tác cập nhật trạng thái hoặc gọi dịch vụ liên quan.
+                     
                     setSimulateTarget(tx || { orderCode: qrModalData.orderCode });
                   }}
                   className="flex-1 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold transition-colors flex items-center justify-center gap-1.5"
