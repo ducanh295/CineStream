@@ -16,6 +16,12 @@ AGENTS.md
 *.suo
 *.zip
 
+# Hệ điều hành (macOS, Windows)
+.DS_Store
+**/.DS_Store
+Thumbs.db
+**/Thumbs.db
+
 # Build artifacts của .NET
 [Bb]in/
 [Oo]bj/
