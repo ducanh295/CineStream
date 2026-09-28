@@ -21,14 +21,16 @@ Hệ thống bao gồm 3 phân hệ chính:
    - [Bước 2: Cài đặt và cấu hình Cơ sở dữ liệu](#bước-2-cài-đặt-và-cấu-hình-cơ-sở-dữ-liệu)
    - [Bước 3: Khởi chạy Backend API](#bước-3-khởi-chạy-backend-api)
    - [Bước 4: Khởi chạy WebAdmin](#bước-4-khởi-chạy-webadmin)
-   - [Bước 5: Khởi chạy Ứng dụng Di động Flutter](#bước-5-khởi-chạy-ứng-dụng-di-động-flutter)
-7. [Hướng Dẫn Sử Dụng Tool Băm Phim HLS (split_video.bat)](#7-hướng-dẫn-sử-dụng-tool-băm-phim-hls-split_videobat)
-8. [Hướng Dẫn Sử Dụng Hệ Thống Cho Người Dùng và Quản Trị Viên](#8-hướng-dẫn-sử-dụng-hệ-thống-cho-người-dùng-và-quản-trị-viên)
-   - [8.1. Dành cho Người dùng cuối (Mobile App Flutter)](#81-dành-cho-người-dùng-cuối-mobile-app-flutter)
-   - [8.2. Dành cho Quản trị viên (WebAdmin)](#82-dành-cho-quản-trị-viên-webadmin)
-9. [Tài Khoản và Dữ Liệu Khởi Tạo (Seed Data)](#9-tài-khoản-và-dữ-liệu-khởi-tạo-seed-data)
-10. [Kiểm Thử Tự Động (Automated Testing)](#10-kiểm-thử-tự-động-automated-testing)
-11. [Bộ Danh Mục API Cốt Lõi](#11-bộ-danh-mục-api-cốt-lõi)
+   - [Bước 5: Khởi chạy Ứng dụng Di động Flutter trên Máy ảo](#bước-5-khởi-chạy-ứng-dụng-di-động-flutter)
+7. [Hướng Dẫn Tải và Cài Đặt Kho Phim (Google Drive)](#7-hướng-dẫn-tải-và-cài-đặt-kho-phim-google-drive)
+8. [Hướng Dẫn Sử Dụng Tool Băm Phim HLS (split_video.bat)](#8-hướng-dẫn-sử-dụng-tool-băm-phim-hls-split_videobat)
+9. [Hướng Dẫn Sử Dụng Hệ Thống Cho Người Dùng và Quản Trị Viên](#9-hướng-dẫn-sử-dụng-hệ-thống-cho-người-dùng-và-quản-trị-viên)
+   - [9.1. Dành cho Người dùng cuối (Mobile App Flutter)](#91-dành-cho-người-dùng-cuối-mobile-app-flutter)
+   - [9.2. Dành cho Quản trị viên (WebAdmin)](#92-dành-cho-quản-trị-viên-webadmin)
+10. [Thiết Kế Cơ Sở Dữ Liệu & Quan Hệ Các Bảng (Database Architecture & ERD)](#10-thiết-kế-cơ-sở-dữ-liệu--quan-hệ-các-bảng-database-architecture--erd)
+11. [Tài Khoản và Dữ Liệu Khởi Tạo (Seed Data)](#11-tài-khoản-và-dữ-liệu-khởi-tạo-seed-data)
+12. [Kiểm Thử Tự Động (Automated Testing)](#12-kiểm-thử-tự-động-automated-testing)
+13. [Bộ Danh Mục API Cốt Lõi](#13-bộ-danh-mục-api-cốt-lõi)
 
 ---
 
@@ -261,30 +263,122 @@ Sau khi khởi chạy, mở trình duyệt truy cập:
 
 ### Bước 5: Khởi chạy Ứng dụng Di động Flutter
 
-Mở một cửa sổ Terminal mới và di chuyển vào thư mục `Frontend/cinestream_mobile`:
+Di chuyển vào thư mục dự án ứng dụng di động:
 
 ```bash
 cd Frontend/cinestream_mobile
 
-# Tải các gói thư viện Flutter
+# Tải các gói thư viện Flutter cần thiết
 flutter pub get
-
-# Kiểm tra danh sách thiết bị/máy ảo đang kết nối
-flutter devices
-
-# Khởi chạy ứng dụng trên máy ảo hoặc thiết bị thật
-flutter run
 ```
 
-> **Lưu ý cấu hình địa chỉ IP cho Mobile**:
-> - Nếu chạy trên **Android Emulator**: Địa chỉ trỏ về máy chủ Backend cục bộ là `http://10.0.2.2:5182/api`.
-> - Nếu chạy trên **iOS Simulator**: Sử dụng `http://localhost:5182/api`.
-> - Nếu chạy trên **Thiết bị thật (Android/iOS vật lý)**: Thay thế bằng địa chỉ IPv4 nội bộ mạng WiFi của máy tính (ví dụ: `http://192.168.1.15:5182/api`).
-> Cấu hình này nằm tại tệp `Frontend/cinestream_mobile/lib/core/constants/api_constants.dart`.
+#### 5.1. Khởi động Máy ảo (Android Emulator / iOS Simulator)
+
+Bạn có thể khởi động máy ảo theo 1 trong 3 cách thuận tiện sau:
+
+- **Cách 1: Khởi động nhanh từ dòng lệnh Terminal (Khuyên dùng)**:
+  ```bash
+  # Xem danh sách máy ảo đã cài đặt trên máy
+  flutter emulators
+
+  # Khởi động máy ảo theo ID (ví dụ máy ảo Pixel_7)
+  flutter emulators --launch Pixel_7
+  ```
+
+- **Cách 2: Khởi động từ Visual Studio Code**:
+  1. Nhấn tổ hợp phím `Ctrl + Shift + P` (hoặc `Cmd + Shift + P` trên macOS).
+  2. Nhập tìm kiếm và chọn lệnh: `Flutter: Launch Emulator`.
+  3. Chọn thiết bị máy ảo mong muốn từ danh sách xuất hiện (ví dụ: `Pixel 7`).
+
+- **Cách 3: Khởi động từ Android Studio**:
+  1. Mở phần mềm Android Studio.
+  2. Truy cập thanh công cụ bên phải hoặc menu: **Tools** -> **Device Manager**.
+  3. Nhấn vào biểu tượng nút **Run/Play** tại máy ảo bạn muốn bật.
+
+#### 5.2. Khởi chạy Ứng dụng lên Máy ảo
+
+1. **Kiểm tra kết nối thiết bị**:
+   Sau khi máy ảo đã khởi động xong hoàn toàn, chạy lệnh để xác nhận thiết bị đã được nhận diện:
+   ```bash
+   flutter devices
+   ```
+   Hệ thống sẽ hiển thị thiết bị đang hoạt động (ví dụ: `Android SDK built for x86_64 • emulator-5554 • android-x64`).
+
+2. **Chạy ứng dụng**:
+   ```bash
+   flutter run
+   ```
+   *Mẹo*: Nếu máy tính của bạn đang kết nối đồng thời nhiều thiết bị, chỉ định đích danh máy ảo bằng tham số `-d`:
+   ```bash
+   flutter run -d emulator-5554
+   ```
+
+3. **Các phím tắt điều khiển khi chạy**:
+   - Nhấn phím `r`: **Hot Reload** (cập nhật thay đổi giao diện ngay lập tức trong 1 giây mà không mất trạng thái hiện tại).
+   - Nhấn phím `R`: **Hot Restart** (khởi động lại toàn bộ logic ứng dụng).
+   - Nhấn phím `q`: Dừng và thoát ứng dụng.
+
+> **Cơ chế mạng đặc biệt của Android Emulator**:
+> - Máy ảo Android chạy trong môi trường ảo hóa độc lập. Khi máy ảo gọi đến `localhost`, nó sẽ tự trỏ vào chính nó thay vì máy tính của bạn.
+> - Do đó, Android Emulator quy định địa chỉ **`10.0.2.2`** là cổng kết nối đặc biệt ánh xạ trực tiếp về `localhost` của máy tính.
+> - Dự án CineStream đã thiết lập tự động cơ chế này trong tệp `lib/core/constants/api_constants.dart` (`http://10.0.2.2:5182/api`), do đó bạn không cần phải thay đổi mã nguồn khi chạy trên máy ảo Android.
+> - Trường hợp chạy trên **Thiết bị thật (cắm cáp USB hoặc chung WiFi)**: Thay đổi `baseUrl` thành địa chỉ IPv4 nội bộ của máy tính bạn (ví dụ: `http://192.168.1.15:5182/api`).
 
 ---
 
-## 7. Hướng Dẫn Sử Dụng Tool Băm Phim HLS (`split_video.bat`)
+## 7. Hướng Dẫn Tải và Cài Đặt Kho Phim (Google Drive)
+
+Nhằm đảm bảo kho mã nguồn Git luôn nhẹ nhàng và tối ưu tốc độ clone dự án, toàn bộ các tệp video độ phân giải cao được lưu trữ tập trung tại Google Drive.
+
+### 7.1. Tải gói dữ liệu phim
+
+- **Đường dẫn tải kho phim đầy đủ**: [Tải Full Kho Phim CineStream (Google Drive)](https://drive.google.com/file/d/1-kCoZi6fNyT1F-8JeFRzeU3rmfjjvODU/view?usp=sharing)
+- **Tên tệp**: `videos.zip` (Khoảng 3.4 GB)
+- **Nội dung bao gồm**:
+  - `Dai_thoai_tay_du/`: Phim kinh điển Đại Thoại Tây Du (Châu Tinh Trì), định dạng HLS trọn bộ 106 phút.
+  - `lao_dao_hoa/`: Phim hành động Lão Đạo Hỏa, định dạng HLS trọn bộ 98 phút.
+  - `Demo_2/`: Hoạt hình Big Buck Bunny và Elephant's Dream định dạng HLS chuẩn HD.
+  - `demo001/`: Luồng video thử nghiệm HLS.
+
+### 7.2. Các bước cài đặt vào dự án
+
+1. **Bước 1**: Nhấp vào đường dẫn Google Drive ở trên và tải tệp `videos.zip` về máy tính của bạn.
+2. **Bước 2**: Nhấp chuột phải vào `videos.zip` và chọn **Extract Here** (hoặc giải nén bằng WinRAR / 7-Zip).
+3. **Bước 3**: Sao chép toàn bộ các thư mục vừa giải nén (`Dai_thoai_tay_du`, `lao_dao_hoa`, `Demo_2`, `demo001`...) và dán trực tiếp vào thư mục:
+   ```
+   Backend/wwwroot/videos/
+   ```
+4. **Bước 4**: Kiểm tra cấu trúc thư mục sau khi giải nén đảm bảo đúng định dạng như sau:
+   ```
+   Backend/
+   └── wwwroot/
+       ├── player.html
+       └── videos/
+           ├── Dai_thoai_tay_du/
+           │   ├── master.m3u8
+           │   ├── master0.ts
+           │   └── ...
+           ├── lao_dao_hoa/
+           │   ├── master.m3u8
+           │   ├── master0.ts
+           │   └── ...
+           ├── Demo_2/
+           │   ├── master.m3u8
+           │   ├── master0.ts
+           │   └── ...
+           └── demo001/
+               ├── master.m3u8
+               └── ...
+   ```
+5. **Bước 5**: Kiểm tra phát thử luồng HLS. Bạn có thể mở trình duyệt truy cập:
+   ```
+   http://localhost:5182/player.html
+   ```
+   Nhập đường dẫn `/videos/Dai_thoai_tay_du/master.m3u8` hoặc `/videos/Demo_2/master.m3u8` để kiểm tra khả năng phát video trước khi chạy ứng dụng di động.
+
+---
+
+## 8. Hướng Dẫn Sử Dụng Tool Băm Phim HLS (`split_video.bat`)
 
 Công cụ `Backend/split_video.bat` được xây dựng nhằm tự động hóa quy trình phân đoạn video MP4 thành định dạng chuẩn công nghiệp HTTP Live Streaming (HLS RFC 8216) phục vụ hệ thống streaming nội bộ của CineStream.
 
@@ -339,9 +433,9 @@ Dán đường dẫn HLS (ví dụ: `/videos/my_movie/master.m3u8`) và bấm ph
 
 ---
 
-## 8. Hướng Dẫn Sử Dụng Hệ Thống Cho Người Dùng và Quản Trị Viên
+## 9. Hướng Dẫn Sử Dụng Hệ Thống Cho Người Dùng và Quản Trị Viên
 
-### 8.1. Dành cho Người dùng cuối (Mobile App Flutter)
+### 9.1. Dành cho Người dùng cuối (Mobile App Flutter)
 
 1. **Đăng ký và Đăng nhập**:
    - Mở ứng dụng CineStream trên điện thoại hoặc máy ảo.
@@ -363,7 +457,7 @@ Dán đường dẫn HLS (ví dụ: `/videos/my_movie/master.m3u8`) và bấm ph
 
 ---
 
-### 8.2. Dành cho Quản trị viên (WebAdmin)
+### 9.2. Dành cho Quản trị viên (WebAdmin)
 
 1. **Đăng nhập Quản trị viên**:
    - Truy cập `http://localhost:5173/login`.
@@ -389,29 +483,96 @@ Dán đường dẫn HLS (ví dụ: `/videos/my_movie/master.m3u8`) và bấm ph
 
 ---
 
-## 9. Tài Khoản và Dữ Liệu Khởi Tạo (Seed Data)
+## 10. Thiết Kế Cơ Sở Dữ Liệu & Quan Hệ Các Bảng (Database Architecture & ERD)
+
+Hệ thống cơ sở dữ liệu của CineStream được xây dựng trên hệ quản trị **PostgreSQL** kết hợp cùng công nghệ **Entity Framework Core 10 (Code-First)**. Thiết kế tuân thủ nghiêm ngặt các quy tắc chuẩn hóa dữ liệu (Chuẩn 3NF), tối ưu hóa chỉ mục (Indexes) và áp dụng cơ chế xóa mềm (**Soft Delete**) kế thừa từ lớp `BaseEntity`.
+
+### 10.1. Sơ đồ Quan Hệ Thực Thể (ERD - Entity Relationship Diagram)
+
+```mermaid
+erDiagram
+    USERS ||--|| PROFILES : "1:1 - Hồ sơ cá nhân"
+    USERS ||--o{ FAVORITES : "1:N - Phim yêu thích"
+    MOVIES ||--o{ FAVORITES : "1:N - Được yêu thích"
+    MOVIES ||--o{ MOVIE_CATEGORIES : "1:N - Phân loại thể loại"
+    CATEGORIES ||--o{ MOVIE_CATEGORIES : "1:N - Thuộc danh mục"
+    SERIES ||--o{ SEASONS : "1:N - Các mùa phát sóng"
+    SEASONS ||--o{ EPISODES : "1:N - Các tập phim"
+    USERS ||--o{ CHAT_LOGS : "1:N - Lịch sử hội thoại AI"
+    MOVIES ||--o{ CHAT_LOGS : "1:N - Phim được AI đề xuất"
+    USERS ||--o{ PAYMENT_TRANSACTIONS : "1:N - Đơn thanh toán VIP"
+    SYSTEM_SETTINGS {
+        int Id PK
+        string Key UK
+        string Value
+        string Description
+    }
+```
+
+### 10.2. Chi tiết Danh Mục Các Bảng và Ràng Buộc Dữ Liệu
+
+Mọi bảng trong hệ thống (ngoại trừ bảng liên kết nhiều-nhiều) đều kế thừa từ lớp cơ sở `BaseEntity`:
+- `Id`: Khóa chính định danh duy nhất (Primary Key).
+- `CreatedAt`: Thời điểm khởi tạo bản ghi (UTC).
+- `UpdatedAt`: Thời điểm cập nhật bản ghi gần nhất (UTC).
+- `IsDeleted`: Trạng thái xóa mềm (`true` = đã xóa, `false` = đang hoạt động).
+- `DeletedAt`: Thời điểm thực hiện xóa bản ghi.
+
+Hệ thống tự động cấu hình **Global Query Filter** (`HasQueryFilter(e => !e.IsDeleted)`) cho toàn bộ các bảng, đảm bảo các bản ghi đã xóa mềm không bao giờ bị lộ ra ngoài giao diện người dùng.
+
+| Tên Bảng | Vai Trò & Mục Đích Nghiệp Vụ | Các Thuộc Tính Cốt Lõi | Ràng Buộc & Khóa Ngoại |
+| :--- | :--- | :--- | :--- |
+| **Users** | Lưu trữ thông tin tài khoản người dùng, phân quyền truy cập và gói thuê bao | `Id`, `Email`, `Username`, `PasswordHash`, `Role` (Admin/User), `IsEmailConfirmed`, `IsVip`, `VipExpireAt`, `IsLocked`, `LockReason` | `Email` (Unique Index), `Username` (Unique Index) |
+| **Profiles** | Chứa thông tin hồ sơ hiển thị công khai của người dùng | `Id`, `UserId`, `DisplayName`, `AvatarUrl`, `Bio` | `UserId` (FK trỏ tới `Users.Id`, Unique Index quan hệ 1 - 1) |
+| **Categories** | Quản lý danh mục thể loại phim | `Id`, `Name`, `Description` | `Name` (Unique Index). Chặn xóa nếu còn phim liên kết |
+| **Movies** | Lưu trữ dữ liệu phim (phim lẻ và phim bộ), đường dẫn phát HLS và trạng thái | `Id`, `Title`, `Description`, `PosterUrl`, `TrailerUrl`, `VideoUrl`, `Duration`, `ReleaseYear`, `Type` (Single/Series), `VideoStatus`, `IsFeatured`, `PublishStatus` | Liên kết với `MovieCategories` và `Favorites` |
+| **MovieCategories** | Bảng nối quan hệ nhiều - nhiều (N - N) giữa phim và thể loại | `MovieId`, `CategoryId` | Khóa chính kép `(MovieId, CategoryId)`. FK trỏ tới `Movies.Id` và `Categories.Id` |
+| **Favorites** | Quản lý danh sách các bộ phim được người dùng bấm "Yêu thích" | `UserId`, `MovieId`, `CreatedAt` | Khóa chính kép `(UserId, MovieId)`. FK trỏ tới `Users.Id` và `Movies.Id` |
+| **Series** | Quản lý thông tin tổng quan của các bộ phim dài tập (Phim truyền hình) | `Id`, `Title`, `Description`, `PosterUrl`, `TrailerUrl` | Liên kết 1 - N với bảng `Seasons` |
+| **Seasons** | Quản lý từng mùa phát sóng của phim bộ | `Id`, `SeriesId`, `SeasonNumber`, `Title` | FK `SeriesId` trỏ tới `Series.Id` |
+| **Episodes** | Quản lý từng tập phim cụ thể trong mùa | `Id`, `SeasonId`, `EpisodeNumber`, `Title`, `VideoUrl`, `Duration` | FK `SeasonId` trỏ tới `Seasons.Id` |
+| **ChatLogs** | Lưu trữ lịch sử tương tác giữa người dùng và Trợ lý AI CineBot | `Id`, `UserId`, `Role` (user/model), `Message`, `SuggestedMovieId` | FK `UserId` trỏ tới `Users.Id` (Index), FK `SuggestedMovieId` trỏ tới `Movies.Id` (Nullable) |
+| **PaymentTransactions** | Lưu trữ nhật ký đơn hàng và lịch sử giao dịch nạp VIP VietQR SePay | `Id`, `UserId`, `OrderCode`, `PlanType`, `Amount`, `Status` (Pending/Success/Failed), `BankName`, `AccountNumber`, `TransactionContent`, `PaidAt`, `ReferenceCode` | `OrderCode` (Unique Index để tra cứu và webhook bảo mật), FK `UserId` trỏ tới `Users.Id` (Index) |
+| **SystemSettings** | Quản lý các tham số cấu hình hệ thống động (giá gói VIP, SePay API...) | `Id`, `Key`, `Value`, `Description` | `Key` (Unique Index phục vụ truy vấn O(1) cấu hình) |
+
+> **Ghi chú kiến trúc về Phim bộ (Series / Seasons / Episodes)**:
+> Hệ thống áp dụng tư duy thiết kế đón đầu (Future-Proof Architecture). Tầng Cơ sở dữ liệu đã chuẩn hóa và sẵn sàng cấu trúc phân cấp 3 tầng (`Series` -> `Seasons` -> `Episodes`) phục vụ phát sóng phim truyền hình nhiều tập trong Giai đoạn 2 (Roadmap). Trong phiên bản hiện tại (Giai đoạn 1 - MVP 1.0), toàn bộ danh mục phim được hợp nhất quản trị và tối ưu luồng phát qua bảng trung tâm `Movies` (kèm trường phân loại `MovieType: Single / Series`) nhằm tập trung giải quyết xuất sắc các bài toán công nghệ cốt lõi: hạ tầng HLS phân đoạn 6s, thanh toán tự động VietQR SePay và trợ lý trí tuệ nhân tạo Gemini AI.
+
+---
+
+## 11. Tài Khoản và Dữ Liệu Khởi Tạo (Seed Data)
 
 Khi khởi động lần đầu, hệ thống tự động nạp sẵn các tài khoản và nội dung phim phục vụ kiểm thử và thuyết trình:
 
-### 9.1. Tài khoản mặc định
+### 11.1. Tài khoản mặc định
 
 | Vai trò | Email đăng nhập | Mật khẩu | Đặc quyền |
 | :--- | :--- | :--- | :--- |
 | **Quản trị viên (Admin)** | `admin@cinestream.com` | `Admin@123` | Toàn quyền quản trị phim, thể loại, người dùng, xem toàn bộ giao dịch, sửa giá gói VIP |
 | **Người dùng thường (User)** | `user@cinestream.com` | `User@123` | Xem phim thường, trò chuyện với trợ lý AI, nạp tiền mua gói VIP |
 
-### 9.2. Dữ liệu phim và luồng phát mẫu
+### 11.2. Dữ liệu phim và cơ chế phát mẫu (Streaming Playback)
 
-Hệ thống có sẵn các bộ phim mẫu để trải nghiệm đầy đủ 2 cơ chế streaming:
-1. **Đại Thoại Tây Du**: Định dạng HLS nội bộ phục vụ từ máy chủ Backend (`/videos/1/master.m3u8`), gồm trọn vẹn các phân đoạn `.ts`.
-2. **Tears of Steel**: Định dạng HLS nội bộ (`/videos/2/master.m3u8`).
-3. **Big Buck Bunny**: Phát luồng trực tiếp CDN Direct MP4.
-4. **Sintel**: Phát luồng trực tiếp CDN Direct MP4.
-5. **Elephant's Dream**: Phát luồng trực tiếp CDN Direct MP4.
+Hệ thống có sẵn 6 bộ phim mẫu được khởi tạo tự động trong cơ sở dữ liệu (`DataSeeder.cs`), đại diện cho nhiều thể loại:
+
+| STT | Tên phim | Thể loại | Đường dẫn luồng phát HLS |
+| :---: | :--- | :--- | :--- |
+| 1 | **Đại Thoại Tây Du (Châu Tinh Trì)** | Hài Hước, Hành Động, Võ Thuật | `/videos/Dai_thoai_tay_du/master.m3u8` |
+| 2 | **Tears of Steel (Chiến Binh Thép)** | Viễn Tưởng, Hành Động | `/videos/lao_dao_hoa/master.m3u8` |
+| 3 | **Big Buck Bunny (Chú Thỏ Nổi Giận)** | Hoạt Hình, Hài Hước | `/videos/Demo_2/master.m3u8` |
+| 4 | **Sintel (Hành Trình Tìm Rồng)** | Hoạt Hình, Phiêu Lưu | `/videos/lao_dao_hoa/master.m3u8` |
+| 5 | **Elephant's Dream (Giấc Mơ Cơ Khí)** | Viễn Tưởng, Hành Động | `/videos/Demo_2/master.m3u8` |
+| 6 | **Lão Đạo Hỏa: Rực Lửa Chiến Tuyến** | Hành Động, Võ Thuật | `/videos/lao_dao_hoa/master.m3u8` |
+
+> **Cách thức hoạt động của kho video khi tải dự án**:
+> - **Cơ sở dữ liệu (PostgreSQL)**: Được `DataSeeder` tự động nạp đầy đủ thông tin (tên phim, ảnh poster Unsplash, mô tả, thể loại) ngay khi Backend khởi động lần đầu. Người dùng mở app sẽ thấy danh sách phim hiển thị đầy đủ ngay lập tức.
+> - **Phát video thật (HLS Stream)**: Các tệp phân đoạn video `.ts` và `master.m3u8` được lưu tại `Backend/wwwroot/videos/`.
+>   - Đối với môi trường phát triển: Bạn chỉ cần tải tệp `videos.zip` từ đường dẫn Google Drive tại **Mục 7** và giải nén vào thư mục `Backend/wwwroot/videos/` là toàn bộ các bộ phim sẽ phát mượt mà ngay lập tức.
+>   - Hoặc sử dụng ngay công cụ `split_video.bat` (Mục 8) để tự băm bất kỳ video MP4 nào trên máy của bạn và đưa vào hệ thống trong vài giây.
 
 ---
 
-## 10. Kiểm Thử Tự Động (Automated Testing)
+## 12. Kiểm Thử Tự Động (Automated Testing)
 
 Dự án áp dụng quy trình kiểm thử nghiêm ngặt theo phương pháp Phát triển Hướng Kiểm thử (Test-Driven Development - TDD).
 
@@ -433,22 +594,22 @@ dotnet test Backend.Tests
 
 ---
 
-## 11. Bộ Danh Mục API Cốt Lõi
+## 13. Bộ Danh Mục API Cốt Lõi
 
-### 11.1. Xác thực & Tài khoản (`/api/auth`)
+### 13.1. Xác thực & Tài khoản (`/api/auth`)
 - `POST /api/auth/register`: Đăng ký tài khoản người dùng mới.
 - `POST /api/auth/login`: Xác thực đăng nhập và nhận JWT Token.
 - `GET /api/auth/me`: Lấy thông tin tài khoản người dùng hiện tại (Yêu cầu JWT Token).
 - `GET /api/auth/admin-check`: Kiểm tra quyền quản trị viên.
 
-### 11.2. Thể loại phim (`/api/categories`)
+### 13.2. Thể loại phim (`/api/categories`)
 - `GET /api/categories`: Lấy danh sách thể loại phim (Công khai).
 - `GET /api/categories/{id}`: Xem chi tiết thể loại kèm số lượng phim liên kết (Công khai).
 - `POST /api/categories`: Thêm thể loại mới (Yêu cầu quyền Admin).
 - `PUT /api/categories/{id}`: Cập nhật thể loại (Yêu cầu quyền Admin).
 - `DELETE /api/categories/{id}`: Xóa thể loại (Chặn xóa nếu còn phim liên kết, yêu cầu quyền Admin).
 
-### 11.3. Quản lý phim & Truyền phát (`/api/movies`)
+### 13.3. Quản lý phim & Truyền phát (`/api/movies`)
 - `GET /api/movies`: Danh sách phim có hỗ trợ tìm kiếm, lọc theo thể loại và phân trang (Công khai).
 - `GET /api/movies/{id}`: Xem thông tin chi tiết một bộ phim (Công khai).
 - `GET /api/movies/{id}/playback`: Lấy thông tin luồng phát (Tự động nhận diện HLS m3u8 hoặc CDN MP4).
@@ -456,7 +617,7 @@ dotnet test Backend.Tests
 - `PUT /api/movies/{id}`: Chỉnh sửa thông tin phim (Yêu cầu quyền Admin).
 - `DELETE /api/movies/{id}`: Xóa mềm phim khỏi hệ thống (Yêu cầu quyền Admin).
 
-### 11.4. Thanh toán & Gói dịch vụ VIP (`/api/payments`)
+### 13.4. Thanh toán & Gói dịch vụ VIP (`/api/payments`)
 - `GET /api/payments/plans`: Xem bảng giá niêm yết các gói VIP (Công khai).
 - `PUT /api/payments/plans/{planType}`: Quản trị viên cập nhật giá gói VIP động (Yêu cầu quyền Admin).
 - `POST /api/payments/create`: Tạo đơn thanh toán và sinh ảnh VietQR Napas tự động (Yêu cầu đăng nhập).
@@ -465,12 +626,12 @@ dotnet test Backend.Tests
 - `POST /api/payments/simulate/{orderCode}`: Kích hoạt mô phỏng thanh toán phục vụ kiểm thử và demo (Yêu cầu quyền Admin).
 - `GET /api/payments/admin/all`: Xem toàn bộ lịch sử giao dịch phân trang (Yêu cầu quyền Admin).
 
-### 11.5. Trợ lý AI Điện ảnh (`/api/ai`)
+### 13.5. Trợ lý AI Điện ảnh (`/api/ai`)
 - `POST /api/ai/chat`: Gửi câu hỏi tư vấn phim và nhận phản hồi thông minh kèm mã phim gợi ý (Yêu cầu đăng nhập).
 - `GET /api/ai/history`: Lấy lịch sử các phiên trò chuyện của người dùng (Yêu cầu đăng nhập).
 - `DELETE /api/ai/history`: Xóa lịch sử trò chuyện của người dùng (Yêu cầu đăng nhập).
 
-### 11.6. Quản trị người dùng (`/api/admin/users`)
+### 13.6. Quản trị người dùng (`/api/admin/users`)
 - `GET /api/admin/users`: Danh sách người dùng hệ thống có phân trang và bộ lọc (Yêu cầu quyền Admin).
 - `GET /api/admin/users/{id}`: Xem chi tiết thông tin và thống kê tương tác của người dùng (Yêu cầu quyền Admin).
 - `POST /api/admin/users/{id}/lock`: Khóa tài khoản kèm lý do vi phạm (Yêu cầu quyền Admin).
