@@ -13,13 +13,13 @@ class ApiConstants {
   //   http://localhost:5182/api
   //
   // Android Emulator:
-  //   http://10.0.2.2:5182/api
+  //   https://10.0.2.2:7145/api
   static String get baseUrl {
     if (kIsWeb) {
       return 'http://localhost:5182/api';
     }
 
-    return 'http://10.0.2.2:5182/api';
+    return 'https://10.0.2.2:7145/api';
   }
 
   // ================================================================
