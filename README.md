@@ -353,7 +353,7 @@ Nhằm đảm bảo kho mã nguồn Git luôn nhẹ nhàng và tối ưu tốc �
 
 ### 7.1. Tải gói dữ liệu phim
 
-- **Đường dẫn tải kho phim đầy đủ**: [Tải Full Kho Phim CineStream (Google Drive)](https://drive.google.com/file/d/1-kCoZi6fNyT1F-8JeFRzeU3rmfjjvODU/view?usp=sharing)
+- **Đường dẫn tải kho phim đầy đủ**: [Tải Full Kho Phim CineStream (Google Drive)](https://drive.google.com/file/d/1pVuXEH1yI4Yji-qdUIWk64Z_DM_F-r9o/view?usp=sharing)
 - **Tên tệp**: `videos.zip` (Khoảng 3.4 GB)
 - **Nội dung bao gồm**:
   - `Dai_thoai_tay_du/`: Phim kinh điển Đại Thoại Tây Du (Châu Tinh Trì), định dạng HLS trọn bộ 106 phút.
