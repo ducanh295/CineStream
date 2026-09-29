@@ -194,13 +194,13 @@ const Dashboard = () => {
 
   // Lấy 5 phim mới nhất theo thứ tự API trả về (giả định API trả theo id tăng dần / mới nhất trước)
   const recentMovies = [...movies].slice(0, 5);
-   
+  // Lọc danh sách giao dịch để chỉ giữ lại những giao dịch thành công. 
   const successfulTransactions = transactions.filter(isSuccessfulTransaction);
-   
+  // Tính tổng doanh thu từ danh sách giao dịch thành công bằng cách sử dụng phương thức reduce để cộng dồn giá trị amount của từng giao dịch, nếu amount không phải là số thì sử dụng giá trị mặc định là 0. 
   const totalRevenue = successfulTransactions.reduce((total, transaction) => total + (Number(transaction.amount) || 0), 0);
-   
+  // Lấy thống kê giao dịch trong 7 ngày gần nhất từ danh sách giao dịch bằng cách sử dụng hàm getRecentTransactionStats đã định nghĩa trước đó. 
   const recentTransactionStats = getRecentTransactionStats(transactions);
-   
+  // Tính tổng doanh thu trong 7 ngày gần nhất bằng cách sử dụng phương thức reduce để cộng dồn giá trị revenue của từng ngày trong recentTransactionStats. 
   const recentRevenue = recentTransactionStats.reduce((total, item) => total + item.revenue, 0);
 
 
