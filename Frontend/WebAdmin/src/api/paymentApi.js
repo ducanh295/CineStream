@@ -1,4 +1,4 @@
-// Nạp mô-đun phụ thuộc cần dùng trong tệp này.
+ 
 import axiosInstance from './axios';
 
 // API module cho chuc nang thanh toan VietQR SePay va quan ly goi VIP

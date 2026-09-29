@@ -1,35 +1,35 @@
-// Nạp mô-đun phụ thuộc cần dùng trong tệp này.
+ 
 import { useState, useEffect, useCallback, useRef } from 'react';
-// Nạp mô-đun phụ thuộc cần dùng trong tệp này.
+ 
 import { motion } from 'framer-motion';
-// Nạp mô-đun phụ thuộc cần dùng trong tệp này.
+ 
 import { Send, Bot, User, Trash2, Loader2, Sparkles, Film } from 'lucide-react';
-// Nạp mô-đun phụ thuộc cần dùng trong tệp này.
+ 
 import aiApi from '../api/aiApi';
-// Nạp mô-đun phụ thuộc cần dùng trong tệp này.
+ 
 import ConfirmDialog from '../components/ConfirmDialog';
 
-// Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+ // Định nghĩa thành phần AiChat để quản lý giao diện và logic trò chuyện với AI.
 const AiChat = () => {
-  // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+   
   const [messages, setMessages] = useState([]); // { id, message, isFromAI, createdAt, recommendedMovies? }
-  // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+   
   const [input, setInput] = useState('');
-  // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+   
   const [loadingHistory, setLoadingHistory] = useState(true);
-  // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+   
   const [sending, setSending] = useState(false);
-  // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+   
   const [errorMsg, setErrorMsg] = useState('');
-  // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+   
   const [clearing, setClearing] = useState(false);
-  // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+   
   const [confirmClearOpen, setConfirmClearOpen] = useState(false);
 
-  // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+   
   const bottomRef = useRef(null);
 
-  // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+   // Định nghĩa hàm fetchHistory để lấy lịch sử trò chuyện từ API.
   const fetchHistory = useCallback(async () => {
      
     setLoadingHistory(true);
@@ -37,12 +37,13 @@ const AiChat = () => {
     setErrorMsg('');
     // Bao bọc thao tác có thể lỗi để xử lý an toàn.
     try {
-      // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+      // Gọi API để lấy lịch sử trò chuyện với giới hạn 30 tin nhắn gần nhất. 
       const result = await aiApi.getHistory(30);
-      // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+      // dòng này kiểm tra xem dữ liệu trả về có phải là một mảng hay không, nếu không thì gán giá trị mặc định là một mảng rỗng. 
       const history = Array.isArray(result?.data) ? result.data : [];
       // Sắp xếp theo thời gian tăng dần để hiển thị đúng thứ tự hội thoại
       const sorted = [...history].sort(
+        // So sánh hai tin nhắn dựa trên thuộc tính createdAt để sắp xếp theo thời gian tăng dần.
         (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
       );
        
@@ -56,9 +57,9 @@ const AiChat = () => {
     }
   }, []);
 
-   
+  // Sử dụng useEffect để gọi fetchHistory khi thành phần được gắn vào DOM hoặc khi fetchHistory thay đổi. 
   useEffect(() => {
-     
+    // Sử dụng Promise.resolve().then() để đảm bảo fetchHistory được gọi sau khi tất cả các hiệu ứng hiện tại đã hoàn thành, tránh xung đột với các hiệu ứng khác. 
     Promise.resolve().then(() => {
        
       fetchHistory();
@@ -67,17 +68,17 @@ const AiChat = () => {
 
    
   useEffect(() => {
-     
+    // Cuộn xuống cuối khung hội thoại mỗi khi messages hoặc sending thay đổi, đảm bảo người dùng luôn thấy tin nhắn mới nhất. 
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, sending]);
 
-  // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+  //logic gửi tin nhắn đến AI và xử lý phản hồi từ API. 
   const handleSend = async (e) => {
-     
+    // Ngăn chặn hành vi mặc định của sự kiện gửi form để tránh tải lại trang. 
     e.preventDefault();
-    // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+    // Loại bỏ khoảng trắng ở đầu và cuối của tin nhắn nhập vào để kiểm tra xem có nội dung hay không.
     const text = input.trim();
-    // Kiểm tra điều kiện để chọn nhánh xử lý phù hợp.
+    // nếu tin nhắn trống hoặc đang gửi tin nhắn, thì không thực hiện hành động gửi.
     if (!text || sending) return;
 
      
@@ -89,25 +90,25 @@ const AiChat = () => {
       isFromAI: false,
       createdAt: new Date().toISOString(),
     };
-     
+    // Cập nhật danh sách tin nhắn với tin nhắn mới của Admin, giữ nguyên các tin nhắn trước đó. 
     setMessages((prev) => [...prev, tempUserMsg]);
-     
+    // Xóa nội dung ô nhập tin nhắn và đặt trạng thái sending thành true để hiển thị trạng thái đang gửi. 
     setInput('');
-     
+    
     setSending(true);
 
     // Bao bọc thao tác có thể lỗi để xử lý an toàn.
     try {
-      // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+      // Gọi API để gửi tin nhắn đến AI và nhận phản hồi. 
       const result = await aiApi.sendMessage(text);
-      // Kiểm tra điều kiện để chọn nhánh xử lý phù hợp.
+       
       if (!result?.success || !result?.data) {
         // Phát sinh lỗi để thông báo trạng thái bất thường.
         throw new Error(result?.message || 'CineBot không phản hồi được. Vui lòng thử lại!');
       }
-      // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+      // Giải cấu trúc dữ liệu phản hồi từ API, bao gồm reply (phản hồi của AI), recommendedMovies (danh sách phim gợi ý) và createdAt (thời gian tạo phản hồi). 
       const { reply, recommendedMovies, createdAt } = result.data;
-      // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+      // Tạo một đối tượng tin nhắn từ AI với thông tin phản hồi và các thuộc tính liên quan. 
       const aiMsg = {
         id: `temp-ai-${Date.now()}`,
         message: reply,
@@ -126,7 +127,7 @@ const AiChat = () => {
     }
   };
 
-  // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+  // logic xóa lịch sử trò chuyện với AI và cập nhật giao diện người dùng. 
   const handleClearHistory = async () => {
      
     setClearing(true);
@@ -149,16 +150,16 @@ const AiChat = () => {
     }
   };
 
-  // Trả về kết quả hoặc giao diện từ nhánh xử lý hiện tại.
+   
   return (
     <div className="space-y-6">
-      {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
+       
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
+         
         <div>
-          {/* Hiển thị phần tử giao diện h1 và nội dung con của nó. */}
+           
           <h1 className="text-3xl font-bold text-white">Trợ lý AI CineBot</h1>
-          {/* Hiển thị phần tử giao diện p và nội dung con của nó. */}
+           
           <p className="text-slate-400 mt-1">Kiểm thử trợ lý AI tư vấn và gợi ý phim cho người dùng.</p>
         </div>
         {/* Hiển thị phần tử giao diện button và nội dung con của nó. */}
@@ -172,7 +173,7 @@ const AiChat = () => {
         </button>
       </div>
 
-      {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
+       
       <div className="bg-slate-900 border border-slate-800 rounded-2xl shadow-xl flex flex-col h-[65vh]">
         {/* Khung hội thoại */}
         <div className="flex-1 overflow-y-auto p-6 space-y-5">
@@ -184,18 +185,18 @@ const AiChat = () => {
 
           {loadingHistory ? (
             <div className="flex flex-col items-center justify-center h-full text-slate-500">
-              {/* Hiển thị phần tử giao diện Loader2 và nội dung con của nó. */}
+               
               <Loader2 className="animate-spin mb-3" size={32} />
-              {/* Hiển thị phần tử giao diện p và nội dung con của nó. */}
+               
               <p>Đang tải lịch sử trò chuyện...</p>
             </div>
           ) : messages.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-slate-500">
               {/* Hiển thị phần tử giao diện Sparkles và nội dung con của nó. */}
               <Sparkles size={40} className="mb-3 opacity-50" />
-              {/* Hiển thị phần tử giao diện p và nội dung con của nó. */}
+               
               <p>Chưa có hội thoại nào. Hãy thử hỏi CineBot điều gì đó!</p>
-              {/* Hiển thị phần tử giao diện p và nội dung con của nó. */}
+               
               <p className="text-xs mt-1 text-slate-600">Ví dụ: "Gợi ý cho tôi phim hành động hay"</p>
             </div>
           ) : (
@@ -206,7 +207,7 @@ const AiChat = () => {
                 animate={{ opacity: 1, y: 0 }}
                 className={`flex gap-3 ${msg.isFromAI ? 'flex-row' : 'flex-row-reverse'}`}
               >
-                {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
+                 
                 <div
                   className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 ${
                     msg.isFromAI ? 'bg-blue-600' : 'bg-slate-700'
@@ -215,9 +216,9 @@ const AiChat = () => {
                   {msg.isFromAI ? <Bot size={18} className="text-white" /> : <User size={18} className="text-white" />}
                 </div>
 
-                {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
+                 
                 <div className={`max-w-[75%] ${msg.isFromAI ? '' : 'flex flex-col items-end'}`}>
-                  {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
+                   
                   <div
                     className={`px-4 py-3 rounded-2xl text-sm whitespace-pre-wrap ${
                       msg.isFromAI
@@ -236,7 +237,7 @@ const AiChat = () => {
                           key={movie.id}
                           className="flex items-center gap-2 bg-slate-800/70 border border-slate-700 rounded-xl px-3 py-2"
                         >
-                          {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
+                           
                           <div className="w-8 h-10 bg-slate-700 rounded overflow-hidden shrink-0">
                             {movie.posterUrl ? (
                               <img src={movie.posterUrl} alt={movie.title} className="w-full h-full object-cover" />
@@ -257,20 +258,20 @@ const AiChat = () => {
 
           {sending && (
             <div className="flex gap-3">
-              {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
+               
               <div className="w-9 h-9 rounded-full bg-blue-600 flex items-center justify-center shrink-0">
                 {/* Hiển thị phần tử giao diện Bot và nội dung con của nó. */}
                 <Bot size={18} className="text-white" />
               </div>
-              {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
+               
               <div className="px-4 py-3 rounded-2xl bg-slate-800 text-slate-400 rounded-tl-sm flex items-center gap-2">
-                {/* Hiển thị phần tử giao diện Loader2 và nội dung con của nó. */}
+                 
                 <Loader2 className="animate-spin" size={16} /> CineBot đang trả lời...
               </div>
             </div>
           )}
 
-          {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
+           
           <div ref={bottomRef} />
         </div>
 

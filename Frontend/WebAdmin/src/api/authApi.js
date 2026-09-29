@@ -1,7 +1,7 @@
-// Nạp mô-đun phụ thuộc cần dùng trong tệp này.
+ 
 import axiosInstance from './axios';
 
-// Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+ 
 const authApi = {
   // POST /api/auth/login -> { usernameOrEmail, password }
   login: (credentials) => axiosInstance.post('/auth/login', credentials),

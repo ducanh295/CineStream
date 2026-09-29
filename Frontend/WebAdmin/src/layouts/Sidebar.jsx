@@ -1,13 +1,13 @@
-// Nạp mô-đun phụ thuộc cần dùng trong tệp này.
+ 
 import { motion } from 'framer-motion';
-// Nạp mô-đun phụ thuộc cần dùng trong tệp này.
+ 
 import { LayoutDashboard, Film, Tag, Users, CreditCard, MessageSquare, Settings, LogOut } from 'lucide-react';
-// Nạp mô-đun phụ thuộc cần dùng trong tệp này.
+ 
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-// Nạp mô-đun phụ thuộc cần dùng trong tệp này.
+ 
 import { useAuth } from '../context/useAuth';
 
-// Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+ 
 const menuItems = [
   { icon: LayoutDashboard, label: 'Dashboard', path: '/' },
   { icon: Film, label: 'Phim & Series', path: '/movies' },
@@ -18,16 +18,16 @@ const menuItems = [
   { icon: Settings, label: 'Cấu hình', path: '/settings' },
 ];
 
-// Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+ 
 const Sidebar = () => {
-  // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+   
   const location = useLocation();
-  // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+   
   const navigate = useNavigate();
-  // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+   
   const { logout } = useAuth();
 
-  // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+   
   const handleLogout = () => {
      
     logout();
@@ -35,15 +35,15 @@ const Sidebar = () => {
     navigate('/login', { replace: true });
   };
 
-  // Trả về kết quả hoặc giao diện từ nhánh xử lý hiện tại.
+   
   return (
     <motion.aside
       initial={{ x: -250 }} animate={{ x: 0 }}
       className="w-64 bg-[#0f172a] text-white h-screen fixed left-0 top-0 z-50 border-r border-slate-800"
     >
-      {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
+       
       <div className="p-6 flex items-center gap-3">
-        {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
+         
         <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center font-bold text-xl shadow-lg shadow-blue-500/50">C</div>
         {/* Hiển thị phần tử giao diện span và nội dung con của nó. */}
         <span className="text-xl font-bold bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">CineStream</span>
@@ -52,9 +52,9 @@ const Sidebar = () => {
       {/* Hiển thị phần tử giao diện nav và nội dung con của nó. */}
       <nav className="mt-6 px-4 space-y-2">
         {menuItems.map((item) => {
-          // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+           
           const isActive = location.pathname === item.path;
-          // Trả về kết quả hoặc giao diện từ nhánh xử lý hiện tại.
+           
           return (
             <Link key={item.path} to={item.path}>
               {/* Hiển thị phần tử giao diện giao diện và nội dung con của nó. */}
@@ -74,7 +74,7 @@ const Sidebar = () => {
         })}
       </nav>
 
-      {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
+       
       <div className="absolute bottom-6 w-full px-4 border-t border-slate-800 pt-6">
         {/* Hiển thị phần tử giao diện button và nội dung con của nó. */}
         <button

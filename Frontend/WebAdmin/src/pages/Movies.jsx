@@ -1,21 +1,21 @@
-// Nạp mô-đun phụ thuộc cần dùng trong tệp này.
+ 
 import { useState, useEffect, useCallback } from 'react';
-// Nạp mô-đun phụ thuộc cần dùng trong tệp này.
+ 
 import { motion } from 'framer-motion';
-// Nạp mô-đun phụ thuộc cần dùng trong tệp này.
+ 
 import { Plus, Search, Edit2, Trash2, PlayCircle, Loader2, Film, X, Layers, Star, ChevronLeft, ChevronRight } from 'lucide-react';
-// Nạp mô-đun phụ thuộc cần dùng trong tệp này.
+ 
 import { Link } from 'react-router-dom';
-// Nạp mô-đun phụ thuộc cần dùng trong tệp này.
+ 
 import movieApi from '../api/movieApi';
-// Nạp mô-đun phụ thuộc cần dùng trong tệp này.
+ 
 import categoryApi from '../api/categoryApi';
-// Nạp mô-đun phụ thuộc cần dùng trong tệp này.
+ 
 import Modal from '../components/Modal';
-// Nạp mô-đun phụ thuộc cần dùng trong tệp này.
+ 
 import ConfirmDialog from '../components/ConfirmDialog';
 
-// Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+// Định nghĩa một đối tượng EMPTY_FORM để lưu trữ giá trị mặc định của biểu mẫu thêm/sửa phim. 
 const EMPTY_FORM = {
   title: '',
   description: '',
@@ -41,47 +41,47 @@ const PUBLISH_STATUS_CONFIG = {
   2: { label: 'Đã phát hành', color: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' },
 };
 
-// Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+ 
 const Movies = () => {
-  // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+   
   const [movies, setMovies] = useState([]);
-  // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+   
   const [categories, setCategories] = useState([]);
-  // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+   
   const [loading, setLoading] = useState(true);
-  // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+   
   const [errorMsg, setErrorMsg] = useState('');
-  // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+   
   const [search, setSearch] = useState('');
 
   // Trạng thái phân trang danh sách phim
   const [page, setPage] = useState(1);
-  // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+   
   const [pageSize, setPageSize] = useState(10);
-  // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+   
   const [totalPages, setTotalPages] = useState(1);
-  // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+   
   const [totalCount, setTotalCount] = useState(0);
 
-  // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+   
   const [modalOpen, setModalOpen] = useState(false);
-  // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+   
   const [editingId, setEditingId] = useState(null);
-  // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+   
   const [form, setForm] = useState(EMPTY_FORM);
-  // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+   
   const [formErrors, setFormErrors] = useState({});
-  // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+   
   const [saving, setSaving] = useState(false);
 
-  // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+   
   const [deleteTarget, setDeleteTarget] = useState(null);
-  // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+   
   const [deleting, setDeleting] = useState(false);
 
   // Danh sách luồng phát có sẵn từ kho HLS nội bộ
   const [availableStreams, setAvailableStreams] = useState({ internalStreams: [], cdnPresets: [] });
-  // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+   
   const [showHlsPicker, setShowHlsPicker] = useState(false);
 
   // Tải danh sách phim phân trang từ máy chủ Backend
@@ -92,27 +92,27 @@ const Movies = () => {
     setErrorMsg('');
     // Bao bọc thao tác có thể lỗi để xử lý an toàn.
     try {
-      // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+      // khai báo một đối tượng params để lưu trữ các tham số truy vấn cho API getAll, bao gồm số trang, kích thước trang và trạng thái bản nháp. 
       const params = {
         page: pageNumber,
         pageSize: size,
         includeDraft: true,
       };
-      // Kiểm tra điều kiện để chọn nhánh xử lý phù hợp.
+      // nếu searchTerm không rỗng, thêm tham số tìm kiếm vào params để lọc danh sách phim theo từ khóa.
       if (searchTerm.trim()) params.search = searchTerm.trim();
-      // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+       
       const result = await movieApi.getAll(params);
-      // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+       
       const movieData = result?.data;
-      // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+       
       const items = Array.isArray(movieData) ? movieData : movieData?.items || [];
        
       setMovies(items);
-       
+      // Cập nhật trạng thái phân trang dựa trên dữ liệu trả về từ API, bao gồm tổng số trang
       setTotalPages(movieData?.totalPages || 1);
-       
+      // Cập nhật tổng số phim dựa trên dữ liệu trả về từ API, nếu không có dữ liệu, đặt mặc định là 0. 
       setTotalCount(movieData?.totalCount || items.length);
-       
+      // Cập nhật số trang hiện tại dựa trên dữ liệu trả về từ API, nếu không có dữ liệu, giữ nguyên giá trị hiện tại. 
       setPage(movieData?.pageNumber || pageNumber);
     } catch (err) {
        
@@ -123,26 +123,26 @@ const Movies = () => {
     }
   }, []);
 
-  // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+  // Tải danh sách thể loại phim từ máy chủ Backend 
   const fetchCategories = useCallback(async () => {
     // Bao bọc thao tác có thể lỗi để xử lý an toàn.
     try {
-      // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
-      const result = await categoryApi.getAll();
        
+      const result = await categoryApi.getAll();
+      // set categories dựa trên dữ liệu trả về từ API, nếu dữ liệu không phải là mảng, đặt mặc định là mảng rỗng. 
       setCategories(Array.isArray(result?.data) ? result.data : []);
     } catch {
       // Không chặn trang nếu lỗi lấy category, chỉ ảnh hưởng form thêm/sửa
     }
   }, []);
 
-  // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+  // Tải danh sách luồng phát có sẵn từ máy chủ Backend (bao gồm luồng nội bộ và preset CDN) 
   const fetchAvailableStreams = useCallback(async () => {
     // Bao bọc thao tác có thể lỗi để xử lý an toàn.
     try {
-      // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+      // Gọi API để lấy danh sách luồng phát có sẵn từ máy chủ Backend và kiểm tra dữ liệu trả về. 
       const result = await movieApi.getAvailableStreams();
-      // Kiểm tra điều kiện để chọn nhánh xử lý phù hợp.
+       
       if (result?.data) {
          
         setAvailableStreams(result.data);
@@ -162,16 +162,16 @@ const Movies = () => {
 
   // Tự động tải lại danh sách phim theo trang, từ khóa tìm kiếm và kích thước trang
   useEffect(() => {
-    // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+     
     const timer = setTimeout(() => {
        
       fetchMovies(page, search, pageSize);
     }, 300);
-    // Trả về kết quả hoặc giao diện từ nhánh xử lý hiện tại.
+     
     return () => clearTimeout(timer);
   }, [page, search, pageSize, fetchMovies]);
 
-  // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+   
   const openCreateModal = () => {
      
     setEditingId(null);
@@ -185,7 +185,7 @@ const Movies = () => {
     setModalOpen(true);
   };
 
-  // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+   
   const openEditModal = async (movie) => {
      
     setEditingId(movie.id);
@@ -213,11 +213,11 @@ const Movies = () => {
 
     // Nạp thêm chi tiết từ API getById để đảm bảo dữ liệu luôn đầy đủ và mới nhất
     try {
-      // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+       
       const res = await movieApi.getById(movie.id);
-      // Kiểm tra điều kiện để chọn nhánh xử lý phù hợp.
+       
       if (res?.data) {
-        // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+         
         const detail = res.data;
          
         setForm((prev) => ({
@@ -241,9 +241,9 @@ const Movies = () => {
     }
   };
 
-  // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+   
   const closeModal = () => {
-    // Kiểm tra điều kiện để chọn nhánh xử lý phù hợp.
+     
     if (saving) return;
      
     setShowHlsPicker(false);
@@ -251,13 +251,13 @@ const Movies = () => {
     setModalOpen(false);
   };
 
-  // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+  // Chuyển đổi trạng thái chọn / bỏ chọn thể loại phim trong biểu mẫu thêm/sửa 
   const toggleCategory = (id) => {
      
     setForm((prev) => {
-      // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+       
       const exists = prev.categoryIds.includes(id);
-      // Trả về kết quả hoặc giao diện từ nhánh xử lý hiện tại.
+       
       return {
         ...prev,
         categoryIds: exists
@@ -267,47 +267,47 @@ const Movies = () => {
     });
   };
 
-  // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+  // Hàm validateForm kiểm tra tính hợp lệ của dữ liệu trong biểu mẫu thêm/sửa phim trước khi gửi lên máy chủ. Nó kiểm tra các trường bắt buộc, độ dài ký tự và phạm vi giá trị, sau đó lưu trữ các lỗi vào trạng thái formErrors để hiển thị thông báo lỗi cho người dùng. Nếu không có lỗi nào, hàm trả về true, ngược lại trả về false. 
   const validateForm = () => {
-    // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+     
     const errors = {};
-    // Kiểm tra điều kiện để chọn nhánh xử lý phù hợp.
+     
     if (!form.title.trim()) {
        
       errors.title = 'Tiêu đề phim không được để trống!';
-    // Kiểm tra điều kiện để chọn nhánh xử lý phù hợp.
+     
     } else if (form.title.trim().length > 255) {
        
       errors.title = 'Tiêu đề tối đa 255 ký tự!';
     }
-    // Kiểm tra điều kiện để chọn nhánh xử lý phù hợp.
+     
     if (form.duration && (Number(form.duration) < 1 || Number(form.duration) > 1000)) {
        
       errors.duration = 'Thời lượng phải từ 1 đến 1000 phút!';
     }
-    // Kiểm tra điều kiện để chọn nhánh xử lý phù hợp.
+     
     if (form.releaseYear && (Number(form.releaseYear) < 1888 || Number(form.releaseYear) > 2100)) {
        
       errors.releaseYear = 'Năm phát hành phải từ 1888 đến 2100!';
     }
      
     setFormErrors(errors);
-    // Trả về kết quả hoặc giao diện từ nhánh xử lý hiện tại.
+     
     return Object.keys(errors).length === 0;
   };
 
-  // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+  // Hàm handleSubmit xử lý sự kiện gửi biểu mẫu thêm/sửa phim. Nó ngăn chặn hành vi mặc định của form, kiểm tra tính hợp lệ của dữ liệu bằng validateForm, sau đó gửi dữ liệu lên máy chủ thông qua API movieApi. Nếu đang chỉnh sửa, nó gọi API cập nhật, nếu là thêm mới, nó gọi API tạo phim mới. Sau khi thành công, nó đóng modal và tải lại danh sách phim. Nếu có lỗi xảy ra, nó lưu trữ thông báo lỗi vào trạng thái formErrors để hiển thị cho người dùng. 
   const handleSubmit = async (e) => {
      
     e.preventDefault();
-    // Kiểm tra điều kiện để chọn nhánh xử lý phù hợp.
+     
     if (!validateForm()) return;
 
      
     setSaving(true);
     // Bao bọc thao tác có thể lỗi để xử lý an toàn.
     try {
-      // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+       
       const payload = {
         title: form.title.trim(),
         description: form.description.trim() || null,
@@ -322,7 +322,7 @@ const Movies = () => {
         categoryIds: form.categoryIds,
       };
 
-      // Kiểm tra điều kiện để chọn nhánh xử lý phù hợp.
+       
       if (editingId) {
          
         payload.videoStatus = Number(form.videoStatus);
@@ -338,7 +338,7 @@ const Movies = () => {
        
       await fetchMovies(page, search, pageSize);
     } catch (err) {
-      // Kiểm tra điều kiện để chọn nhánh xử lý phù hợp.
+       
       if (err.errors && err.errors.length > 0) {
          
         setFormErrors({ general: err.errors.join(', ') });
@@ -352,9 +352,9 @@ const Movies = () => {
     }
   };
 
-  // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+  // Hàm handleDelete xử lý việc xóa phim. Nó kiểm tra xem có phim nào được chọn để xóa hay không, sau đó gọi API movieApi để xóa phim dựa trên ID của phim đó. Nếu xóa thành công, nó cập nhật lại danh sách phim và điều chỉnh trang hiện tại nếu cần thiết. Nếu có lỗi xảy ra trong quá trình xóa, nó lưu trữ thông báo lỗi vào trạng thái errorMsg để hiển thị cho người dùng 
   const handleDelete = async () => {
-    // Kiểm tra điều kiện để chọn nhánh xử lý phù hợp.
+     
     if (!deleteTarget) return;
      
     setDeleting(true);
@@ -364,7 +364,7 @@ const Movies = () => {
       await movieApi.delete(deleteTarget.id);
        
       setDeleteTarget(null);
-      // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+       
       const targetPage = movies.length === 1 && page > 1 ? page - 1 : page;
        
       setPage(targetPage);
@@ -397,16 +397,16 @@ const Movies = () => {
     }
   };
 
-  // Trả về kết quả hoặc giao diện từ nhánh xử lý hiện tại.
+   
   return (
     <div className="space-y-6">
-      {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
+       
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
+         
         <div>
-          {/* Hiển thị phần tử giao diện h1 và nội dung con của nó. */}
+           
           <h1 className="text-3xl font-bold text-white">Quản lý nội dung</h1>
-          {/* Hiển thị phần tử giao diện p và nội dung con của nó. */}
+           
           <p className="text-slate-400 mt-1">Danh sách phim lẻ, phim bộ và các tập phim.</p>
         </div>
         {/* Hiển thị phần tử giao diện giao diện và nội dung con của nó. */}
@@ -420,11 +420,11 @@ const Movies = () => {
         </motion.button>
       </div>
 
-      {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
+       
       <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
-        {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
+         
         <div className="p-4 border-b border-slate-800 flex flex-col md:flex-row gap-4 bg-slate-900/50">
-          {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
+           
           <div className="relative flex-1">
             {/* Hiển thị phần tử giao diện Search và nội dung con của nó. */}
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
@@ -452,16 +452,16 @@ const Movies = () => {
 
         {loading && movies.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-slate-500">
-            {/* Hiển thị phần tử giao diện Loader2 và nội dung con của nó. */}
+             
             <Loader2 className="animate-spin mb-3" size={32} />
-            {/* Hiển thị phần tử giao diện p và nội dung con của nó. */}
+             
             <p>Đang tải danh sách phim...</p>
           </div>
         ) : movies.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-slate-500">
             {/* Hiển thị phần tử giao diện Film và nội dung con của nó. */}
             <Film size={40} className="mb-3 opacity-50" />
-            {/* Hiển thị phần tử giao diện p và nội dung con của nó. */}
+             
             <p>{search ? 'Không tìm thấy phim phù hợp.' : 'Chưa có phim nào. Hãy thêm mới!'}</p>
           </div>
         ) : (
@@ -501,7 +501,7 @@ const Movies = () => {
                         className="flex items-center gap-4 group/movie hover:text-blue-400 transition-colors"
                         title={`Xem chi tiết ${movie.title}`}
                       >
-                        {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
+                         
                         <div className="w-12 h-16 bg-slate-800 rounded-lg flex items-center justify-center border border-slate-700 group-hover:border-blue-500 transition-all overflow-hidden relative shrink-0">
                           {movie.posterUrl ? (
                             <img src={movie.posterUrl} alt={movie.title} className="w-full h-full object-cover" />
@@ -509,11 +509,11 @@ const Movies = () => {
                             <PlayCircle className="text-white/20" />
                           )}
                         </div>
-                        {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
+                         
                         <div>
-                          {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
+                           
                           <div className="flex items-center gap-2 flex-wrap">
-                            {/* Hiển thị phần tử giao diện p và nội dung con của nó. */}
+                             
                             <p className="font-bold text-white group-hover/movie:text-blue-300 transition-colors">{movie.title}</p>
                             {movie.isFeatured && (
                               <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-400 border border-amber-500/30 shrink-0">
@@ -528,7 +528,7 @@ const Movies = () => {
                     </td>
                     {/* Hiển thị phần tử giao diện td và nội dung con của nó. */}
                     <td className="px-6 py-4">
-                      {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
+                       
                       <div className="flex flex-wrap gap-1 max-w-50">
                         {(movie.categories || []).length > 0 ? (
                           movie.categories.map((c) => (
@@ -556,7 +556,7 @@ const Movies = () => {
                     <td className="px-6 py-4 text-sm">{movie.releaseYear || '—'}</td>
                     {/* Hiển thị phần tử giao diện td và nội dung con của nó. */}
                     <td className="px-6 py-4">
-                      {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
+                       
                       <div className="flex items-center justify-center gap-2">
                         {/* Hiển thị phần tử giao diện button và nội dung con của nó. */}
                         <button
@@ -600,7 +600,7 @@ const Movies = () => {
         {/* Thanh điều khiển phân trang danh sách phim */}
         {totalCount > 0 && (
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-6 py-4 border-t border-slate-800 bg-slate-900/60 rounded-b-2xl">
-            {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
+             
             <div className="flex items-center gap-3 text-sm text-slate-400">
               {/* Hiển thị phần tử giao diện span và nội dung con của nó. */}
               <span>
@@ -616,7 +616,7 @@ const Movies = () => {
                 <select
                   value={pageSize}
                   onChange={(e) => {
-                    // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+                     
                     const newSize = Number(e.target.value);
                      
                     setPageSize(newSize);
@@ -637,7 +637,7 @@ const Movies = () => {
               </label>
             </div>
 
-            {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
+             
             <div className="flex items-center gap-1.5">
               {/* Hiển thị phần tử giao diện button và nội dung con của nó. */}
               <button
@@ -652,16 +652,16 @@ const Movies = () => {
                 <span>Trước</span>
               </button>
 
-              {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
+               
               <div className="flex items-center gap-1 px-1">
                 {Array.from({ length: totalPages }, (_, i) => i + 1)
                   .filter((p) => p === 1 || p === totalPages || Math.abs(p - page) <= 1)
                   .map((p, idx, arr) => {
-                    // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+                     
                     const prevP = arr[idx - 1];
-                    // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+                     
                     const showEllipsis = prevP && p - prevP > 1;
-                    // Trả về kết quả hoặc giao diện từ nhánh xử lý hiện tại.
+                     
                     return (
                       <div key={p} className="flex items-center">
                         {showEllipsis && <span className="px-1.5 text-slate-500 text-xs">...</span>}
@@ -715,7 +715,7 @@ const Movies = () => {
             </div>
           )}
 
-          {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
+           
           <div className="space-y-1">
             {/* Hiển thị phần tử giao diện label và nội dung con của nó. */}
             <label className="text-slate-400 text-xs font-bold uppercase ml-1">Tiêu đề phim *</label>
@@ -730,7 +730,7 @@ const Movies = () => {
             {formErrors.title && <p className="text-red-400 text-xs ml-1">{formErrors.title}</p>}
           </div>
 
-          {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
+           
           <div className="space-y-1">
             {/* Hiển thị phần tử giao diện label và nội dung con của nó. */}
             <label className="text-slate-400 text-xs font-bold uppercase ml-1">Mô tả</label>
@@ -744,9 +744,9 @@ const Movies = () => {
             />
           </div>
 
-          {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
+           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
+             
             <div className="space-y-1">
               {/* Hiển thị phần tử giao diện label và nội dung con của nó. */}
               <label className="text-slate-400 text-xs font-bold uppercase ml-1">Poster URL</label>
@@ -759,7 +759,7 @@ const Movies = () => {
                 className="w-full bg-slate-800/50 border border-slate-700 text-white rounded-xl py-3 px-4 outline-none focus:ring-2 focus:ring-blue-500 transition-all"
               />
             </div>
-            {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
+             
             <div className="space-y-1">
               {/* Hiển thị phần tử giao diện label và nội dung con của nó. */}
               <label className="text-slate-400 text-xs font-bold uppercase ml-1">Trailer URL</label>
@@ -774,9 +774,9 @@ const Movies = () => {
             </div>
           </div>
 
-          {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
+           
           <div className="space-y-2">
-            {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
+             
             <div className="flex flex-wrap items-center justify-between gap-2">
               {/* Hiển thị phần tử giao diện label và nội dung con của nó. */}
               <label className="text-slate-400 text-xs font-bold uppercase ml-1">Video URL (HLS .m3u8 hoặc MP4)</label>
@@ -801,7 +801,7 @@ const Movies = () => {
             {/* Panel chọn nhanh HLS nội bộ */}
             {showHlsPicker && (
               <div className="bg-slate-900 border border-blue-500/30 rounded-xl p-3 space-y-2 animate-fadeIn shadow-lg">
-                {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
+                 
                 <div className="flex items-center justify-between text-xs text-slate-400 pb-1.5 border-b border-slate-800">
                   {/* Hiển thị phần tử giao diện span và nội dung con của nó. */}
                   <span className="font-semibold text-blue-300">Kho video HLS trên máy chủ Kestrel:</span>
@@ -824,13 +824,13 @@ const Movies = () => {
                         }}
                         className="w-full text-left p-2 rounded-lg bg-slate-800/60 hover:bg-blue-600/20 border border-slate-700/60 hover:border-blue-500/40 transition-all flex items-center justify-between gap-3 group"
                       >
-                        {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
+                         
                         <div>
-                          {/* Hiển thị phần tử giao diện p và nội dung con của nó. */}
+                           
                           <p className="text-xs font-semibold text-white group-hover:text-blue-300 transition-colors">
                             Thư mục #{s.streamKey} — {s.relativeUrl}
                           </p>
-                          {/* Hiển thị phần tử giao diện p và nội dung con của nó. */}
+                           
                           <p className="text-[11px] text-slate-400">
                             {s.segmentCount} phân đoạn .ts • {s.totalSizeMb} MB
                           </p>
@@ -860,9 +860,9 @@ const Movies = () => {
             />
           </div>
 
-          {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
+           
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
+             
             <div className="space-y-1">
               {/* Hiển thị phần tử giao diện label và nội dung con của nó. */}
               <label className="text-slate-400 text-xs font-bold uppercase ml-1">Thời lượng (phút)</label>
@@ -876,7 +876,7 @@ const Movies = () => {
               />
               {formErrors.duration && <p className="text-red-400 text-xs ml-1">{formErrors.duration}</p>}
             </div>
-            {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
+             
             <div className="space-y-1">
               {/* Hiển thị phần tử giao diện label và nội dung con của nó. */}
               <label className="text-slate-400 text-xs font-bold uppercase ml-1">Năm phát hành</label>
@@ -890,7 +890,7 @@ const Movies = () => {
               />
               {formErrors.releaseYear && <p className="text-red-400 text-xs ml-1">{formErrors.releaseYear}</p>}
             </div>
-            {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
+             
             <div className="space-y-1 col-span-2 md:col-span-1">
               {/* Hiển thị phần tử giao diện label và nội dung con của nó. */}
               <label className="text-slate-400 text-xs font-bold uppercase ml-1">Loại phim</label>
@@ -906,7 +906,7 @@ const Movies = () => {
                 <option value={1}>Phim bộ</option>
               </select>
             </div>
-            {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
+             
             <div className="space-y-1 col-span-2 md:col-span-1">
               {/* Hiển thị phần tử giao diện label và nội dung con của nó. */}
               <label className="text-slate-400 text-xs font-bold uppercase ml-1">Trạng thái phát hành</label>
@@ -945,19 +945,19 @@ const Movies = () => {
             )}
           </div>
 
-          {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
+           
           <div className="space-y-2">
             {/* Hiển thị phần tử giao diện label và nội dung con của nó. */}
             <label className="text-slate-400 text-xs font-bold uppercase ml-1">Thể loại</label>
-            {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
+             
             <div className="flex flex-wrap gap-2">
               {categories.length === 0 ? (
                 <p className="text-slate-600 text-sm italic">Chưa có thể loại nào. Hãy thêm thể loại trước.</p>
               ) : (
                 categories.map((cat) => {
-                  // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+                   
                   const selected = form.categoryIds.includes(cat.id);
-                  // Trả về kết quả hoặc giao diện từ nhánh xử lý hiện tại.
+                   
                   return (
                     <button
                       key={cat.id}
@@ -980,9 +980,9 @@ const Movies = () => {
 
           {/* Tùy chọn Phim nổi bật (Banner Carousel) */}
           <div className="p-3.5 rounded-xl bg-slate-800/40 border border-slate-700/60 flex items-center justify-between gap-4">
-            {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
+             
             <div>
-              {/* Hiển thị phần tử giao diện p và nội dung con của nó. */}
+               
               <p className="text-sm font-bold text-white flex items-center gap-2">
                 {/* Hiển thị phần tử giao diện span và nội dung con của nó. */}
                 <span>Đánh dấu là Phim nổi bật</span>
@@ -992,7 +992,7 @@ const Movies = () => {
                   </span>
                 )}
               </p>
-              {/* Hiển thị phần tử giao diện p và nội dung con của nó. */}
+               
               <p className="text-xs text-slate-400 mt-0.5">
                 Hiển thị phim này trên Banner Carousel trang chủ của ứng dụng mobile.
               </p>
@@ -1005,7 +1005,7 @@ const Movies = () => {
                 form.isFeatured ? 'bg-amber-500' : 'bg-slate-700'
               }`}
             >
-              {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
+               
               <div
                 className={`w-5 h-5 rounded-full bg-white transition-transform ${
                   form.isFeatured ? 'translate-x-6' : 'translate-x-0'
@@ -1014,7 +1014,7 @@ const Movies = () => {
             </button>
           </div>
 
-          {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
+           
           <div className="flex gap-3 pt-2">
             {/* Hiển thị phần tử giao diện button và nội dung con của nó. */}
             <button

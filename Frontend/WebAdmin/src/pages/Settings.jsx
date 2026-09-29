@@ -1,15 +1,15 @@
-// Nạp mô-đun phụ thuộc cần dùng trong tệp này.
+ 
 import { useState, useEffect, useCallback } from 'react';
-// Nạp mô-đun phụ thuộc cần dùng trong tệp này.
+ 
 import { useAuth } from '../context/useAuth';
-// Nạp mô-đun phụ thuộc cần dùng trong tệp này.
+ 
 import { Bot, UserCog, Save, RotateCcw, Loader2, Eye, EyeOff, CheckCircle2 } from 'lucide-react';
-// Nạp mô-đun phụ thuộc cần dùng trong tệp này.
+ 
 import aiApi from '../api/aiApi';
-// Nạp mô-đun phụ thuộc cần dùng trong tệp này.
+ 
 import ConfirmDialog from '../components/ConfirmDialog';
 
-// Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+ 
 const InfoRow = ({ label, value }) => (
   <div className="flex items-center justify-between gap-4 py-3 border-b border-slate-800 last:border-b-0">
     {/* Hiển thị phần tử giao diện span và nội dung con của nó. */}
@@ -19,41 +19,41 @@ const InfoRow = ({ label, value }) => (
   </div>
 );
 
-// Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+ 
 const Settings = () => {
-  // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+   
   const { user } = useAuth();
 
   // Trạng thái cấu hình AI Gemini
   const [aiConfig, setAiConfig] = useState(null);
-  // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+   
   const [loadingConfig, setLoadingConfig] = useState(true);
-  // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+   
   const [apiKeyInput, setApiKeyInput] = useState('');
-  // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+   
   const [modelInput, setModelInput] = useState('gemini-3.5-flash-lite');
-  // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+   
   const [showKey, setShowKey] = useState(false);
-  // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+   
   const [saving, setSaving] = useState(false);
-  // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+   
   const [resetting, setResetting] = useState(false);
-  // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+   
   const [confirmResetOpen, setConfirmResetOpen] = useState(false);
-  // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+   
   const [notice, setNotice] = useState(null);
 
-  // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+   
   const fetchAiConfig = useCallback(async () => {
      
     setLoadingConfig(true);
     // Bao bọc thao tác có thể lỗi để xử lý an toàn.
     try {
-      // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+       
       const res = await aiApi.getConfig();
-      // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+       
       const data = res?.data;
-      // Kiểm tra điều kiện để chọn nhánh xử lý phù hợp.
+       
       if (data) {
          
         setAiConfig(data);
@@ -80,15 +80,15 @@ const Settings = () => {
     fetchAiConfig();
   }, [fetchAiConfig]);
 
-  // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+   
   const handleSaveAiConfig = async (e) => {
      
     e.preventDefault();
-    // Kiểm tra điều kiện để chọn nhánh xử lý phù hợp.
+     
     if (!apiKeyInput.trim()) {
        
       setNotice({ type: 'error', text: 'API Key không được để trống!' });
-      // Trả về kết quả hoặc giao diện từ nhánh xử lý hiện tại.
+       
       return;
     }
 
@@ -98,7 +98,7 @@ const Settings = () => {
     setNotice(null);
     // Bao bọc thao tác có thể lỗi để xử lý an toàn.
     try {
-      // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+       
       const res = await aiApi.updateConfig({
         apiKey: apiKeyInput.trim(),
         model: modelInput.trim() || 'gemini-3.5-flash-lite',
@@ -121,7 +121,7 @@ const Settings = () => {
     }
   };
 
-  // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+   
   const handleConfirmReset = async () => {
      
     setResetting(true);
@@ -154,14 +154,14 @@ const Settings = () => {
     }
   };
 
-  // Trả về kết quả hoặc giao diện từ nhánh xử lý hiện tại.
+   
   return (
     <div className="space-y-6">
-      {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
+       
       <div>
-        {/* Hiển thị phần tử giao diện h1 và nội dung con của nó. */}
+         
         <h1 className="text-3xl font-bold text-white">Cấu hình hệ thống</h1>
-        {/* Hiển thị phần tử giao diện p và nội dung con của nó. */}
+         
         <p className="text-slate-400 mt-1">Quản lý tài khoản quản trị và cấu hình khóa API cho Trợ lý AI CineBot.</p>
       </div>
 
@@ -179,17 +179,17 @@ const Settings = () => {
         </div>
       )}
 
-      {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
+       
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Khối 1: Thông tin tài khoản Admin */}
         <section className="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col justify-between">
-          {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
+           
           <div>
-            {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
+             
             <div className="flex items-center gap-3 mb-4">
               {/* Hiển thị phần tử giao diện UserCog và nội dung con của nó. */}
               <UserCog className="text-blue-400" size={22} />
-              {/* Hiển thị phần tử giao diện h2 và nội dung con của nó. */}
+               
               <h2 className="text-lg font-bold text-white">Tài khoản Quản trị</h2>
             </div>
             {/* Hiển thị phần tử giao diện InfoRow và nội dung con của nó. */}
@@ -202,7 +202,7 @@ const Settings = () => {
             <InfoRow label="Vai trò hệ thống" value="Quản trị viên (Admin)" />
           </div>
 
-          {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
+           
           <div className="mt-6 p-4 rounded-xl bg-slate-800/40 border border-slate-800 text-xs text-slate-400 leading-5">
             Tài khoản này có đầy đủ đặc quyền quản trị kho phim, kiểm soát người dùng, đối soát giao dịch và cấu hình dịch vụ toàn hệ thống.
           </div>
@@ -210,13 +210,13 @@ const Settings = () => {
 
         {/* Khối 2: Cấu hình Gemini API Key cho Chatbot */}
         <section className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-          {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
+           
           <div className="flex items-center justify-between gap-3 mb-4">
-            {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
+             
             <div className="flex items-center gap-3">
               {/* Hiển thị phần tử giao diện Bot và nội dung con của nó. */}
               <Bot className="text-indigo-400" size={22} />
-              {/* Hiển thị phần tử giao diện h2 và nội dung con của nó. */}
+               
               <h2 className="text-lg font-bold text-white">Cấu hình Trợ lý AI (Gemini)</h2>
             </div>
             {aiConfig && (
@@ -234,7 +234,7 @@ const Settings = () => {
 
           {loadingConfig ? (
             <div className="py-12 flex flex-col items-center justify-center text-slate-500 gap-2">
-              {/* Hiển thị phần tử giao diện Loader2 và nội dung con của nó. */}
+               
               <Loader2 size={24} className="animate-spin text-indigo-500" />
               {/* Hiển thị phần tử giao diện span và nội dung con của nó. */}
               <span>Đang tải cấu hình AI...</span>
@@ -247,7 +247,7 @@ const Settings = () => {
                 <label className="block text-xs font-semibold uppercase text-slate-400 mb-2">
                   Google Gemini API Key
                 </label>
-                {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
+                 
                 <div className="relative">
                   {/* Hiển thị phần tử giao diện input và nội dung con của nó. */}
                   <input
@@ -257,7 +257,7 @@ const Settings = () => {
                     placeholder="Nhập API Key bắt đầu bằng AIzaSy..."
                     className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 pr-24 text-sm text-white focus:outline-none focus:border-indigo-500 font-mono transition-colors"
                   />
-                  {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
+                   
                   <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
                     {/* Hiển thị phần tử giao diện button và nội dung con của nó. */}
                     <button

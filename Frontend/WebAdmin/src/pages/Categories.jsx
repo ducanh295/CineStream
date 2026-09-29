@@ -1,47 +1,47 @@
-// Nạp mô-đun phụ thuộc cần dùng trong tệp này.
+ 
 import { useState, useEffect, useCallback } from 'react';
-// Nạp mô-đun phụ thuộc cần dùng trong tệp này.
+ 
 import { motion } from 'framer-motion';
-// Nạp mô-đun phụ thuộc cần dùng trong tệp này.
+ 
 import { Plus, Search, Edit2, Trash2, Tag, Loader2, RefreshCw } from 'lucide-react';
-// Nạp mô-đun phụ thuộc cần dùng trong tệp này.
+ 
 import categoryApi from '../api/categoryApi';
-// Nạp mô-đun phụ thuộc cần dùng trong tệp này.
+ 
 import Modal from '../components/Modal';
-// Nạp mô-đun phụ thuộc cần dùng trong tệp này.
+ 
 import ConfirmDialog from '../components/ConfirmDialog';
 
-// Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+ 
 const EMPTY_FORM = { name: '', description: '' };
 
-// Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+ 
 const Categories = () => {
-  // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+   
   const [categories, setCategories] = useState([]);
-  // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+   
   const [loading, setLoading] = useState(true);
-  // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+   
   const [errorMsg, setErrorMsg] = useState('');
-  // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+   
   const [search, setSearch] = useState('');
 
   // Modal thêm/sửa
   const [modalOpen, setModalOpen] = useState(false);
-  // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+   
   const [editingId, setEditingId] = useState(null); // null = đang tạo mới
-  // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+   
   const [form, setForm] = useState(EMPTY_FORM);
-  // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+   
   const [formErrors, setFormErrors] = useState({});
-  // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+   
   const [saving, setSaving] = useState(false);
 
   // Dialog xác nhận xóa
   const [deleteTarget, setDeleteTarget] = useState(null); // category object hoặc null
-  // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+   
   const [deleting, setDeleting] = useState(false);
 
-  // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+  // logic fetch danh sách thể loại từ API và cập nhật trạng thái giao diện người dùng. 
   const fetchCategories = useCallback(async () => {
      
     setLoading(true);
@@ -49,9 +49,9 @@ const Categories = () => {
     setErrorMsg('');
     // Bao bọc thao tác có thể lỗi để xử lý an toàn.
     try {
-      // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
-      const result = await categoryApi.getAll();
        
+      const result = await categoryApi.getAll();
+      // logic kiểm tra dữ liệu trả về từ API và cập nhật danh sách thể loại. Nếu dữ liệu không phải là mảng, sẽ đặt danh sách thể loại thành mảng rỗng. 
       setCategories(Array.isArray(result?.data) ? result.data : []);
     } catch (err) {
        
@@ -71,8 +71,9 @@ const Categories = () => {
     });
   }, [fetchCategories]);
 
-  // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+  // logic lọc danh sách thể loại dựa trên từ khóa tìm kiếm và cập nhật giao diện người dùng. 
   const filteredCategories = categories.filter((c) =>
+    // logic kiểm tra xem tên thể loại có chứa từ khóa tìm kiếm hay không, bỏ qua khoảng trắng và không phân biệt chữ hoa chữ thường.
     c.name.toLowerCase().includes(search.trim().toLowerCase())
   );
 
@@ -100,9 +101,9 @@ const Categories = () => {
     setModalOpen(true);
   };
 
-  // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+   
   const closeModal = () => {
-    // Kiểm tra điều kiện để chọn nhánh xử lý phù hợp.
+     
     if (saving) return; // không cho đóng khi đang gửi request
      
     setModalOpen(false);
@@ -110,25 +111,25 @@ const Categories = () => {
 
   // ----- Validate cơ bản phía client trước khi gửi -----
   const validateForm = () => {
-    // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+     
     const errors = {};
-    // Kiểm tra điều kiện để chọn nhánh xử lý phù hợp.
+     
     if (!form.name.trim()) {
        
       errors.name = 'Tên thể loại không được để trống!';
-    // Kiểm tra điều kiện để chọn nhánh xử lý phù hợp.
+     
     } else if (form.name.trim().length > 100) {
        
       errors.name = 'Tên thể loại tối đa 100 ký tự!';
     }
-    // Kiểm tra điều kiện để chọn nhánh xử lý phù hợp.
+     
     if (form.description && form.description.length > 500) {
        
       errors.description = 'Mô tả tối đa 500 ký tự!';
     }
      
     setFormErrors(errors);
-    // Trả về kết quả hoặc giao diện từ nhánh xử lý hiện tại.
+     
     return Object.keys(errors).length === 0;
   };
 
@@ -136,20 +137,20 @@ const Categories = () => {
   const handleSubmit = async (e) => {
      
     e.preventDefault();
-    // Kiểm tra điều kiện để chọn nhánh xử lý phù hợp.
+     
     if (!validateForm()) return;
 
      
     setSaving(true);
     // Bao bọc thao tác có thể lỗi để xử lý an toàn.
     try {
-      // Khai báo dữ liệu hoặc giá trị phục vụ luồng xử lý bên dưới.
+       
       const payload = {
         name: form.name.trim(),
         description: form.description.trim() || null,
       };
 
-      // Kiểm tra điều kiện để chọn nhánh xử lý phù hợp.
+       
       if (editingId) {
          
         await categoryApi.update(editingId, payload);
@@ -179,7 +180,7 @@ const Categories = () => {
 
   // ----- Xóa -----
   const handleDelete = async () => {
-    // Kiểm tra điều kiện để chọn nhánh xử lý phù hợp.
+     
     if (!deleteTarget) return;
      
     setDeleting(true);
@@ -202,16 +203,16 @@ const Categories = () => {
     }
   };
 
-  // Trả về kết quả hoặc giao diện từ nhánh xử lý hiện tại.
+   
   return (
     <div className="space-y-6">
-      {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
+       
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
+         
         <div>
-          {/* Hiển thị phần tử giao diện h1 và nội dung con của nó. */}
+           
           <h1 className="text-3xl font-bold text-white">Quản lý thể loại</h1>
-          {/* Hiển thị phần tử giao diện p và nội dung con của nó. */}
+           
           <p className="text-slate-400 mt-1">Danh mục phân loại nội dung phim trên hệ thống.</p>
         </div>
         {/* Hiển thị phần tử giao diện giao diện và nội dung con của nó. */}
@@ -225,11 +226,11 @@ const Categories = () => {
         </motion.button>
       </div>
 
-      {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
+       
       <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
         {/* Thanh công cụ */}
         <div className="p-4 border-b border-slate-800 flex flex-col md:flex-row gap-4 bg-slate-900/50">
-          {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
+           
           <div className="relative flex-1">
             {/* Hiển thị phần tử giao diện Search và nội dung con của nó. */}
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
@@ -263,16 +264,16 @@ const Categories = () => {
         {/* Trạng thái loading lần đầu */}
         {loading && categories.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-slate-500">
-            {/* Hiển thị phần tử giao diện Loader2 và nội dung con của nó. */}
+             
             <Loader2 className="animate-spin mb-3" size={32} />
-            {/* Hiển thị phần tử giao diện p và nội dung con của nó. */}
+             
             <p>Đang tải danh sách thể loại...</p>
           </div>
         ) : filteredCategories.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-slate-500">
             {/* Hiển thị phần tử giao diện Tag và nội dung con của nó. */}
             <Tag size={40} className="mb-3 opacity-50" />
-            {/* Hiển thị phần tử giao diện p và nội dung con của nó. */}
+             
             <p>{search ? 'Không tìm thấy thể loại phù hợp.' : 'Chưa có thể loại nào. Hãy thêm mới!'}</p>
           </div>
         ) : (
@@ -300,9 +301,9 @@ const Categories = () => {
                   >
                     {/* Hiển thị phần tử giao diện td và nội dung con của nó. */}
                     <td className="px-6 py-4">
-                      {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
+                       
                       <div className="flex items-center gap-3">
-                        {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
+                         
                         <div className="w-9 h-9 rounded-lg bg-blue-500/10 flex items-center justify-center border border-blue-500/20">
                           {/* Hiển thị phần tử giao diện Tag và nội dung con của nó. */}
                           <Tag size={16} className="text-blue-400" />
@@ -325,7 +326,7 @@ const Categories = () => {
                       </span>
                     </td>
                     <td className="px-6 py-4">
-                      {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
+                       
                       <div className="flex items-center justify-center gap-2">
                         {/* Hiển thị phần tử giao diện button và nội dung con của nó. */}
                         <button
@@ -367,7 +368,7 @@ const Categories = () => {
             </div>
           )}
 
-          {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
+           
           <div className="space-y-1">
             {/* Hiển thị phần tử giao diện label và nội dung con của nó. */}
             <label className="text-slate-400 text-xs font-bold uppercase ml-1">Tên thể loại *</label>
@@ -382,7 +383,7 @@ const Categories = () => {
             {formErrors.name && <p className="text-red-400 text-xs ml-1">{formErrors.name}</p>}
           </div>
 
-          {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
+           
           <div className="space-y-1">
             {/* Hiển thị phần tử giao diện label và nội dung con của nó. */}
             <label className="text-slate-400 text-xs font-bold uppercase ml-1">Mô tả</label>
@@ -397,7 +398,7 @@ const Categories = () => {
             {formErrors.description && <p className="text-red-400 text-xs ml-1">{formErrors.description}</p>}
           </div>
 
-          {/* Hiển thị phần tử giao diện div và nội dung con của nó. */}
+           
           <div className="flex gap-3 pt-2">
             {/* Hiển thị phần tử giao diện button và nội dung con của nó. */}
             <button
