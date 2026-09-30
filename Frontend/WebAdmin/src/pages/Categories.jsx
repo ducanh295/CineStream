@@ -333,7 +333,7 @@ const Categories = () => {
                           onClick={() => openEditModal(category)}
                           className="p-2 hover:bg-blue-500/10 hover:text-blue-400 rounded-lg transition-all"
                         >
-                          {/* Hiển thị phần tử giao diện Edit2 và nội dung con của nó. */}
+                          {/* icon edit*/}
                           <Edit2 size={18} />
                         </button>
                         {/* Hiển thị phần tử giao diện button và nội dung con của nó. */}
@@ -341,7 +341,7 @@ const Categories = () => {
                           onClick={() => setDeleteTarget(category)}
                           className="p-2 hover:bg-red-500/10 hover:text-red-400 rounded-lg transition-all"
                         >
-                          {/* Hiển thị phần tử giao diện Trash2 và nội dung con của nó. */}
+                          {/* icon xoá */}
                           <Trash2 size={18} />
                         </button>
                       </div>
